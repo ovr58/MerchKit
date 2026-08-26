@@ -1,6 +1,6 @@
 # GitHub-готовность репозитория
 
-Status: ACTIVE (с 2026-08-26)
+Status: DONE (2026-08-26)
 
 ## Context
 
@@ -49,3 +49,25 @@ Status: ACTIVE (с 2026-08-26)
 - Сама защита веток на GitHub включается владельцем репо в настройках — агент этого сделать
   не может (нет авторизованного `gh`). План даёт воспроизводимую инструкцию, а не факт
   включённой защиты.
+
+## Что реально сделано
+
+- `main` подтверждён как trunk: переименовывать нечего, упоминания `master` в репо остались
+  только там, где они host-neutral (`githooks/pre-commit`, `.claude/commands/review-branches.md`).
+- Заведён `docs/BRANCH_PROTECTION.md`: ruleset на `main` (запрет удаления и force-push,
+  обязательный PR, `Required approvals: 0` для репо одного мейнтейнера, статус-чеки — вместе
+  с будущим CI), раскладка на полосы доверия, воспроизводящая команда `gh api`, отказ от
+  `CODEOWNERS` с обоснованием.
+- Заведён `CONTRIBUTING.md` для людей: установка хука, конвенция веток, стиль коммитов,
+  PR-флоу и ревью, таблица «что обновлять вместе с кодом», три инварианта проекта.
+- Заведён `.github/PULL_REQUEST_TEMPLATE.md`.
+- Ссылки: `README.md` → `CONTRIBUTING.md` и `docs/BRANCH_PROTECTION.md`; B1 перенесена в
+  «Закрытые» в `planning/BACKLOG.md`.
+- Первый коммит репозитория сделан на ветке `claude/github-readiness`, влит в `main`
+  fast-forward и запушен в `https://github.com/ovr58/MerchKit.git` по команде пользователя.
+
+## Осталось за пользователем
+
+Само включение branch protection — ручной шаг владельца репозитория: локальный `gh` не
+авторизован (`gh auth status` → «not logged into any GitHub hosts»), настройки репозитория
+агент не менял. Порядок — `docs/BRANCH_PROTECTION.md`.
