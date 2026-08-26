@@ -1,0 +1,61 @@
+{
+  "_comment": "Project-level Claude Code settings. Generic, safe defaults. Расширь allow под реальные команды проекта (тесты, линтер, БД-клиент). Локальные/машинные override клади в .claude/settings.local.json (он в .gitignore).",
+  "extraKnownMarketplaces": {
+    "ponytail": { "source": { "source": "github", "repo": "DietrichGebert/ponytail" } }
+  },
+  "enabledPlugins": { "ponytail@ponytail": true },
+  "permissions": {
+    "allow": [
+      "Read(./**)",
+      "Grep",
+      "Glob",
+      "Bash(git status)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+      "Bash(git restore:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(tail:*)",
+      "Bash(head:*)",
+      "WebSearch"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./secrets.*)",
+      "Read(./credentials.json)",
+      "Read(./**/*.key)"
+    ],
+    "additionalDirectories": [
+      "C:/Users/B7E3~1/AppData/Local/Temp/claude/d--AppBusters-projects-MK"
+    ]
+  },
+
+  "_hooks_note": "Раскомментируй блок ниже (переименуй _hooks -> hooks) и впиши свои команды, если нужны автодействия. Hooks исполняет харнесс, НЕ Claude — именно так реализуются правила вида «каждый раз при X». Формат: matcher по имени тула + список команд. См. /help или claude-code-guide. SessionStart-пример ниже — OPT-IN bootstrap скилов (подмешивает карту .claude/skills/INDEX.md в контекст каждой сессии); по умолчанию consult-first держится правилом в CLAUDE.md, хук не обязателен.",
+  "_hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          { "type": "command", "command": "cat .claude/skills/INDEX.md" }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "echo example: запрети опасные команды до их запуска" }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          { "type": "command", "command": "echo example: автоформат/линтер по завершении хода" }
+        ]
+      }
+    ]
+  }
+}

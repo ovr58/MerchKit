@@ -1,0 +1,28 @@
+# === Строки для .gitignore нового проекта (добавить к своим) ===
+# Скопируй нужное в корневой .gitignore проекта.
+
+# Локальные override прав Claude Code — машинно-зависимы, НЕ коммитить.
+.claude/settings.local.json
+
+# Личный локальный оверлей правил для Harvi Code — машинно-зависим, НЕ коммитить.
+AGENTS.local.md
+
+# Опциональная переносимая память проекта (docs/MEMORY_GUIDE.md) — локальная, НЕ коммитить.
+.ai-memory/
+
+# Крупные машинные артефакты планирования (вне git).
+planning/archive/artifacts/
+
+# Логи прогонов (если ведёшь tail/JSON-логи для мониторинга).
+logs/
+*.log
+
+# Секреты — НИКОГДА в git.
+.env
+.envrc
+secrets.*
+credentials.json
+*.key
+
+# NB: per-project долгая память живёт в ~/.claude/projects/<hash>/memory/,
+#     то есть ВНЕ репозитория — отдельно игнорировать не нужно.

@@ -1,0 +1,14 @@
+#!/bin/bash
+# Block direct commits to the trunk — force use of side branches.
+# Trusted lane (Opus only): claude/<slug>, harvi/<slug>.
+# Conservative lane (any non-Opus model): feature/<slug>, fix/<slug>, exp/<slug>.
+# Rules: AGENTS.md · rationale: docs/adr/0002-trust-lane-by-model-not-host.md
+# Install: copy to .git/hooks/pre-commit and `chmod +x .git/hooks/pre-commit`.
+BRANCH=$(git branch --show-current)
+if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ]; then
+  echo "ERROR: Direct commits to '$BRANCH' are not allowed."
+  echo "Create a side branch: git switch -c feature/<slug>"
+  echo "  conservative lane (non-Opus): feature/ fix/ exp/"
+  echo "  trusted lane (Opus only):     claude/ harvi/"
+  exit 1
+fi

@@ -1,0 +1,16 @@
+{
+  "_comment": "ПРИМЕР локальных/машинно-зависимых прав. Скопируй в .claude/settings.local.json (он в .gitignore — НЕ коммитится). Сюда — пути к venv/интерпретатору, БД-клиенту, абсолютные пути конкретной машины.",
+  "permissions": {
+    "allow": [
+      "Bash(.venv/Scripts/python.exe:*)",
+      "Bash(.venv/bin/python:*)",
+      "Bash(pytest:*)",
+      "Bash(npm test:*)",
+      "Bash(npm run:*)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\<you>\\.claude",
+      "D:\\tmp"
+    ]
+  }
+}

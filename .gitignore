@@ -1,0 +1,44 @@
+# Локальные override прав Claude Code — машинно-зависимы, НЕ коммитить.
+.claude/settings.local.json
+
+# Личный локальный оверлей правил для Harvi Code — машинно-зависим, НЕ коммитить.
+AGENTS.local.md
+
+# Опциональная переносимая память проекта (docs/MEMORY_GUIDE.md) — локальная, НЕ коммитить.
+.ai-memory/
+
+# Секреты — НИКОГДА в git.
+.env
+.envrc
+secrets.*
+credentials.json
+*.key
+
+# Логи прогонов.
+logs/
+*.log
+
+# === Стек проекта: Node / Vite / Supabase ===
+
+# Зависимости и кэши сборки.
+node_modules/
+dist/
+dist-ssr/
+.vite/
+coverage/
+*.tsbuildinfo
+
+# Переменные окружения фронтенда (в git идёт только .env.example).
+.env.local
+.env.*.local
+
+# Локальный Supabase (supabase start) — контейнерное состояние и временные файлы.
+supabase/.branches/
+supabase/.temp/
+
+# Крупные машинные артефакты планирования (вне git).
+planning/archive/artifacts/
+
+# Служебное ОС / редактора.
+.DS_Store
+Thumbs.db
