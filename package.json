@@ -12,6 +12,7 @@
     "preview": "vite preview",
     "lint": "oxlint",
     "test": "vitest run",
+    "test:db": "supabase test db",
     "test:watch": "vitest"
   },
   "dependencies": {
