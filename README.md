@@ -6,10 +6,11 @@
 вместе с заголовком и описанием. Генерации складываются в личный каталог, оплата — внутренними
 баллами.
 
-**Статус: интейк завершён, генеральный план построен, кода ещё нет.** Требования, спецификация
-и схемы собраны; восемь решений, блокировавших старт, закрыты 2026-08-27; дорожная карта —
-шесть вех M1…M6 в
-[`planning/reference/00_GENERAL_PLAN.md`](planning/reference/00_GENERAL_PLAN.md).
+**Статус: идёт веха M1 — каркас.** Требования, спецификация и схемы собраны, дизайн-заход D1
+и экономика утверждены; сейчас в репозитории появляется сборка, конвейер миграций и связка
+фронтенд ↔ Edge Function. Продуктовых экранов ещё нет. Дорожная карта — шесть вех M1…M6 в
+[`planning/reference/00_GENERAL_PLAN.md`](planning/reference/00_GENERAL_PLAN.md), текущий
+план — [`planning/active/m1-skeleton_2026-08-27.md`](planning/active/m1-skeleton_2026-08-27.md).
 
 ## Стек
 
@@ -47,13 +48,31 @@ RLS, Auth, Storage, Realtime, Edge Functions на Deno) · AI-провайдер
 
 ## Разработка
 
-Кода пока нет — команды приведены как контракт из `docs/SPEC.md` §1 и §7:
+Требуется **Node 22** (версия зафиксирована в `.nvmrc` и `package.json`) и — для локального
+Supabase — Docker Desktop.
 
 ```
-npm run dev     # дев-сервер
-npm run build   # сборка
-npm test        # тесты
+nvm use                 # Node 22 из .nvmrc
+npm install
+cp .env.example .env    # заполнить VITE_SUPABASE_URL и VITE_SUPABASE_PUBLISHABLE_KEY
+
+npm run dev             # дев-сервер Vite
+npm run build           # сборка (tsc -b && vite build)
+npm test                # тесты (Vitest)
+npm run lint            # oxlint
 ```
+
+Локальная часть Supabase (нужен Docker):
+
+```
+npx supabase start                    # локальные Postgres, Auth, Storage, Studio
+npx supabase db reset                 # накатить миграции с нуля
+npx supabase functions serve health   # Edge Function локально
+```
+
+На прод уезжает не база, а SQL: `npx supabase db push` применяет миграции к облачному
+проекту, затем `npx supabase functions deploy`, затем сборка фронтенда — порядок обязателен
+(`docs/SPEC.md` §8).
 
 Ветки: прямые коммиты в `main` заблокированы хуком `githooks/pre-commit` (после клона его
 надо поставить — см. [`CONTRIBUTING.md`](CONTRIBUTING.md)); на GitHub то же самое держит защита
@@ -62,10 +81,9 @@ npm test        # тесты
 
 ## Что делать дальше
 
-1. Заход **D1** в дизайн-канвасе: десктопные артборды входа, регистрации, подтверждения
-   email, восстановления пароля и профиля — раздел «Дизайн» в
-   [`planning/reference/00_GENERAL_PLAN.md`](planning/reference/00_GENERAL_PLAN.md).
-2. Завести план вехи **M1 — Каркас** через `/plan-new`. M1 экранов не содержит, поэтому
-   дизайн и каркас друг друга не ждут.
+1. Закончить веху **M1** по плану
+   [`planning/active/m1-skeleton_2026-08-27.md`](planning/active/m1-skeleton_2026-08-27.md).
+2. Веха **M2 — Аккаунт**: экраны из утверждённого канваса D1, `profiles` с RLS в той же
+   миграции, подтверждение email.
 3. К вехе M3 закрыть номинал стартовых баллов **N**, цену генерации за объект и состав
    пакетов; к M6 — формулировки 24 сценариев показа. Перечень — [`docs/TZ.md`](docs/TZ.md) §11.

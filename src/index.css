@@ -1,0 +1,96 @@
+@import 'tailwindcss';
+
+/* Токены темы. Палитра — из утверждённого канваса D1 (docs/design/d1-account/gen.mjs),
+   значения для текстовых пар подняты до порога WCAG 2.1 AA (NFR-07): контраст ≥ 4.5:1.
+   Рядом с каждой парой — посчитанный коэффициент, а не «на глаз».
+
+   Отклонения от D1 и причина:
+     primary      #16A34A → #15803D  (белый текст на кнопке: было 3.30, стало 5.02)
+     destructive  #EF4444 → #DC2626  (белый текст: было 3.76, стало 4.83)
+     muted-fg     #71717A → #52525B  (на подложке #F4F4F5: было 4.40, стало 7.03)
+   Исходные оттенки остались там, где они не подложка под текст: --color-brand,
+   --color-success-surface, --color-danger-surface. */
+:root {
+  --background: #ffffff;
+  --foreground: #09090b; /* на фоне: 19.90:1 */
+
+  --muted: #f4f4f5;
+  --muted-foreground: #52525b; /* на muted: 7.03:1 · на фоне: 7.73:1 */
+
+  --primary: #15803d;
+  --primary-foreground: #ffffff; /* на primary: 5.02:1 */
+  --brand: #16a34a; /* нетекстовый акцент из D1: рамки, иконки, индикаторы */
+
+  --secondary: #f4f4f5;
+  --secondary-foreground: #09090b; /* на secondary: 18.85:1 */
+  --accent: #f4f4f5; /* подложка ховера/выделения — смысл токена задан shadcn/ui */
+  --accent-foreground: #09090b; /* на accent: 18.85:1 */
+
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff; /* на destructive: 4.83:1 */
+
+  --success-surface: #f0fdf4;
+  --success-foreground: #15803d; /* на success-surface: 4.79:1 */
+  --danger-surface: #fef2f2;
+  --danger-foreground: #b91c1c; /* на danger-surface: 5.91:1 */
+
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #15803d;
+
+  --radius: 0.5rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-brand: var(--brand);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success-surface: var(--success-surface);
+  --color-success-foreground: var(--success-foreground);
+  --color-danger-surface: var(--danger-surface);
+  --color-danger-foreground: var(--danger-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+}
+
+@layer base {
+  *,
+  ::after,
+  ::before {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family:
+      ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+      sans-serif;
+  }
+
+  /* Плейсхолдер — тоже текст: серый #A1A1AA из D1 давал 2.56:1 и порог не проходил. */
+  ::placeholder {
+    color: var(--color-muted-foreground);
+  }
+
+  /* Фокус виден всегда: весь US-01 проходится с клавиатуры (NFR-07). */
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+}
