@@ -278,7 +278,7 @@
       <section class="card">
         <fieldset>
           <legend>Вендор генерации изображений</legend>
-          <p class="card-sub">Вендор продукта не выбран (ADR-0005) — здесь он только основание расчёта.</p>
+          <p class="card-sub">Вендор продукта не выбран (ADR-0005) — здесь он только основание расчёта. Рабочий канал доступа на приёмке — шлюз AITunnel: его строка идёт первой, прайс Google оставлен для сравнения.</p>
           <details class="expl"><summary></summary><div class="expl-body"><div>Выбранный вендор задаёт цену одной картинки — самую крупную переменную статью: она умножается на каждый объект каждой генерации.</div><div><b>Дешевле:</b> себестоимость объекта ниже и маржа шире, но у дешёвых моделей выше доля брака, а брак мы оплачиваем и возвращаем баллы — часть экономии уходит обратно.</div><div><b>Дороже:</b> качество и сходство лучше, брака меньше, но при неизменной цене пакетов маржа сжимается вплоть до убытка. Сравнение вендоров на графике справа показывает, где проходит граница.</div><div>Отметка «не сверено» значит, что прайс взят из открытых источников и не подтверждён счётом: на такой цифре решение не утверждают.</div></div></details>
           <div class="vendors" id="vendors"></div>
           <div class="rows" style="margin-top: 12px" id="vendor-custom"></div>
@@ -447,63 +447,7 @@
 <div class="tt" id="tt"></div>
 
 <script type="application/json" id="mk-state">
-{
-  "version": 1,
-  "decision": null,
-  "log": [],
-  "inputs": {
-    "vendorId": "g25fi",
-    "custom": { "imgOut": 0.05, "imgIn": 0.5 },
-    "textIn": 0.30,
-    "textOut": 2.50,
-    "recogOut": 80,
-    "cardIn": 1200,
-    "cardOut": 450,
-    "photos": 2,
-    "photoTokens": 1032,
-    "promptTokens": 300,
-    "objects": 4,
-    "defect": 10,
-    "cardShare": 30,
-    "infraPerGen": 0.15,
-    "fx": 85,
-    "pointsPerObject": 10,
-    "cardExtra": 5,
-    "maxObjects": 4,
-    "startPoints": 20,
-    "packages": [
-      { "name": "Старт", "points": 100, "price": 149, "share": 50 },
-      { "name": "Стандарт", "points": 300, "price": 390, "share": 35 },
-      { "name": "Про", "points": 1000, "price": 1090, "share": 15 }
-    ],
-    "recurring": [
-      { "id": "supabase", "name": "Supabase Pro (БД, Storage, Edge Functions)", "value": 2125, "on": true },
-      { "id": "frontend", "name": "Хостинг фронтенда (Vercel/Netlify)", "value": 0, "on": true },
-      { "id": "domain", "name": "Домен (годовая цена / 12)", "value": 150, "on": true },
-      { "id": "mail", "name": "Почтовый сервис сверх Supabase", "value": 1700, "on": false },
-      { "id": "sentry", "name": "Мониторинг ошибок и логи", "value": 2200, "on": false },
-      { "id": "moderation", "name": "Модерация загружаемого контента", "value": 0, "on": false },
-      { "id": "accounting", "name": "Бухгалтерия и отчётность", "value": 3000, "on": true },
-      { "id": "insurance", "name": "Страховые взносы ИП (фикс. часть / 12)", "value": 4500, "on": true },
-      { "id": "support", "name": "Поддержка пользователей (часы × ставка)", "value": 6000, "on": false },
-      { "id": "marketing", "name": "Реклама и привлечение", "value": 15000, "on": false },
-      { "id": "reserve", "name": "Резерв на инциденты", "value": 2000, "on": false }
-    ],
-    "onetime": [
-      { "id": "dev", "name": "Разработка MVP", "value": 0, "on": true },
-      { "id": "design", "name": "Дизайн и брендинг", "value": 0, "on": true },
-      { "id": "legal", "name": "Регистрация, оферта, политика ПДн", "value": 15000, "on": true },
-      { "id": "infra", "name": "Настройка инфраструктуры и домена", "value": 5000, "on": true },
-      { "id": "launch", "name": "Стартовый маркетинг", "value": 30000, "on": true },
-      { "id": "reserveOne", "name": "Резерв запуска", "value": 20000, "on": true }
-    ],
-    "tax": 6,
-    "acquiring": 0,
-    "targetProfit": 50000,
-    "conversion": 10,
-    "packagesPerPayer": 1
-  }
-}
+{"version":1,"decision":{"ts":"2026-08-27T09:56:14.595Z","summary":{"startPoints":120,"pointsPerObject":50,"cardExtra":5,"maxObjects":1,"packages":[{"name":"Старт","points":300,"price":390},{"name":"Стандарт","points":1000,"price":1090},{"name":"Про","points":3000,"price":2030}],"vendorBasis":"Google · Gemini 2.5 Flash Image","costPerObjectRub":3.81,"costPerPointRub":0.076,"marginPct":[{"name":"Старт","pct":94.1},{"name":"Стандарт","pct":93},{"name":"Про","pct":88.7}],"breakEvenPackages":40,"targetProfit":50000,"packagesForTarget":112,"fx":85}},"log":[{"ts":"2026-08-27T09:56:07.680Z","kind":"snapshot","summary":{"startPoints":120,"pointsPerObject":50,"cardExtra":5,"maxObjects":1,"packages":[{"name":"Старт","points":300,"price":390},{"name":"Стандарт","points":1000,"price":1090},{"name":"Про","points":3000,"price":2030}],"vendorBasis":"Google · Gemini 2.5 Flash Image","costPerObjectRub":3.81,"costPerPointRub":0.076,"marginPct":[{"name":"Старт","pct":94.1},{"name":"Стандарт","pct":93},{"name":"Про","pct":88.7}],"breakEvenPackages":40,"targetProfit":50000,"packagesForTarget":112,"fx":85},"inputs":{"vendorId":"g25fi","custom":{"imgOut":0.05,"imgIn":0.5},"textIn":0.3,"textOut":2.5,"recogOut":80,"cardIn":1200,"cardOut":450,"photos":4,"photoTokens":1032,"promptTokens":300,"objects":1,"defect":10,"cardShare":30,"infraPerGen":0.15,"fx":85,"pointsPerObject":50,"cardExtra":5,"maxObjects":1,"startPoints":120,"packages":[{"name":"Старт","points":300,"price":390,"share":50},{"name":"Стандарт","points":1000,"price":1090,"share":35},{"name":"Про","points":3000,"price":2030,"share":15}],"recurring":[{"id":"supabase","name":"Supabase Pro (БД, Storage, Edge Functions)","value":2125,"on":true},{"id":"frontend","name":"Хостинг фронтенда (Vercel/Netlify)","value":0,"on":true},{"id":"domain","name":"Домен (годовая цена / 12)","value":0,"on":true},{"id":"mail","name":"Почтовый сервис сверх Supabase","value":1700,"on":false},{"id":"sentry","name":"Мониторинг ошибок и логи","value":2200,"on":false},{"id":"moderation","name":"Модерация загружаемого контента","value":0,"on":false},{"id":"accounting","name":"Бухгалтерия и отчётность","value":0,"on":true},{"id":"insurance","name":"Страховые взносы ИП (фикс. часть / 12)","value":4500,"on":true},{"id":"support","name":"Поддержка пользователей (часы × ставка)","value":6000,"on":true},{"id":"marketing","name":"Реклама и привлечение","value":15000,"on":true},{"id":"reserve","name":"Резерв на инциденты","value":2000,"on":false}],"onetime":[{"id":"dev","name":"Разработка MVP","value":0,"on":true},{"id":"design","name":"Дизайн и брендинг","value":0,"on":true},{"id":"legal","name":"Регистрация, оферта, политика ПДн","value":1500,"on":true},{"id":"infra","name":"Настройка инфраструктуры и домена","value":5000,"on":true},{"id":"launch","name":"Стартовый маркетинг","value":30000,"on":true},{"id":"reserveOne","name":"Резерв запуска","value":0,"on":true}],"tax":6,"acquiring":0,"targetProfit":50000,"conversion":10,"packagesPerPayer":1.5},"math":["входные токены = фото × токены на фото + промпт = 4 × 1032 + 300 = 4428","распознавание = 4428 × $0.3/1M + 80 × $2.5/1M = $0.00153","объект (вызов) = 4428 × $0.3/1M + $0.039 = $0.04033","объект с учётом брака 10% = $0.04033 ÷ 0.90 = $0.04481","тексты карточки = 1200 × $0.3/1M + 450 × $2.5/1M = $0.00148","генерация = распознавание + 1 × объект + 30% × тексты = $0.04678","генерация, ₽ = $0.04678 × 85 + инфра 0,15 ₽ = 4,13 ₽","себестоимость балла = объект 3,81 ₽ ÷ 50 баллов = 0,076 ₽","средний пакет = 881 ₽ и 950 баллов (по долям покупок)","бесплатные баллы на один проданный пакет = 120 × 0,076 ₽ ÷ (10,0% × 1.5) = 60,94 ₽","вклад пакета = 881 − 72,37 (ИИ) − 52,86 (налог+эквайринг) − 60,94 (стартовые баллы) = 694,83 ₽","безубыточность = постоянные 27 625 ₽ ÷ вклад 694,83 ₽ = 40 пакетов/мес","для прибыли 50 000 ₽ = (27 625 + 50 000) ÷ 694,83 = 112 пакетов/мес"]},{"ts":"2026-08-27T09:56:14.595Z","kind":"apply","summary":{"startPoints":120,"pointsPerObject":50,"cardExtra":5,"maxObjects":1,"packages":[{"name":"Старт","points":300,"price":390},{"name":"Стандарт","points":1000,"price":1090},{"name":"Про","points":3000,"price":2030}],"vendorBasis":"Google · Gemini 2.5 Flash Image","costPerObjectRub":3.81,"costPerPointRub":0.076,"marginPct":[{"name":"Старт","pct":94.1},{"name":"Стандарт","pct":93},{"name":"Про","pct":88.7}],"breakEvenPackages":40,"targetProfit":50000,"packagesForTarget":112,"fx":85},"inputs":{"vendorId":"g25fi","custom":{"imgOut":0.05,"imgIn":0.5},"textIn":0.3,"textOut":2.5,"recogOut":80,"cardIn":1200,"cardOut":450,"photos":4,"photoTokens":1032,"promptTokens":300,"objects":1,"defect":10,"cardShare":30,"infraPerGen":0.15,"fx":85,"pointsPerObject":50,"cardExtra":5,"maxObjects":1,"startPoints":120,"packages":[{"name":"Старт","points":300,"price":390,"share":50},{"name":"Стандарт","points":1000,"price":1090,"share":35},{"name":"Про","points":3000,"price":2030,"share":15}],"recurring":[{"id":"supabase","name":"Supabase Pro (БД, Storage, Edge Functions)","value":2125,"on":true},{"id":"frontend","name":"Хостинг фронтенда (Vercel/Netlify)","value":0,"on":true},{"id":"domain","name":"Домен (годовая цена / 12)","value":0,"on":true},{"id":"mail","name":"Почтовый сервис сверх Supabase","value":1700,"on":false},{"id":"sentry","name":"Мониторинг ошибок и логи","value":2200,"on":false},{"id":"moderation","name":"Модерация загружаемого контента","value":0,"on":false},{"id":"accounting","name":"Бухгалтерия и отчётность","value":0,"on":true},{"id":"insurance","name":"Страховые взносы ИП (фикс. часть / 12)","value":4500,"on":true},{"id":"support","name":"Поддержка пользователей (часы × ставка)","value":6000,"on":true},{"id":"marketing","name":"Реклама и привлечение","value":15000,"on":true},{"id":"reserve","name":"Резерв на инциденты","value":2000,"on":false}],"onetime":[{"id":"dev","name":"Разработка MVP","value":0,"on":true},{"id":"design","name":"Дизайн и брендинг","value":0,"on":true},{"id":"legal","name":"Регистрация, оферта, политика ПДн","value":1500,"on":true},{"id":"infra","name":"Настройка инфраструктуры и домена","value":5000,"on":true},{"id":"launch","name":"Стартовый маркетинг","value":30000,"on":true},{"id":"reserveOne","name":"Резерв запуска","value":0,"on":true}],"tax":6,"acquiring":0,"targetProfit":50000,"conversion":10,"packagesPerPayer":1.5},"math":["входные токены = фото × токены на фото + промпт = 4 × 1032 + 300 = 4428","распознавание = 4428 × $0.3/1M + 80 × $2.5/1M = $0.00153","объект (вызов) = 4428 × $0.3/1M + $0.039 = $0.04033","объект с учётом брака 10% = $0.04033 ÷ 0.90 = $0.04481","тексты карточки = 1200 × $0.3/1M + 450 × $2.5/1M = $0.00148","генерация = распознавание + 1 × объект + 30% × тексты = $0.04678","генерация, ₽ = $0.04678 × 85 + инфра 0,15 ₽ = 4,13 ₽","себестоимость балла = объект 3,81 ₽ ÷ 50 баллов = 0,076 ₽","средний пакет = 881 ₽ и 950 баллов (по долям покупок)","бесплатные баллы на один проданный пакет = 120 × 0,076 ₽ ÷ (10,0% × 1.5) = 60,94 ₽","вклад пакета = 881 − 72,37 (ИИ) − 52,86 (налог+эквайринг) − 60,94 (стартовые баллы) = 694,83 ₽","безубыточность = постоянные 27 625 ₽ ÷ вклад 694,83 ₽ = 40 пакетов/мес","для прибыли 50 000 ₽ = (27 625 + 50 000) ÷ 694,83 = 112 пакетов/мес"]}],"inputs":{"vendorId":"g25fi","custom":{"imgOut":0.05,"imgIn":0.5},"textIn":0.3,"textOut":2.5,"recogOut":80,"cardIn":1200,"cardOut":450,"photos":4,"photoTokens":1032,"promptTokens":300,"objects":1,"defect":10,"cardShare":30,"infraPerGen":0.15,"fx":85,"pointsPerObject":50,"cardExtra":5,"maxObjects":1,"startPoints":120,"packages":[{"name":"Старт","points":300,"price":390,"share":50},{"name":"Стандарт","points":1000,"price":1090,"share":35},{"name":"Про","points":3000,"price":2030,"share":15}],"recurring":[{"id":"supabase","name":"Supabase Pro (БД, Storage, Edge Functions)","value":2125,"on":true},{"id":"frontend","name":"Хостинг фронтенда (Vercel/Netlify)","value":0,"on":true},{"id":"domain","name":"Домен (годовая цена / 12)","value":0,"on":true},{"id":"mail","name":"Почтовый сервис сверх Supabase","value":1700,"on":false},{"id":"sentry","name":"Мониторинг ошибок и логи","value":2200,"on":false},{"id":"moderation","name":"Модерация загружаемого контента","value":0,"on":false},{"id":"accounting","name":"Бухгалтерия и отчётность","value":0,"on":true},{"id":"insurance","name":"Страховые взносы ИП (фикс. часть / 12)","value":4500,"on":true},{"id":"support","name":"Поддержка пользователей (часы × ставка)","value":6000,"on":true},{"id":"marketing","name":"Реклама и привлечение","value":15000,"on":true},{"id":"reserve","name":"Резерв на инциденты","value":2000,"on":false}],"onetime":[{"id":"dev","name":"Разработка MVP","value":0,"on":true},{"id":"design","name":"Дизайн и брендинг","value":0,"on":true},{"id":"legal","name":"Регистрация, оферта, политика ПДн","value":1500,"on":true},{"id":"infra","name":"Настройка инфраструктуры и домена","value":5000,"on":true},{"id":"launch","name":"Стартовый маркетинг","value":30000,"on":true},{"id":"reserveOne","name":"Резерв запуска","value":0,"on":true}],"tax":6,"acquiring":0,"targetProfit":50000,"conversion":10,"packagesPerPayer":1.5}}
 </script>
 
 <script>
@@ -511,7 +455,8 @@
   "use strict";
 
   var VENDORS = [
-    { id: "g25fi", vendor: "Google", name: "Gemini 2.5 Flash Image", note: "Nano Banana · 1024 px · 1 290 ток.", imgOut: 0.039, imgIn: 0.30, verified: true },
+    { id: "aitunnel25fi", vendor: "AITunnel", name: "gemini-2-5-flash-image через шлюз", note: "рабочий канал доступа · 5,95 ₽ за изображение по прайсу шлюза, здесь — в $ по курсу ниже · вход не сверен", imgOut: 0.07, imgIn: 0.30, verified: false },
+    { id: "g25fi", vendor: "Google", name: "Gemini 2.5 Flash Image", note: "Nano Banana · 1024 px · 1 290 ток. · прямой доступ из РФ закрыт", imgOut: 0.039, imgIn: 0.30, verified: true },
     { id: "g31fli", vendor: "Google", name: "Gemini 3.1 Flash Lite Image", note: "Nano Banana 2 Lite · 1K", imgOut: 0.0336, imgIn: 0.25, verified: true },
     { id: "g31fi", vendor: "Google", name: "Gemini 3.1 Flash Image", note: "Nano Banana 2 · 1K", imgOut: 0.067, imgIn: 0.50, verified: true },
     { id: "g3pi", vendor: "Google", name: "Gemini 3 Pro Image", note: "Nano Banana Pro · 1K/2K", imgOut: 0.134, imgIn: 2.00, verified: true },
