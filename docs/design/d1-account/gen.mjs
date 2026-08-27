@@ -151,7 +151,7 @@ write('SignInError', authPage(headerRight('Нет аккаунта?', 'Реги�
 
 /* ---------- 3. Регистрация ---------- */
 write('SignUp', authPage(headerRight('Уже есть аккаунт?', 'Войти'), `
-      ${cardHead('Регистрация', 'После подтверждения email на баланс придут 20 стартовых баллов — это одна пробная генерация из двух объектов.')}
+      ${cardHead('Регистрация', 'После подтверждения email на баланс придут 120 стартовых баллов — это две пробные генерации.')}
       ${field({ label: 'Email', value: '', placeholder: 'you@example.com' })}
       ${field({ label: 'Пароль', value: '', placeholder: 'Минимум 8 символов', icon: eyeIcon })}
       ${field({ label: 'Подтверждение пароля', value: '', placeholder: 'Повторите пароль', icon: eyeIcon })}
@@ -160,7 +160,7 @@ write('SignUp', authPage(headerRight('Уже есть аккаунт?', 'Вой�
 
 /* ---------- 4. Регистрация — ошибки полей ---------- */
 write('SignUpErrors', authPage(headerRight('Уже есть аккаунт?', 'Войти'), `
-      ${cardHead('Регистрация', 'После подтверждения email на баланс придут 20 стартовых баллов — это одна пробная генерация из двух объектов.')}
+      ${cardHead('Регистрация', 'После подтверждения email на баланс придут 120 стартовых баллов — это две пробные генерации.')}
       ${field({ label: 'Email', value: 'seller@example.com', error: 'Этот email уже зарегистрирован. Войдите или восстановите пароль.' })}
       ${field({ label: 'Пароль', value: '••••••••••', icon: eyeIcon })}
       ${field({ label: 'Подтверждение пароля', value: '••••••••', error: 'Подтверждение не совпадает с паролем', icon: eyeIcon })}
@@ -177,7 +177,7 @@ write('ConfirmEmail', authPage(headerRight('Не тот адрес?', 'Выйт�
         ${mailArt(C.green700)}
         <div style="display: flex; flex-direction: column; gap: 8px">
           <h1 style="margin: 0; font-size: 24px; font-weight: 600; letter-spacing: -0.02em; color: ${C.fg}">Подтвердите email</h1>
-          <p style="margin: 0; font-size: 14px; line-height: 20px; color: ${C.mutedFg}">Мы отправили письмо на <span style="color: ${C.fg}; font-weight: 500">seller@example.com</span>. Перейдите по ссылке из него — и на баланс придут 20 стартовых баллов.</p>
+          <p style="margin: 0; font-size: 14px; line-height: 20px; color: ${C.mutedFg}">Мы отправили письмо на <span style="color: ${C.fg}; font-weight: 500">seller@example.com</span>. Перейдите по ссылке из него — и на баланс придут 120 стартовых баллов.</p>
         </div>
         <div style="width: 100%; display: flex; flex-direction: column; gap: 10px">
           ${btn('Отправить письмо повторно', 'outline')}
@@ -274,7 +274,7 @@ const profilePage = (confirmed) => `<div style="width: 1440px; height: 1024px; b
         <div style="display: flex; gap: 12px; align-items: flex-start">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${C.green700}" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="flex: none; margin-top: 1px"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m2 7 10 6 10-6"></path></svg>
           <div style="display: flex; flex-direction: column; gap: 2px">
-            <span style="font-size: 14px; font-weight: 500; color: ${C.fg}">Подтвердите email — и получите 20 стартовых баллов</span>
+            <span style="font-size: 14px; font-weight: 500; color: ${C.fg}">Подтвердите email — и получите 120 стартовых баллов</span>
             <span style="font-size: 13px; color: ${C.mutedFg}">Письмо ушло на seller@example.com. До перехода по ссылке запуск генерации недоступен.</span>
           </div>
         </div>
