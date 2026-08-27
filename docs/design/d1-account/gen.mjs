@@ -1,9 +1,16 @@
 import { writeFileSync } from 'node:fs';
 
+// Палитра синхронизирована с токенами кода (`src/index.css`): значения текстовых пар
+// подняты до порога WCAG 2.1 AA (NFR-07), рядом — посчитанный коэффициент.
+//   primary     #16A34A → #15803D  (белый текст на кнопке: было 3.30, стало 5.02)
+//   destructive #EF4444 → #DC2626  (белый текст: было 3.76, стало 4.83)
+//   mutedFg     #71717A → #52525B  (на подложке #F4F4F5: было 4.40, стало 7.03)
+//   ph          #A1A1AA → #52525B  (плейсхолдер — тоже текст: было 2.56, стало 7.03)
+// Исходный оттенок #16A34A остался как `brand` — нетекстовый акцент: рамки, индикаторы.
 const C = {
-  bg: '#FFFFFF', fg: '#09090B', muted: '#F4F4F5', mutedFg: '#71717A',
-  primary: '#16A34A', primaryFg: '#FFF1F2', border: '#E4E4E7',
-  destructive: '#EF4444', ph: '#A1A1AA', green50: '#F0FDF4', green200: '#BBF7D0',
+  bg: '#FFFFFF', fg: '#09090B', muted: '#F4F4F5', mutedFg: '#52525B',
+  primary: '#15803D', primaryFg: '#FFFFFF', brand: '#16A34A', border: '#E4E4E7',
+  destructive: '#DC2626', ph: '#52525B', green50: '#F0FDF4', green200: '#BBF7D0',
   red50: '#FEF2F2', red200: '#FECACA', red700: '#B91C1C', green700: '#15803D'
 };
 const FONT = 'ui-sans-serif, system-ui, "Segoe UI", "Noto Sans", Arial, sans-serif';
@@ -42,7 +49,7 @@ const authHeader = (rightHtml) => `<header style="height: 64px; flex: none; back
     <div style="display: flex; align-items: center; gap: 10px; font-size: 14px; color: ${C.mutedFg}">${rightHtml}</div>
   </header>`;
 
-const navLink = (t, active) => `<span style="font-size: 14px; font-weight: ${active ? 500 : 400}; color: ${active ? C.fg : C.mutedFg}; padding: 8px 0; border-bottom: 2px solid ${active ? C.primary : 'transparent'}">${t}</span>`;
+const navLink = (t, active) => `<span style="font-size: 14px; font-weight: ${active ? 500 : 400}; color: ${active ? C.fg : C.mutedFg}; padding: 8px 0; border-bottom: 2px solid ${active ? C.brand : 'transparent'}">${t}</span>`;
 
 const appHeader = (active, balance) => `<header style="height: 64px; flex: none; background: ${C.bg}; border-bottom: 1px solid ${C.border}; padding: 0 40px; display: flex; align-items: center; justify-content: space-between">
     <div style="display: flex; align-items: center; gap: 40px">
@@ -64,7 +71,7 @@ const appHeader = (active, balance) => `<header style="height: 64px; flex: none;
 
 const field = ({ label, value = '', placeholder = '', error = '', hint = '', focus = false, icon = '' }) => `<div style="display: flex; flex-direction: column; gap: 6px">
         <label style="font-size: 14px; font-weight: 500; color: ${C.fg}">${label}</label>
-        <div style="height: 40px; border: 1px solid ${error ? C.destructive : C.border}; border-radius: 6px; background: ${C.bg}; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; ${focus ? `box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.25); border-color: ${C.primary}` : ''}">
+        <div style="height: 40px; border: 1px solid ${error ? C.destructive : C.border}; border-radius: 6px; background: ${C.bg}; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; ${focus ? `box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.25); border-color: ${C.brand}` : ''}">
           <span style="font-size: 14px; color: ${value ? C.fg : C.ph}">${value || placeholder}</span>
           ${icon}
         </div>
