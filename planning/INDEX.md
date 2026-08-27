@@ -7,7 +7,7 @@
 > Статусы: `REFERENCE` · `ACTIVE` · `DONE` · `ARCHIVED` · `ARTIFACT`.
 > Lifecycle: BACKLOG (`BACKLOG.md`) → Draft (`~/.claude/plans/`) → ACTIVE (`active/`) → DONE → ARCHIVED (`archive/plans/`).
 
-Обновлено: 2026-08-26
+Обновлено: 2026-08-27
 
 ## BACKLOG — предтечи планов (todo на будущее)
 
@@ -19,7 +19,7 @@
 
 | Файл | Назначение | Статус |
 | --- | --- | --- |
-| 00_GENERAL_PLAN.md | Общий план проекта, верхнеуровневая архитектура | REFERENCE |
+| 00_GENERAL_PLAN.md | Генеральный план: дорожная карта M1–M6, покрытие FR/NFR вехами, решения, блокирующие старт | REFERENCE |
 | SPEC_INTAKE_RESEARCH.md | Разведка с цитированием: форма ТЗ/спецификации по стандартам (29148, Volere, arc42, C4, Google design doc, PR/FAQ, INVEST), чужие spec-driven реализации (spec-kit, BMAD, Agent OS), стековые грабли по 7 профилям | REFERENCE |
 
 ## active/ — текущая работа

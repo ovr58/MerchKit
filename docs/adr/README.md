@@ -25,3 +25,4 @@
 | [0004](0004-single-visual-artifact.md) | 2026-08-26 | Accepted | Визуальный слой — один `docs/VISUALS.md` со стабильными ID `V-NN`, переписывается на месте; ТЗ и спека ссылаются, а не копируют |
 | [0005](0005-ai-provider-abstraction.md) | 2026-08-26 | Accepted | AI-провайдер за интерфейсом `ai-provider` из четырёх операций; выбор вендора отложен, для `local` — заглушка |
 | [0006](0006-supabase-as-backend.md) | 2026-08-26 | Accepted | Supabase — единственный бэкенд; чтение через RLS, баланс и вызов провайдера — только Edge Functions; баланс производен от журнала `ledger` |
+| [0007](0007-vite-spa-no-ssr.md) | 2026-08-27 | Accepted | Vite + React-SPA без SSR; серверной логике негде жить, кроме Edge Functions |
