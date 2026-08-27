@@ -259,7 +259,7 @@ const accountPanel = (confirmed) => panel(`
         </div>`);
 
 const profilePage = (confirmed) => `<div style="width: 1440px; height: 1024px; background: ${C.muted}; display: flex; flex-direction: column">
-  ${appHeader('profile', confirmed ? '20 баллов' : '0 баллов')}
+  ${appHeader('profile', confirmed ? '120 баллов' : '0 баллов')}
   <main style="flex: 1; overflow: hidden; padding: 32px 40px">
     <div style="max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px">
       <h1 style="margin: 0; font-size: 30px; font-weight: 600; letter-spacing: -0.02em; color: ${C.fg}">Профиль</h1>
@@ -280,19 +280,19 @@ const profilePage = (confirmed) => `<div style="width: 1440px; height: 1024px; b
             <div style="display: flex; flex-direction: column; gap: 6px">
               ${sectionTitle('Баланс')}
               <div style="display: flex; align-items: baseline; gap: 8px">
-                <span style="font-size: 40px; font-weight: 600; letter-spacing: -0.03em; color: ${C.fg}">${confirmed ? '20' : '0'}</span>
+                <span style="font-size: 40px; font-weight: 600; letter-spacing: -0.03em; color: ${C.fg}">${confirmed ? '120' : '0'}</span>
                 <span style="font-size: 16px; color: ${C.mutedFg}">баллов</span>
               </div>
-              <span style="font-size: 13px; color: ${C.mutedFg}">${confirmed ? 'Хватит на 2 объекта — один объект стоит 10 баллов' : 'Стартовые баллы придут после подтверждения email'}</span>
+              <span style="font-size: 13px; color: ${C.mutedFg}">${confirmed ? 'Хватит на 2 объекта — один объект стоит 50 баллов' : 'Стартовые баллы придут после подтверждения email'}</span>
             </div>
             <div style="width: 180px">${btn('Пополнить баланс', 'primary')}</div>
           </div>`)}
           ${panel(`
           ${sectionTitle('Пакеты пополнения', 'Баллы зачисляются сразу: оплата в этой версии не подключена')}
           <div style="display: flex; gap: 16px; align-items: stretch">
-            ${pack('Старт', '100', '149 ₽', '1,49 ₽ за балл', false)}
-            ${pack('Стандарт', '300', '390 ₽', '1,30 ₽ за балл', true)}
-            ${pack('Про', '1 000', '1 090 ₽', '1,09 ₽ за балл', false)}
+            ${pack('Старт', '300', '390 ₽', '1,30 ₽ за балл', false)}
+            ${pack('Стандарт', '1 000', '1 090 ₽', '1,09 ₽ за балл', true)}
+            ${pack('Про', '3 000', '2 030 ₽', '0,68 ₽ за балл', false)}
           </div>`)}
           ${panel(`
           ${sectionTitle('История операций')}
@@ -300,7 +300,7 @@ const profilePage = (confirmed) => `<div style="width: 1440px; height: 1024px; b
             <div style="display: grid; grid-template-columns: 120px minmax(0, 1fr) 90px 90px; gap: 16px; padding-bottom: 10px; font-size: 12px; font-weight: 500; letter-spacing: 0.03em; text-transform: uppercase; color: ${C.mutedFg}">
               <span>Дата</span><span>Операция</span><span style="text-align: right">Баллы</span><span style="text-align: right">Баланс</span>
             </div>
-            ${historyRow('27.08.2026', 'Стартовые баллы за подтверждение email', '+20', '20', true)}
+            ${historyRow('27.08.2026', 'Стартовые баллы за подтверждение email', '+120', '120', true)}
           </div>
           <p style="margin: 0; font-size: 13px; color: ${C.mutedFg}">Списания за генерации и возвраты по неудачным объектам появятся здесь же.</p>`
           : `<div style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 28px 0; text-align: center">
@@ -320,7 +320,7 @@ write('ProfileUnconfirmed', profilePage(false));
 
 /* ---------- Каталог ---------- */
 const catalogPage = (inner) => `<div style="width: 1440px; height: 900px; background: ${C.muted}; display: flex; flex-direction: column">
-  ${appHeader('catalog', '20 баллов')}
+  ${appHeader('catalog', '120 баллов')}
   <main style="flex: 1; overflow: hidden; padding: 32px 40px">
     <div style="max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; height: 100%">
       <div style="display: flex; align-items: center; justify-content: space-between">
