@@ -7,7 +7,7 @@
 > Статусы: `REFERENCE` · `ACTIVE` · `DONE` · `ARCHIVED` · `ARTIFACT`.
 > Lifecycle: BACKLOG (`BACKLOG.md`) → Draft (`~/.claude/plans/`) → ACTIVE (`active/`) → DONE → ARCHIVED (`archive/plans/`).
 
-Обновлено: 2026-08-27
+Обновлено: 2026-08-28
 
 ## BACKLOG — предтечи планов (todo на будущее)
 
@@ -27,6 +27,7 @@
 
 | Файл | Назначение | Статус |
 | --- | --- | --- |
+| m2-account_2026-08-28.md | Веха M2 «Аккаунт»: регистрация с подтверждением email, вход, восстановление, выход, `profiles` под RLS, экраны по артбордам D1 | ACTIVE (с 2026-08-28) |
 | economics-calculator_2026-08-27.md | Артефакт V-09: интерактивный расчёт экономики, утверждение цифр и перенос их в ТЗ | ACTIVE (с 2026-08-27) |
 
 ## archive/plans/ — выполненные планы
