@@ -242,16 +242,14 @@ const historyRow = (date, op, delta, balance, positive) => `<div style="display:
           <span style="text-align: right; color: ${C.mutedFg}">${balance}</span>
         </div>`;
 
-const accountPanel = (confirmed) => panel(`
+const accountPanel = () => panel(`
         ${sectionTitle('Аккаунт')}
         <div style="display: flex; flex-direction: column; gap: 12px; font-size: 14px">
           <div style="display: flex; flex-direction: column; gap: 2px">
             <span style="font-size: 13px; color: ${C.mutedFg}">Email</span>
             <div style="display: flex; align-items: center; gap: 8px">
               <span style="color: ${C.fg}">seller@example.com</span>
-              ${confirmed
-                ? `<span style="display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 500; color: ${C.green700}; background: ${C.green50}; border: 1px solid ${C.green200}; border-radius: 10px; padding: 2px 8px">Подтверждён</span>`
-                : `<span style="display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 500; color: ${C.mutedFg}; background: ${C.muted}; border: 1px solid ${C.border}; border-radius: 10px; padding: 2px 8px">Не подтверждён</span>`}
+              <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 500; color: ${C.green700}; background: ${C.green50}; border: 1px solid ${C.green200}; border-radius: 10px; padding: 2px 8px">Подтверждён</span>
             </div>
           </div>
           <div style="display: flex; flex-direction: column; gap: 2px">
@@ -265,21 +263,13 @@ const accountPanel = (confirmed) => panel(`
           ${btn('Выйти', 'ghost')}
         </div>`);
 
-const profilePage = (confirmed) => `<div style="width: 1440px; height: 1024px; background: ${C.muted}; display: flex; flex-direction: column">
-  ${appHeader('profile', confirmed ? '120 баллов' : '0 баллов')}
+// Артборда «профиль до подтверждения» здесь нет намеренно: подтверждение email закрывает
+// вход целиком, и неподтверждённый пользователь профиля не видит (ADR-0008).
+const profilePage = () => `<div style="width: 1440px; height: 1024px; background: ${C.muted}; display: flex; flex-direction: column">
+  ${appHeader('profile', '120 баллов')}
   <main style="flex: 1; overflow: hidden; padding: 32px 40px">
     <div style="max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px">
       <h1 style="margin: 0; font-size: 30px; font-weight: 600; letter-spacing: -0.02em; color: ${C.fg}">Профиль</h1>
-      ${!confirmed ? `<div style="display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 16px 20px; background: ${C.bg}; border: 1px solid ${C.border}; border-left: 3px solid ${C.primary}; border-radius: 8px">
-        <div style="display: flex; gap: 12px; align-items: flex-start">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${C.green700}" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" style="flex: none; margin-top: 1px"><rect x="2" y="4" width="20" height="16" rx="2"></rect><path d="m2 7 10 6 10-6"></path></svg>
-          <div style="display: flex; flex-direction: column; gap: 2px">
-            <span style="font-size: 14px; font-weight: 500; color: ${C.fg}">Подтвердите email — и получите 120 стартовых баллов</span>
-            <span style="font-size: 13px; color: ${C.mutedFg}">Письмо ушло на seller@example.com. До перехода по ссылке запуск генерации недоступен.</span>
-          </div>
-        </div>
-        <div style="flex: none; width: 220px">${btn('Отправить письмо повторно', 'outline')}</div>
-      </div>` : ''}
       <div style="display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 20px; align-items: start">
         <div style="display: flex; flex-direction: column; gap: 20px">
           ${panel(`
@@ -287,10 +277,10 @@ const profilePage = (confirmed) => `<div style="width: 1440px; height: 1024px; b
             <div style="display: flex; flex-direction: column; gap: 6px">
               ${sectionTitle('Баланс')}
               <div style="display: flex; align-items: baseline; gap: 8px">
-                <span style="font-size: 40px; font-weight: 600; letter-spacing: -0.03em; color: ${C.fg}">${confirmed ? '120' : '0'}</span>
+                <span style="font-size: 40px; font-weight: 600; letter-spacing: -0.03em; color: ${C.fg}">120</span>
                 <span style="font-size: 16px; color: ${C.mutedFg}">баллов</span>
               </div>
-              <span style="font-size: 13px; color: ${C.mutedFg}">${confirmed ? 'Хватит на 2 объекта — один объект стоит 50 баллов' : 'Стартовые баллы придут после подтверждения email'}</span>
+              <span style="font-size: 13px; color: ${C.mutedFg}">Хватит на 2 объекта — один объект стоит 50 баллов</span>
             </div>
             <div style="width: 180px">${btn('Пополнить баланс', 'primary')}</div>
           </div>`)}
@@ -303,27 +293,21 @@ const profilePage = (confirmed) => `<div style="width: 1440px; height: 1024px; b
           </div>`)}
           ${panel(`
           ${sectionTitle('История операций')}
-          ${confirmed ? `<div style="display: flex; flex-direction: column">
+          <div style="display: flex; flex-direction: column">
             <div style="display: grid; grid-template-columns: 120px minmax(0, 1fr) 90px 90px; gap: 16px; padding-bottom: 10px; font-size: 12px; font-weight: 500; letter-spacing: 0.03em; text-transform: uppercase; color: ${C.mutedFg}">
               <span>Дата</span><span>Операция</span><span style="text-align: right">Баллы</span><span style="text-align: right">Баланс</span>
             </div>
             ${historyRow('27.08.2026', 'Стартовые баллы за подтверждение email', '+120', '120', true)}
           </div>
-          <p style="margin: 0; font-size: 13px; color: ${C.mutedFg}">Списания за генерации и возвраты по неудачным объектам появятся здесь же.</p>`
-          : `<div style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 28px 0; text-align: center">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="${C.ph}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v14H4z"></path><path d="M8 10h8M8 14h5"></path></svg>
-            <span style="font-size: 14px; font-weight: 500; color: ${C.fg}">Операций пока нет</span>
-            <span style="font-size: 13px; color: ${C.mutedFg}">Первой записью станет начисление стартовых баллов</span>
-          </div>`}`)}
+          <p style="margin: 0; font-size: 13px; color: ${C.mutedFg}">Списания за генерации и возвраты по неудачным объектам появятся здесь же.</p>`)}
         </div>
-        ${accountPanel(confirmed)}
+        ${accountPanel()}
       </div>
     </div>
   </main>
 </div>`;
 
-write('Profile', profilePage(true));
-write('ProfileUnconfirmed', profilePage(false));
+write('Profile', profilePage());
 
 /* ---------- Каталог ---------- */
 const catalogPage = (inner) => `<div style="width: 1440px; height: 900px; background: ${C.muted}; display: flex; flex-direction: column">
