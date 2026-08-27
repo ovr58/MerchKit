@@ -1,0 +1,1251 @@
+<title>Экономика Merch Kit</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@600&display=swap">
+
+<style>
+  :root {
+    --ground: #F4F6F3;
+    --surface: #FFFFFF;
+    --surface-2: #EDF1EC;
+    --ink: #101511;
+    --ink-2: #5A665D;
+    --ink-3: #8A968C;
+    --line: #DDE4DC;
+    --line-strong: #C3CDC2;
+    --brand: #16A34A;
+    --brand-ink: #0B5F2B;
+    --brand-wash: #EBF7EF;
+    --neg: #DC2626;
+    --neg-wash: #FDF0F0;
+    --warn: #B45309;
+    --warn-wash: #FBF3E8;
+    --c1: #16A34A;
+    --c2: #3B82F6;
+    --c3: #D97706;
+    --c4: #DB2777;
+    --chart-surface: #FFFFFF;
+    --shadow: 0 1px 2px rgba(16, 21, 17, .05), 0 8px 24px -18px rgba(16, 21, 17, .35);
+    --radius: 10px;
+  }
+
+  :root:not([data-theme="light"]) {
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0D110E;
+      --surface: #151A17;
+      --surface-2: #1C231E;
+      --ink: #E8EDE8;
+      --ink-2: #9AA79D;
+      --ink-3: #74806F;
+      --line: #262E28;
+      --line-strong: #36413A;
+      --brand: #22C55E;
+      --brand-ink: #86EFAC;
+      --brand-wash: #12251A;
+      --neg: #F87171;
+      --neg-wash: #2A1717;
+      --warn: #F59E0B;
+      --warn-wash: #2A2011;
+      --chart-surface: #151A17;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 10px 30px -20px rgba(0, 0, 0, .9);
+      color-scheme: dark;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0D110E;
+    --surface: #151A17;
+    --surface-2: #1C231E;
+    --ink: #E8EDE8;
+    --ink-2: #9AA79D;
+    --ink-3: #74806F;
+    --line: #262E28;
+    --line-strong: #36413A;
+    --brand: #22C55E;
+    --brand-ink: #86EFAC;
+    --brand-wash: #12251A;
+    --neg: #F87171;
+    --neg-wash: #2A1717;
+    --warn: #F59E0B;
+    --warn-wash: #2A2011;
+    --chart-surface: #151A17;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 10px 30px -20px rgba(0, 0, 0, .9);
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  .num, .mono { font-family: "IBM Plex Mono", ui-monospace, "Cascadia Mono", monospace; font-variant-numeric: tabular-nums; }
+
+  h1, h2, h3 { font-family: "IBM Plex Serif", Georgia, "Times New Roman", serif; font-weight: 600; margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+  h1 { font-size: 30px; line-height: 1.15; }
+  h2 { font-size: 21px; }
+  h3 { font-size: 16px; }
+
+  a { color: var(--brand-ink); text-underline-offset: 2px; }
+  a:hover { color: var(--brand); }
+
+  .wrap { max-width: 1360px; margin: 0 auto; padding: 0 28px 72px; }
+
+  header.top {
+    border-bottom: 1px solid var(--line);
+    background: var(--surface);
+    padding: 24px 0 20px;
+    margin-bottom: 24px;
+  }
+  .top-in { max-width: 1360px; margin: 0 auto; padding: 0 28px; display: flex; gap: 28px; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; }
+  .eyebrow { font-size: 12px; letter-spacing: .09em; text-transform: uppercase; color: var(--ink-3); font-weight: 500; }
+  .lede { margin: 8px 0 0; max-width: 62ch; color: var(--ink-2); }
+
+  .apply-box { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; min-width: 300px; }
+
+  button {
+    font: inherit;
+    font-weight: 500;
+    border-radius: 8px;
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    color: var(--ink);
+    padding: 9px 14px;
+    cursor: pointer;
+  }
+  button:hover { border-color: var(--ink-3); }
+  button:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  button.primary { background: var(--brand); border-color: var(--brand); color: #FFFFFF; }
+  :root[data-theme="dark"] button.primary { color: #06170D; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) button.primary { color: #06170D; } }
+  button.primary:hover { filter: brightness(1.06); }
+  button.ghost { background: transparent; border-color: transparent; color: var(--ink-2); padding: 6px 8px; }
+  button.small { padding: 5px 10px; font-size: 13px; }
+
+  .layout { display: grid; grid-template-columns: minmax(0, 380px) minmax(0, 1fr); gap: 24px; align-items: start; }
+  @media (max-width: 1080px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px;
+  }
+  .card + .card { margin-top: 16px; }
+  .card-h { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 4px; }
+  .card-sub { color: var(--ink-2); font-size: 13px; margin: 0 0 14px; }
+
+  fieldset { border: 0; margin: 0; padding: 0; }
+  legend { font-family: "IBM Plex Serif", Georgia, serif; font-weight: 600; font-size: 16px; padding: 0; margin-bottom: 2px; }
+
+  .rows { display: flex; flex-direction: column; gap: 10px; }
+  .row { display: grid; grid-template-columns: minmax(0, 1fr) 96px; gap: 10px; align-items: center; }
+  .row label { font-size: 13.5px; color: var(--ink); }
+  .row .hint { display: block; font-size: 12px; color: var(--ink-3); }
+  .row.toggle { grid-template-columns: 18px minmax(0, 1fr) 96px; }
+
+  input[type="number"], input[type="text"], select {
+    font: inherit;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    background: var(--surface);
+    color: var(--ink);
+    text-align: right;
+  }
+  select { text-align: left; font-family: "IBM Plex Sans", sans-serif; }
+  input:focus-visible, select:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; border-color: var(--brand); }
+  input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--brand); }
+
+  .vendors { display: flex; flex-direction: column; gap: 8px; }
+  .vendor {
+    display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; gap: 10px; align-items: center;
+    border: 1px solid var(--line); border-radius: 8px; padding: 9px 11px; cursor: pointer;
+  }
+  .vendor:hover { border-color: var(--line-strong); }
+  .vendor[data-on="1"] { border-color: var(--brand); background: var(--brand-wash); }
+  .vendor .v-name { font-size: 13.5px; font-weight: 500; }
+  .vendor .v-note { font-size: 12px; color: var(--ink-2); }
+  .vendor .v-price { font-size: 13px; }
+  input[type="radio"] { accent-color: var(--brand); width: 16px; height: 16px; }
+
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(168px, 1fr)); gap: 12px; }
+  .tile { border: 1px solid var(--line); border-radius: 8px; padding: 13px 14px; background: var(--surface); }
+  .tile .k { font-size: 12px; color: var(--ink-2); }
+  .tile .v { font-size: 25px; line-height: 1.2; margin-top: 4px; }
+  .tile .u { font-size: 13px; color: var(--ink-2); }
+  .tile.good { border-color: var(--brand); background: var(--brand-wash); }
+  .tile.bad { border-color: var(--neg); background: var(--neg-wash); }
+
+  .verdict { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 8px; font-size: 13.5px; line-height: 1.45; }
+  .verdict.ok { background: var(--brand-wash); border: 1px solid var(--brand); }
+  .verdict.warn { background: var(--warn-wash); border: 1px solid var(--warn); }
+  .verdict.bad { background: var(--neg-wash); border: 1px solid var(--neg); }
+  .verdict + .verdict { margin-top: 8px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th, td { text-align: right; padding: 7px 8px; border-bottom: 1px solid var(--line); }
+  th:first-child, td:first-child { text-align: left; }
+  thead th { font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); font-weight: 500; }
+  tbody tr:last-child td { border-bottom: 0; }
+  .tbl-wrap { overflow-x: auto; }
+
+  .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 16px; }
+  .chart-figure { margin: 0; }
+  figcaption { font-size: 12.5px; color: var(--ink-2); margin-top: 8px; }
+  svg { display: block; max-width: 100%; height: auto; }
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 10px 0 0; font-size: 12.5px; color: var(--ink-2); }
+  .legend span.sw { width: 10px; height: 10px; border-radius: 3px; display: inline-block; margin-right: 6px; vertical-align: -1px; }
+
+  details { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 8px; }
+  summary { cursor: pointer; font-size: 12.5px; color: var(--ink-2); }
+  summary:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+  .status { font-size: 12.5px; color: var(--ink-2); text-align: right; max-width: 340px; }
+  .pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line-strong); color: var(--ink-2); }
+  .pill.on { border-color: var(--brand); color: var(--brand-ink); background: var(--brand-wash); }
+
+  .log-entry { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
+  .log-head { display: flex; gap: 10px; align-items: baseline; justify-content: space-between; font-size: 13px; }
+  .math { margin: 8px 0 0; padding: 10px 12px; background: var(--surface-2); border-radius: 6px; font-size: 12.5px; line-height: 1.7; overflow-x: auto; }
+  .math div { white-space: pre; }
+
+  .foot { margin-top: 32px; font-size: 13px; color: var(--ink-2); }
+  .foot ul { padding-left: 18px; }
+
+  .tt {
+    position: fixed; pointer-events: none; z-index: 40;
+    background: var(--ink); color: var(--ground);
+    padding: 7px 9px; border-radius: 6px; font-size: 12.5px; line-height: 1.4;
+    opacity: 0; transition: opacity .12s;
+    max-width: 260px;
+  }
+  .tt[data-show="1"] { opacity: 1; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<header class="top">
+  <div class="top-in">
+    <div>
+      <div class="eyebrow">Merch Kit · юнит-экономика</div>
+      <h1>Экономика Merch Kit</h1>
+      <p class="lede">Считает себестоимость генерации по прайсу выбранного вендора, маржу пакетов, точку безубыточности и то,
+        сколько нужно продаж для желаемой прибыли. Кнопка «Утвердить цифры» фиксирует решение в артефакте и в журнале —
+        оттуда Claude Code переносит его в ТЗ.</p>
+    </div>
+    <div class="apply-box">
+      <button class="primary" id="btn-apply">Утвердить цифры и применить в проекте</button>
+      <div class="status" id="apply-status">Ничего ещё не утверждали.</div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div id="decision-banner"></div>
+
+  <div class="layout">
+    <!-- ЛЕВАЯ КОЛОНКА: ВВОД -->
+    <div>
+      <section class="card">
+        <fieldset>
+          <legend>Вендор генерации изображений</legend>
+          <p class="card-sub">Вендор продукта не выбран (ADR-0005) — здесь он только основание расчёта.</p>
+          <div class="vendors" id="vendors"></div>
+          <div class="rows" style="margin-top: 12px" id="vendor-custom"></div>
+        </fieldset>
+      </section>
+
+      <section class="card">
+        <fieldset>
+          <legend>Распознавание и тексты</legend>
+          <p class="card-sub">Текстовая модель: распознаёт товар по фото и пишет заголовок с описанием для типа «карточка».</p>
+          <div class="rows" id="text-model"></div>
+        </fieldset>
+      </section>
+
+      <section class="card">
+        <fieldset>
+          <legend>Параметры генерации</legend>
+          <div class="rows" id="product"></div>
+        </fieldset>
+      </section>
+
+      <section class="card">
+        <fieldset>
+          <legend>Цена в баллах</legend>
+          <div class="rows" id="pricing"></div>
+        </fieldset>
+      </section>
+
+      <section class="card">
+        <fieldset>
+          <legend>Пакеты пополнения</legend>
+          <p class="card-sub">Доли — как часто покупают этот пакет; сумма долей приводится к 100%.</p>
+          <div class="tbl-wrap"><table id="packages"></table></div>
+        </fieldset>
+      </section>
+
+      <section class="card">
+        <fieldset>
+          <legend>Постоянные расходы, ₽/мес</legend>
+          <p class="card-sub">Снимите галочку — пункт не учитывается.</p>
+          <div class="rows" id="recurring"></div>
+          <div class="rows" style="margin-top: 12px; border-top: 1px solid var(--line); padding-top: 12px" id="percents"></div>
+        </fieldset>
+      </section>
+
+      <section class="card">
+        <fieldset>
+          <legend>Единоразовые расходы, ₽</legend>
+          <p class="card-sub">В прибыль не входят: считаются отдельно — за сколько месяцев отобьются.</p>
+          <div class="rows" id="onetime"></div>
+        </fieldset>
+      </section>
+
+      <section class="card">
+        <fieldset>
+          <legend>Цель</legend>
+          <div class="rows" id="goal"></div>
+        </fieldset>
+      </section>
+
+      <div style="display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap">
+        <button class="small" id="btn-snapshot">Зафиксировать расчёт в журнале</button>
+        <button class="small ghost" id="btn-reset">Сбросить к сохранённому</button>
+      </div>
+    </div>
+
+    <!-- ПРАВАЯ КОЛОНКА: РЕЗУЛЬТАТ -->
+    <div>
+      <section class="card">
+        <div class="card-h"><h2>Итог</h2><span class="pill" id="vendor-pill"></span></div>
+        <p class="card-sub" id="result-sub"></p>
+        <div class="tiles" id="tiles"></div>
+        <div id="verdicts" style="margin-top: 14px"></div>
+      </section>
+
+      <section class="card">
+        <div class="card-h"><h2>Маржа пакетов</h2></div>
+        <p class="card-sub">Себестоимость пакета — это баллы пакета, умноженные на себестоимость балла. Налог и эквайринг здесь не учтены: они считаются от выручки в общей модели.</p>
+        <div class="tbl-wrap"><table id="pack-table"></table></div>
+      </section>
+
+      <div class="grid2" style="margin-top: 16px">
+        <section class="card">
+          <div class="card-h"><h3>Из чего складывается генерация</h3></div>
+          <p class="card-sub">Одна генерация целиком, ₽</p>
+          <figure class="chart-figure"><div id="chart-breakdown"></div>
+            <figcaption>Ширина сегмента — доля в себестоимости одной генерации.</figcaption>
+          </figure>
+          <div class="legend" id="legend-breakdown"></div>
+          <details><summary>Таблица значений</summary><div class="tbl-wrap"><table id="tbl-breakdown"></table></div></details>
+        </section>
+
+        <section class="card">
+          <div class="card-h"><h3>Вендоры: себестоимость балла</h3></div>
+          <p class="card-sub">При текущих параметрах генерации, ₽ за балл</p>
+          <figure class="chart-figure"><div id="chart-vendors"></div>
+            <figcaption>Пунктир — средняя цена балла в пакетах. Столбец правее пунктира означает убыток.</figcaption>
+          </figure>
+          <details><summary>Таблица значений</summary><div class="tbl-wrap"><table id="tbl-vendors"></table></div></details>
+        </section>
+
+        <section class="card">
+          <div class="card-h"><h3>Точка безубыточности</h3></div>
+          <p class="card-sub">Прибыль в месяц в зависимости от числа проданных пакетов</p>
+          <figure class="chart-figure"><div id="chart-breakeven"></div>
+            <figcaption>Линия пересекает ноль в точке безубыточности; метка — объём под желаемую прибыль.</figcaption>
+          </figure>
+          <details><summary>Таблица значений</summary><div class="tbl-wrap"><table id="tbl-breakeven"></table></div></details>
+        </section>
+
+        <section class="card">
+          <div class="card-h"><h3>Отчёт при целевом объёме</h3></div>
+          <p class="card-sub">Куда уходит выручка, ₽/мес</p>
+          <figure class="chart-figure"><div id="chart-waterfall"></div>
+            <figcaption>Слева направо: выручка минус статьи расходов даёт прибыль.</figcaption>
+          </figure>
+          <details><summary>Таблица значений</summary><div class="tbl-wrap"><table id="tbl-waterfall"></table></div></details>
+        </section>
+      </div>
+
+      <section class="card" style="margin-top: 16px">
+        <div class="card-h"><h2>Как движутся деньги и баллы</h2></div>
+        <p class="card-sub">Выручка приходит в момент покупки пакета, расход возникает позже — в момент генерации. Между ними живёт журнал операций.</p>
+        <div id="scheme"></div>
+      </section>
+
+      <section class="card">
+        <div class="card-h"><h2>Что делает кнопка «Утвердить цифры»</h2></div>
+        <p class="card-sub">Честно про два шага: страница не может править файлы репозитория сама.</p>
+        <ol style="margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.6">
+          <li><strong>Шаг 1 — здесь.</strong> Решение и весь расчёт записываются в артефакт и в журнал операций ниже: это и есть акт утверждения цифр.</li>
+          <li><strong>Шаг 2 — в Claude Code.</strong> Скажите «синхронизируй экономику из артефакта» — Claude прочитает эту страницу, закроет пункты §11 ТЗ утверждёнными значениями, пересчитает <span class="mono">UNIT_ECONOMICS.md</span> и поправит цифры на артбордах V-08.</li>
+        </ol>
+      </section>
+
+      <section class="card">
+        <div class="card-h"><h2>Журнал операций</h2>
+          <span>
+            <button class="small" id="btn-log-json">Скачать JSON</button>
+            <button class="small" id="btn-log-csv">Скачать CSV</button>
+          </span>
+        </div>
+        <p class="card-sub">Каждая запись хранит входные параметры, результат и пошаговую арифметику — по ней расчёт проверяется вручную.</p>
+        <div id="log"></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="foot">
+    <h3>Источники прайсов и допущения</h3>
+    <ul>
+      <li>Тарифы Gemini API — <a href="https://ai.google.dev/gemini-api/docs/pricing">ai.google.dev/gemini-api/docs/pricing</a>, платный уровень, сверено 27.08.2026.</li>
+      <li>Токенизация входных фото — <a href="https://ai.google.dev/gemini-api/docs/image-understanding">image-understanding</a>: ≤384 px — 258 токенов, крупнее — тайлы 768×768 по 258 токенов.</li>
+      <li>Лимиты и переработки Supabase — <a href="https://supabase.com/pricing">supabase.com/pricing</a>.</li>
+      <li>gpt-image-1 и FLUX 1.1 [pro] — цены по публичным сводкам (сверено 27.08.2026); цену входных токенов у них подставьте вручную, если будете считать всерьёз.</li>
+      <li>Курс ЦБ РФ 84,46 ₽/$ на 26.08.2026; в расчёте по умолчанию 85 ₽/$.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="tt" id="tt"></div>
+
+<script type="application/json" id="mk-state">
+{
+  "version": 1,
+  "decision": null,
+  "log": [],
+  "inputs": {
+    "vendorId": "g25fi",
+    "custom": { "imgOut": 0.05, "imgIn": 0.5 },
+    "textIn": 0.30,
+    "textOut": 2.50,
+    "recogOut": 80,
+    "cardIn": 1200,
+    "cardOut": 450,
+    "photos": 2,
+    "photoTokens": 1032,
+    "promptTokens": 300,
+    "objects": 4,
+    "defect": 10,
+    "cardShare": 30,
+    "infraPerGen": 0.15,
+    "fx": 85,
+    "pointsPerObject": 10,
+    "cardExtra": 5,
+    "maxObjects": 4,
+    "startPoints": 20,
+    "packages": [
+      { "name": "Старт", "points": 100, "price": 149, "share": 50 },
+      { "name": "Стандарт", "points": 300, "price": 390, "share": 35 },
+      { "name": "Про", "points": 1000, "price": 1090, "share": 15 }
+    ],
+    "recurring": [
+      { "id": "supabase", "name": "Supabase Pro (БД, Storage, Edge Functions)", "value": 2125, "on": true },
+      { "id": "frontend", "name": "Хостинг фронтенда (Vercel/Netlify)", "value": 0, "on": true },
+      { "id": "domain", "name": "Домен (годовая цена / 12)", "value": 150, "on": true },
+      { "id": "mail", "name": "Почтовый сервис сверх Supabase", "value": 1700, "on": false },
+      { "id": "sentry", "name": "Мониторинг ошибок и логи", "value": 2200, "on": false },
+      { "id": "moderation", "name": "Модерация загружаемого контента", "value": 0, "on": false },
+      { "id": "accounting", "name": "Бухгалтерия и отчётность", "value": 3000, "on": true },
+      { "id": "insurance", "name": "Страховые взносы ИП (фикс. часть / 12)", "value": 4500, "on": true },
+      { "id": "support", "name": "Поддержка пользователей (часы × ставка)", "value": 6000, "on": false },
+      { "id": "marketing", "name": "Реклама и привлечение", "value": 15000, "on": false },
+      { "id": "reserve", "name": "Резерв на инциденты", "value": 2000, "on": false }
+    ],
+    "onetime": [
+      { "id": "dev", "name": "Разработка MVP", "value": 0, "on": true },
+      { "id": "design", "name": "Дизайн и брендинг", "value": 0, "on": true },
+      { "id": "legal", "name": "Регистрация, оферта, политика ПДн", "value": 15000, "on": true },
+      { "id": "infra", "name": "Настройка инфраструктуры и домена", "value": 5000, "on": true },
+      { "id": "launch", "name": "Стартовый маркетинг", "value": 30000, "on": true },
+      { "id": "reserveOne", "name": "Резерв запуска", "value": 20000, "on": true }
+    ],
+    "tax": 6,
+    "acquiring": 0,
+    "targetProfit": 50000,
+    "conversion": 10,
+    "packagesPerPayer": 1
+  }
+}
+</script>
+
+<script>
+(function () {
+  "use strict";
+
+  var VENDORS = [
+    { id: "g25fi", vendor: "Google", name: "Gemini 2.5 Flash Image", note: "Nano Banana · 1024 px · 1 290 ток.", imgOut: 0.039, imgIn: 0.30, verified: true },
+    { id: "g31fli", vendor: "Google", name: "Gemini 3.1 Flash Lite Image", note: "Nano Banana 2 Lite · 1K", imgOut: 0.0336, imgIn: 0.25, verified: true },
+    { id: "g31fi", vendor: "Google", name: "Gemini 3.1 Flash Image", note: "Nano Banana 2 · 1K", imgOut: 0.067, imgIn: 0.50, verified: true },
+    { id: "g3pi", vendor: "Google", name: "Gemini 3 Pro Image", note: "Nano Banana Pro · 1K/2K", imgOut: 0.134, imgIn: 2.00, verified: true },
+    { id: "oai", vendor: "OpenAI", name: "gpt-image-1, среднее качество", note: "1024² · снимается с поддержки 23.10.2026 · вход не сверен", imgOut: 0.042, imgIn: 0, verified: false },
+    { id: "flux", vendor: "Black Forest Labs", name: "FLUX 1.1 [pro] через Replicate", note: "фикс. цена за изображение · вход не тарифицируется отдельно", imgOut: 0.04, imgIn: 0, verified: false },
+    { id: "custom", vendor: "Свой", name: "Свой вендор", note: "подставьте цены вручную", imgOut: 0.05, imgIn: 0.5, verified: false }
+  ];
+
+  var PALETTE = ["#16A34A", "#3B82F6", "#D97706", "#DB2777"];
+
+  var stateEl = document.getElementById("mk-state");
+  var PUBLISHED = JSON.parse(stateEl.textContent);
+  var S = JSON.parse(JSON.stringify(PUBLISHED));
+  var DRAFT_KEY = "mk-econ-draft-v1";
+  var artifactNs = null;
+  var downloadsNs = null;
+  var saveMode = "unknown";
+
+  var LOG_KEY = "mk-econ-log-v1";
+
+  try {
+    var draft = localStorage.getItem(DRAFT_KEY);
+    if (draft) {
+      var parsed = JSON.parse(draft);
+      if (parsed && parsed.inputs) S.inputs = parsed.inputs;
+    }
+    // журнал, не доехавший до артефакта (страница открыта локально или сохранение недоступно)
+    var localLog = localStorage.getItem(LOG_KEY);
+    if (localLog) {
+      var lp = JSON.parse(localLog);
+      if (lp && lp.log && lp.log.length > (S.log || []).length) {
+        S.log = lp.log;
+        if (lp.decision && (!S.decision || lp.decision.ts > S.decision.ts)) S.decision = lp.decision;
+      }
+    }
+  } catch (e) { /* приватный режим — работаем без черновика */ }
+
+  // ---------- форматирование ----------
+  function rub(v, digits) {
+    var d = digits == null ? 0 : digits;
+    return v.toLocaleString("ru-RU", { minimumFractionDigits: d, maximumFractionDigits: d });
+  }
+  function usd(v, digits) {
+    return "$" + v.toFixed(digits == null ? 4 : digits);
+  }
+  function pct(v) { return v.toFixed(1).replace(".", ",") + "%"; }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]; }); }
+
+  function vendorById(id) {
+    for (var i = 0; i < VENDORS.length; i++) if (VENDORS[i].id === id) return VENDORS[i];
+    return VENDORS[0];
+  }
+
+  function vendorPrices(id) {
+    var v = vendorById(id);
+    if (id === "custom") return { imgOut: +S.inputs.custom.imgOut, imgIn: +S.inputs.custom.imgIn, name: v.name, vendor: v.vendor };
+    return { imgOut: v.imgOut, imgIn: v.imgIn, name: v.name, vendor: v.vendor };
+  }
+
+  // ---------- расчёт ----------
+  function calc(inp, vendorId) {
+    var p = vendorPrices(vendorId || inp.vendorId);
+    var m = [];
+    var inputTokens = inp.photos * inp.photoTokens + inp.promptTokens;
+    m.push("входные токены = фото × токены на фото + промпт = " + inp.photos + " × " + inp.photoTokens + " + " + inp.promptTokens + " = " + inputTokens);
+
+    var recog = inputTokens * inp.textIn / 1e6 + inp.recogOut * inp.textOut / 1e6;
+    m.push("распознавание = " + inputTokens + " × $" + inp.textIn + "/1M + " + inp.recogOut + " × $" + inp.textOut + "/1M = " + usd(recog, 5));
+
+    var obj = inputTokens * p.imgIn / 1e6 + p.imgOut;
+    m.push("объект (вызов) = " + inputTokens + " × $" + p.imgIn + "/1M + $" + p.imgOut + " = " + usd(obj, 5));
+
+    var objEff = obj / (1 - inp.defect / 100);
+    m.push("объект с учётом брака " + inp.defect + "% = " + usd(obj, 5) + " ÷ " + (1 - inp.defect / 100).toFixed(2) + " = " + usd(objEff, 5));
+
+    var card = inp.cardIn * inp.textIn / 1e6 + inp.cardOut * inp.textOut / 1e6;
+    m.push("тексты карточки = " + inp.cardIn + " × $" + inp.textIn + "/1M + " + inp.cardOut + " × $" + inp.textOut + "/1M = " + usd(card, 5));
+
+    var genUsd = recog + inp.objects * objEff + (inp.cardShare / 100) * card;
+    var genRub = genUsd * inp.fx + inp.infraPerGen;
+    m.push("генерация = распознавание + " + inp.objects + " × объект + " + inp.cardShare + "% × тексты = " + usd(genUsd, 5));
+    m.push("генерация, ₽ = " + usd(genUsd, 5) + " × " + inp.fx + " + инфра " + rub(inp.infraPerGen, 2) + " ₽ = " + rub(genRub, 2) + " ₽");
+
+    var objRub = objEff * inp.fx;
+    var pointRub = objRub / inp.pointsPerObject;
+    m.push("себестоимость балла = объект " + rub(objRub, 2) + " ₽ ÷ " + inp.pointsPerObject + " баллов = " + rub(pointRub, 3) + " ₽");
+
+    var shareSum = 0, i;
+    for (i = 0; i < inp.packages.length; i++) shareSum += +inp.packages[i].share || 0;
+    if (shareSum <= 0) shareSum = 1;
+
+    var packs = inp.packages.map(function (pk) {
+      var cost = pk.points * pointRub;
+      var margin = pk.price - cost;
+      return {
+        name: pk.name, points: pk.points, price: pk.price,
+        share: (+pk.share || 0) / shareSum,
+        perPoint: pk.points ? pk.price / pk.points : 0,
+        cost: cost, margin: margin,
+        marginPct: pk.price ? margin / pk.price * 100 : 0
+      };
+    });
+
+    var avgPrice = 0, avgPoints = 0;
+    for (i = 0; i < packs.length; i++) { avgPrice += packs[i].share * packs[i].price; avgPoints += packs[i].share * packs[i].points; }
+    m.push("средний пакет = " + rub(avgPrice, 0) + " ₽ и " + rub(avgPoints, 0) + " баллов (по долям покупок)");
+
+    var fixed = 0;
+    for (i = 0; i < inp.recurring.length; i++) if (inp.recurring[i].on) fixed += +inp.recurring[i].value || 0;
+    var oneTime = 0;
+    for (i = 0; i < inp.onetime.length; i++) if (inp.onetime[i].on) oneTime += +inp.onetime[i].value || 0;
+
+    var conv = Math.max(inp.conversion, 0.01) / 100;
+    var perPayer = Math.max(inp.packagesPerPayer, 0.01);
+    var freePerPackage = (inp.startPoints * pointRub) / (conv * perPayer);
+    m.push("бесплатные баллы на один проданный пакет = " + inp.startPoints + " × " + rub(pointRub, 3) + " ₽ ÷ (" + pct(inp.conversion) + " × " + perPayer + ") = " + rub(freePerPackage, 2) + " ₽");
+
+    var taxRate = (inp.tax + inp.acquiring) / 100;
+    var contrib = avgPrice - avgPoints * pointRub - avgPrice * taxRate - freePerPackage;
+    m.push("вклад пакета = " + rub(avgPrice, 0) + " − " + rub(avgPoints * pointRub, 2) + " (ИИ) − " + rub(avgPrice * taxRate, 2) + " (налог+эквайринг) − " + rub(freePerPackage, 2) + " (стартовые баллы) = " + rub(contrib, 2) + " ₽");
+
+    var breakEven = contrib > 0 ? fixed / contrib : Infinity;
+    var forTarget = contrib > 0 ? (fixed + inp.targetProfit) / contrib : Infinity;
+    m.push("безубыточность = постоянные " + rub(fixed, 0) + " ₽ ÷ вклад " + rub(contrib, 2) + " ₽ = " + (isFinite(breakEven) ? Math.ceil(breakEven) + " пакетов/мес" : "недостижима"));
+    m.push("для прибыли " + rub(inp.targetProfit, 0) + " ₽ = (" + rub(fixed, 0) + " + " + rub(inp.targetProfit, 0) + ") ÷ " + rub(contrib, 2) + " = " + (isFinite(forTarget) ? Math.ceil(forTarget) + " пакетов/мес" : "недостижимо"));
+
+    var n = isFinite(forTarget) ? forTarget : 0;
+    var revenue = n * avgPrice;
+    var aiCost = n * avgPoints * pointRub;
+    var payers = n / perPayer;
+    var regs = payers / conv;
+    var freeCost = regs * inp.startPoints * pointRub;
+    var taxCost = revenue * taxRate;
+    var profit = revenue - aiCost - freeCost - taxCost - fixed;
+    var generations = inp.objects > 0 ? (n * avgPoints) / (inp.pointsPerObject * inp.objects) : 0;
+    var payback = profit > 0 ? oneTime / profit : Infinity;
+
+    return {
+      prices: p, inputTokens: inputTokens, recog: recog, obj: obj, objEff: objEff, card: card,
+      genUsd: genUsd, genRub: genRub, objRub: objRub, pointRub: pointRub,
+      packs: packs, avgPrice: avgPrice, avgPoints: avgPoints,
+      fixed: fixed, oneTime: oneTime, freePerPackage: freePerPackage, contrib: contrib,
+      breakEven: breakEven, forTarget: forTarget,
+      revenue: revenue, aiCost: aiCost, freeCost: freeCost, taxCost: taxCost, profit: profit,
+      payers: payers, regs: regs, generations: generations, payback: payback,
+      avgPointPrice: avgPoints ? avgPrice / avgPoints : 0,
+      breakdown: [
+        { label: "Изображения", value: inp.objects * objEff * inp.fx, color: PALETTE[0] },
+        { label: "Распознавание", value: recog * inp.fx, color: PALETTE[1] },
+        { label: "Тексты карточки", value: (inp.cardShare / 100) * card * inp.fx, color: PALETTE[2] },
+        { label: "Инфраструктура", value: inp.infraPerGen, color: PALETTE[3] }
+      ],
+      math: m
+    };
+  }
+
+  // ---------- поля ввода ----------
+  var FIELDS = {
+    "text-model": [
+      { path: "textIn", label: "Вход текстовой модели, $/1M токенов", step: 0.01 },
+      { path: "textOut", label: "Выход текстовой модели, $/1M токенов", step: 0.01 },
+      { path: "recogOut", label: "Ответ распознавания, токенов", step: 10, hint: "название товара и категория" },
+      { path: "cardIn", label: "Вход для текстов карточки, токенов", step: 50 },
+      { path: "cardOut", label: "Выход текстов карточки, токенов", step: 50, hint: "заголовок и описание" }
+    ],
+    "product": [
+      { path: "photos", label: "Фото на генерацию", step: 1, hint: "по FR-02 — до 4" },
+      { path: "photoTokens", label: "Токенов на фото", step: 1, select: [[258, "258 — фото ужато до 384 px"], [1032, "1032 — фото крупнее 384 px"]] },
+      { path: "promptTokens", label: "Промпт сценария, токенов", step: 50 },
+      { path: "objects", label: "Объектов в средней генерации", step: 1 },
+      { path: "defect", label: "Доля неудачных объектов, %", step: 1, hint: "вызов оплачен, баллы возвращены" },
+      { path: "cardShare", label: "Доля генераций типа «карточка», %", step: 5 },
+      { path: "infraPerGen", label: "Инфраструктура на генерацию, ₽", step: 0.05, hint: "хранение и отдача файлов" },
+      { path: "fx", label: "Курс, ₽ за $", step: 0.5 }
+    ],
+    "pricing": [
+      { path: "pointsPerObject", label: "Баллов за объект", step: 1 },
+      { path: "cardExtra", label: "Надбавка за «карточку», баллов", step: 1 },
+      { path: "maxObjects", label: "Максимум объектов за генерацию", step: 1 },
+      { path: "startPoints", label: "Стартовых баллов, N", step: 5, hint: "начисляются после подтверждения email" }
+    ],
+    "percents": [
+      { path: "tax", label: "Налог с выручки, %", step: 1 },
+      { path: "acquiring", label: "Эквайринг, %", step: 0.5, hint: "в этой версии оплаты нет" }
+    ],
+    "goal": [
+      { path: "targetProfit", label: "Желаемая прибыль, ₽/мес", step: 5000 },
+      { path: "conversion", label: "Конверсия регистрация → покупка, %", step: 1 },
+      { path: "packagesPerPayer", label: "Пакетов на платящего в месяц", step: 0.5 }
+    ]
+  };
+
+  function inputRow(f) {
+    var val = S.inputs[f.path];
+    var control;
+    if (f.select) {
+      control = '<select data-path="' + f.path + '">' + f.select.map(function (o) {
+        return '<option value="' + o[0] + '"' + (+val === o[0] ? " selected" : "") + ">" + esc(o[1]) + "</option>";
+      }).join("") + "</select>";
+    } else {
+      control = '<input type="number" step="' + f.step + '" value="' + val + '" data-path="' + f.path + '">';
+    }
+    return '<div class="row"><label>' + esc(f.label) +
+      (f.hint ? '<span class="hint">' + esc(f.hint) + "</span>" : "") + "</label>" + control + "</div>";
+  }
+
+  function renderInputs() {
+    Object.keys(FIELDS).forEach(function (key) {
+      var host = document.getElementById(key);
+      if (!host) return;
+      if (key === "product" || key === "text-model") {
+        host.innerHTML = FIELDS[key].map(inputRow).join("");
+      } else {
+        host.innerHTML = FIELDS[key].map(inputRow).join("");
+      }
+    });
+
+    // вендоры
+    document.getElementById("vendors").innerHTML = VENDORS.map(function (v) {
+      var on = S.inputs.vendorId === v.id;
+      var pr = v.id === "custom" ? S.inputs.custom.imgOut : v.imgOut;
+      return '<label class="vendor" data-on="' + (on ? 1 : 0) + '">' +
+        '<input type="radio" name="vendor" value="' + v.id + '"' + (on ? " checked" : "") + ">" +
+        '<span><span class="v-name">' + esc(v.vendor + " · " + v.name) + "</span>" +
+        '<span class="v-note">' + esc(v.note) + (v.verified ? "" : " · не сверено") + "</span></span>" +
+        '<span class="v-price mono">$' + (+pr).toFixed(4) + "</span></label>";
+    }).join("");
+
+    document.getElementById("vendor-custom").innerHTML = S.inputs.vendorId === "custom"
+      ? '<div class="row"><label>Свой вендор: $ за изображение</label><input type="number" step="0.001" value="' + S.inputs.custom.imgOut + '" data-path="custom.imgOut"></div>' +
+        '<div class="row"><label>Свой вендор: вход, $/1M токенов</label><input type="number" step="0.05" value="' + S.inputs.custom.imgIn + '" data-path="custom.imgIn"></div>'
+      : "";
+
+    // пакеты
+    document.getElementById("packages").innerHTML =
+      "<thead><tr><th>Пакет</th><th>Баллов</th><th>Цена, ₽</th><th>Доля, %</th></tr></thead><tbody>" +
+      S.inputs.packages.map(function (p, i) {
+        return "<tr><td><input type=\"text\" style=\"text-align:left\" value=\"" + esc(p.name) + '" data-pack="' + i + '" data-key="name"></td>' +
+          '<td><input type="number" step="10" value="' + p.points + '" data-pack="' + i + '" data-key="points"></td>' +
+          '<td><input type="number" step="10" value="' + p.price + '" data-pack="' + i + '" data-key="price"></td>' +
+          '<td><input type="number" step="5" value="' + p.share + '" data-pack="' + i + '" data-key="share"></td></tr>';
+      }).join("") + "</tbody>";
+
+    // списки расходов
+    ["recurring", "onetime"].forEach(function (kind) {
+      document.getElementById(kind).innerHTML = S.inputs[kind].map(function (r, i) {
+        return '<div class="row toggle"><input type="checkbox"' + (r.on ? " checked" : "") + ' data-list="' + kind + '" data-idx="' + i + '" data-key="on" aria-label="Учитывать: ' + esc(r.name) + '">' +
+          "<label>" + esc(r.name) + "</label>" +
+          '<input type="number" step="100" value="' + r.value + '" data-list="' + kind + '" data-idx="' + i + '" data-key="value">' +
+          "</div>";
+      }).join("");
+    });
+  }
+
+  // ---------- SVG ----------
+  var NS = "http://www.w3.org/2000/svg";
+  function svg(w, h) {
+    var s = document.createElementNS(NS, "svg");
+    s.setAttribute("viewBox", "0 0 " + w + " " + h);
+    s.setAttribute("width", "100%");
+    s.setAttribute("role", "img");
+    return s;
+  }
+  function node(tag, attrs, text) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  function ink(v) { return getComputedStyle(document.body).getPropertyValue(v).trim(); }
+
+  var tt = document.getElementById("tt");
+  function bindTip(el, html) {
+    el.addEventListener("mousemove", function (ev) {
+      tt.innerHTML = html;
+      tt.setAttribute("data-show", "1");
+      var x = Math.min(ev.clientX + 14, window.innerWidth - 280);
+      tt.style.left = x + "px";
+      tt.style.top = (ev.clientY + 16) + "px";
+    });
+    el.addEventListener("mouseleave", function () { tt.removeAttribute("data-show"); });
+  }
+
+  function chartBreakdown(r) {
+    var host = document.getElementById("chart-breakdown");
+    host.innerHTML = "";
+    var W = 520, H = 88, pad = 2;
+    var total = r.breakdown.reduce(function (a, b) { return a + b.value; }, 0) || 1;
+    var s = svg(W, H);
+    s.setAttribute("aria-label", "Структура себестоимости одной генерации");
+    var x = 0;
+    r.breakdown.forEach(function (b, i) {
+      var w = Math.max((b.value / total) * W - pad, 0);
+      var rect = node("rect", { x: x, y: 18, width: w, height: 34, rx: 4, fill: b.color });
+      bindTip(rect, "<strong>" + esc(b.label) + "</strong><br>" + rub(b.value, 2) + " ₽ · " + pct(b.value / total * 100));
+      s.appendChild(rect);
+      if (w > 58) {
+        s.appendChild(node("text", { x: x + 8, y: 40, fill: "#FFFFFF", "font-size": 12, "font-family": "IBM Plex Mono, monospace" }, pct(b.value / total * 100)));
+      }
+      x += w + pad;
+    });
+    s.appendChild(node("text", { x: 0, y: 12, fill: ink("--ink-2"), "font-size": 12 }, "Всего " + rub(r.genRub, 2) + " ₽ за генерацию из " + S.inputs.objects + " объектов"));
+    s.appendChild(node("text", { x: 0, y: 74, fill: ink("--ink-3"), "font-size": 11.5 }, "Себестоимость одного объекта — " + rub(r.objRub, 2) + " ₽, одного балла — " + rub(r.pointRub, 3) + " ₽"));
+    host.appendChild(s);
+
+    document.getElementById("legend-breakdown").innerHTML = r.breakdown.map(function (b) {
+      return '<span><span class="sw" style="background:' + b.color + '"></span>' + esc(b.label) + " — " + rub(b.value, 2) + " ₽</span>";
+    }).join("");
+
+    document.getElementById("tbl-breakdown").innerHTML =
+      "<thead><tr><th>Статья</th><th>₽ за генерацию</th><th>Доля</th></tr></thead><tbody>" +
+      r.breakdown.map(function (b) {
+        return "<tr><td>" + esc(b.label) + '</td><td class="num">' + rub(b.value, 2) + '</td><td class="num">' + pct(b.value / total * 100) + "</td></tr>";
+      }).join("") + '<tr><td><strong>Итого</strong></td><td class="num"><strong>' + rub(total, 2) + "</strong></td><td></td></tr></tbody>";
+  }
+
+  function chartVendors(r) {
+    var host = document.getElementById("chart-vendors");
+    host.innerHTML = "";
+    var rows = VENDORS.map(function (v) {
+      var rr = calc(S.inputs, v.id);
+      return { id: v.id, label: v.vendor + " · " + v.name, value: rr.pointRub, sel: v.id === S.inputs.vendorId };
+    });
+    var max = Math.max.apply(null, rows.map(function (x) { return x.value; }).concat([r.avgPointPrice])) * 1.15;
+    var W = 520, rowH = 26, H = rows.length * rowH + 34, labelW = 210;
+    var s = svg(W, H);
+    s.setAttribute("aria-label", "Себестоимость балла по вендорам");
+    rows.forEach(function (row, i) {
+      var y = i * rowH + 8;
+      var w = Math.max((row.value / max) * (W - labelW - 60), 1);
+      s.appendChild(node("text", { x: 0, y: y + 13, fill: row.sel ? ink("--ink") : ink("--ink-2"), "font-size": 12 }, row.label.length > 34 ? row.label.slice(0, 33) + "…" : row.label));
+      var bar = node("rect", { x: labelW, y: y + 3, width: w, height: 14, rx: 4, fill: row.sel ? PALETTE[0] : ink("--line-strong") });
+      bindTip(bar, "<strong>" + esc(row.label) + "</strong><br>" + rub(row.value, 3) + " ₽ за балл");
+      s.appendChild(bar);
+      s.appendChild(node("text", { x: labelW + w + 6, y: y + 14, fill: ink("--ink-2"), "font-size": 11.5, "font-family": "IBM Plex Mono, monospace" }, rub(row.value, 3)));
+    });
+    var lx = labelW + (r.avgPointPrice / max) * (W - labelW - 60);
+    s.appendChild(node("line", { x1: lx, y1: 4, x2: lx, y2: rows.length * rowH + 6, stroke: ink("--ink-3"), "stroke-width": 1, "stroke-dasharray": "4 3" }));
+    s.appendChild(node("text", { x: 0, y: H - 6, fill: ink("--ink-3"), "font-size": 11.5 }, "Пунктир — цена балла для покупателя: " + rub(r.avgPointPrice, 2) + " ₽"));
+    host.appendChild(s);
+
+    document.getElementById("tbl-vendors").innerHTML =
+      "<thead><tr><th>Вендор</th><th>₽ за балл</th><th>Маржа «Стандарта»</th></tr></thead><tbody>" +
+      rows.map(function (row) {
+        var rr = calc(S.inputs, row.id);
+        var std = rr.packs[1] || rr.packs[0];
+        return "<tr><td>" + esc(row.label) + '</td><td class="num">' + rub(row.value, 3) + '</td><td class="num" style="color:' + (std.margin < 0 ? "var(--neg)" : "inherit") + '">' + pct(std.marginPct) + "</td></tr>";
+      }).join("") + "</tbody>";
+  }
+
+  function chartBreakeven(r) {
+    var host = document.getElementById("chart-breakeven");
+    host.innerHTML = "";
+    var W = 520, H = 220, padL = 58, padB = 28, padT = 10, padR = 12;
+    var maxX = Math.max(isFinite(r.forTarget) ? r.forTarget * 1.4 : 100, isFinite(r.breakEven) ? r.breakEven * 2 : 100, 10);
+    var yAt = function (x) { return x * r.contrib - r.fixed; };
+    var maxY = Math.max(yAt(maxX), 1000), minY = Math.min(-r.fixed, 0);
+    var X = function (x) { return padL + (x / maxX) * (W - padL - padR); };
+    var Y = function (y) { return padT + (1 - (y - minY) / (maxY - minY)) * (H - padT - padB); };
+    var s = svg(W, H);
+    s.setAttribute("aria-label", "Прибыль в зависимости от числа проданных пакетов");
+
+    [0, 0.25, 0.5, 0.75, 1].forEach(function (t) {
+      var yv = minY + t * (maxY - minY);
+      s.appendChild(node("line", { x1: padL, y1: Y(yv), x2: W - padR, y2: Y(yv), stroke: ink("--line"), "stroke-width": 1 }));
+      s.appendChild(node("text", { x: padL - 6, y: Y(yv) + 4, fill: ink("--ink-3"), "font-size": 11, "text-anchor": "end", "font-family": "IBM Plex Mono, monospace" }, Math.round(yv / 1000) + "к"));
+    });
+    s.appendChild(node("line", { x1: padL, y1: Y(0), x2: W - padR, y2: Y(0), stroke: ink("--ink-3"), "stroke-width": 1.5 }));
+    s.appendChild(node("path", {
+      d: "M " + X(0) + " " + Y(yAt(0)) + " L " + X(maxX) + " " + Y(yAt(maxX)),
+      stroke: PALETTE[0], "stroke-width": 2, fill: "none", "stroke-linecap": "round"
+    }));
+
+    if (isFinite(r.breakEven) && r.breakEven <= maxX) {
+      s.appendChild(node("circle", { cx: X(r.breakEven), cy: Y(0), r: 4.5, fill: ink("--chart-surface"), stroke: PALETTE[0], "stroke-width": 2 }));
+      s.appendChild(node("text", { x: X(r.breakEven) + 8, y: Y(0) - 8, fill: ink("--ink-2"), "font-size": 11.5 }, "ноль: " + Math.ceil(r.breakEven) + " пак."));
+    }
+    if (isFinite(r.forTarget) && r.forTarget <= maxX) {
+      s.appendChild(node("circle", { cx: X(r.forTarget), cy: Y(S.inputs.targetProfit), r: 4.5, fill: PALETTE[0] }));
+      s.appendChild(node("text", { x: X(r.forTarget) - 4, y: Y(S.inputs.targetProfit) - 10, fill: ink("--ink"), "font-size": 11.5, "text-anchor": "end" }, "цель: " + Math.ceil(r.forTarget) + " пак."));
+    }
+    s.appendChild(node("text", { x: W - padR, y: H - 8, fill: ink("--ink-3"), "font-size": 11, "text-anchor": "end" }, "пакетов в месяц →"));
+    host.appendChild(s);
+
+    var pts = [0, 0.25, 0.5, 0.75, 1].map(function (t) { return Math.round(maxX * t); });
+    document.getElementById("tbl-breakeven").innerHTML =
+      "<thead><tr><th>Пакетов/мес</th><th>Прибыль, ₽/мес</th></tr></thead><tbody>" +
+      pts.map(function (x) { return '<tr><td class="num">' + x + '</td><td class="num">' + rub(yAt(x), 0) + "</td></tr>"; }).join("") + "</tbody>";
+  }
+
+  function chartWaterfall(r) {
+    var host = document.getElementById("chart-waterfall");
+    host.innerHTML = "";
+    var steps = [
+      { label: "Выручка", value: r.revenue, kind: "total" },
+      { label: "Вызовы ИИ", value: -r.aiCost, kind: "neg" },
+      { label: "Стартовые баллы", value: -r.freeCost, kind: "neg" },
+      { label: "Постоянные", value: -r.fixed, kind: "neg" },
+      { label: "Налог", value: -r.taxCost, kind: "neg" },
+      { label: "Прибыль", value: r.profit, kind: "result" }
+    ];
+    var W = 520, H = 232, padT = 12, padB = 44, padL = 8;
+    var maxV = Math.max(r.revenue, 1);
+    var Y = function (v) { return padT + (1 - v / maxV) * (H - padT - padB); };
+    var s = svg(W, H);
+    s.setAttribute("aria-label", "Отчёт: из выручки вычитаются расходы");
+    var bw = (W - padL * 2) / steps.length - 10;
+    var running = 0;
+    steps.forEach(function (st, i) {
+      var x = padL + i * ((W - padL * 2) / steps.length) + 5;
+      var top, bottom, color;
+      if (st.kind === "total") { top = st.value; bottom = 0; color = PALETTE[0]; running = st.value; }
+      else if (st.kind === "result") { top = Math.max(st.value, 0); bottom = Math.min(st.value, 0); color = st.value >= 0 ? PALETTE[0] : ink("--neg"); }
+      else { top = running; bottom = running + st.value; color = ink("--neg"); running = bottom; }
+      var y1 = Y(Math.max(top, bottom)), y2 = Y(Math.min(top, bottom));
+      var rect = node("rect", { x: x, y: y1, width: bw, height: Math.max(y2 - y1, 2), rx: 4, fill: color, opacity: st.kind === "neg" ? 0.9 : 1 });
+      bindTip(rect, "<strong>" + esc(st.label) + "</strong><br>" + rub(st.value, 0) + " ₽/мес");
+      s.appendChild(rect);
+      s.appendChild(node("text", { x: x + bw / 2, y: H - 26, fill: ink("--ink-2"), "font-size": 11, "text-anchor": "middle" }, st.label.length > 13 ? st.label.slice(0, 12) + "…" : st.label));
+      s.appendChild(node("text", { x: x + bw / 2, y: H - 12, fill: st.value < 0 ? ink("--neg") : ink("--ink"), "font-size": 11.5, "text-anchor": "middle", "font-family": "IBM Plex Mono, monospace" }, (st.value < 0 ? "−" : "") + rub(Math.abs(st.value) / 1000, 1) + "к"));
+    });
+    host.appendChild(s);
+
+    document.getElementById("tbl-waterfall").innerHTML =
+      "<thead><tr><th>Статья</th><th>₽/мес</th></tr></thead><tbody>" +
+      steps.map(function (st) { return "<tr><td>" + esc(st.label) + '</td><td class="num">' + rub(st.value, 0) + "</td></tr>"; }).join("") + "</tbody>";
+  }
+
+  function scheme(r) {
+    var host = document.getElementById("scheme");
+    host.innerHTML = "";
+    var W = 900, H = 190;
+    var s = svg(W, H);
+    s.setAttribute("aria-label", "Схема: покупка пакета, списание баллов, вызов вендора");
+    var boxes = [
+      { x: 0, w: 176, t: "Покупка пакета", s: rub(r.avgPrice, 0) + " ₽ приходят", c: PALETTE[0] },
+      { x: 212, w: 176, t: "Баллы на балансе", s: rub(r.avgPoints, 0) + " баллов", c: PALETTE[1] },
+      { x: 424, w: 176, t: "Генерация", s: "−" + (S.inputs.pointsPerObject * S.inputs.objects) + " баллов", c: PALETTE[2] },
+      { x: 636, w: 176, t: "Вызов вендора", s: rub(r.genRub, 2) + " ₽ уходят", c: PALETTE[3] }
+    ];
+    boxes.forEach(function (b, i) {
+      s.appendChild(node("rect", { x: b.x, y: 34, width: b.w, height: 66, rx: 8, fill: ink("--surface"), stroke: b.c, "stroke-width": 1.5 }));
+      s.appendChild(node("rect", { x: b.x, y: 34, width: 4, height: 66, rx: 2, fill: b.c }));
+      s.appendChild(node("text", { x: b.x + 16, y: 60, fill: ink("--ink"), "font-size": 13.5, "font-weight": 500 }, b.t));
+      s.appendChild(node("text", { x: b.x + 16, y: 80, fill: ink("--ink-2"), "font-size": 12.5, "font-family": "IBM Plex Mono, monospace" }, b.s));
+      if (i < boxes.length - 1) {
+        var ax = b.x + b.w + 6, ay = 67;
+        s.appendChild(node("path", { d: "M " + ax + " " + ay + " L " + (ax + 24) + " " + ay, stroke: ink("--line-strong"), "stroke-width": 1.5 }));
+        s.appendChild(node("path", { d: "M " + (ax + 24) + " " + ay + " l -6 -4 v 8 z", fill: ink("--line-strong") }));
+      }
+    });
+    s.appendChild(node("text", { x: 0, y: 20, fill: ink("--ink-3"), "font-size": 12 }, "Выручка приходит здесь ↓, а расход возникает только на четвёртом шаге — разрыв во времени и есть оборотный капитал"));
+    s.appendChild(node("rect", { x: 0, y: 118, width: 812, height: 52, rx: 8, fill: ink("--surface-2") }));
+    s.appendChild(node("text", { x: 16, y: 140, fill: ink("--ink"), "font-size": 13 }, "Журнал операций (ledger) — единственный источник правды: каждое начисление и списание с ключом идемпотентности"));
+    s.appendChild(node("text", { x: 16, y: 158, fill: ink("--ink-2"), "font-size": 12 }, "Неудачный объект → баллы возвращаются пользователю, но вызов вендора уже оплачен: это и есть заложенные " + S.inputs.defect + "% брака"));
+    host.appendChild(s);
+  }
+
+  // ---------- вывод ----------
+  function renderResults(r) {
+    var inp = S.inputs;
+    document.getElementById("vendor-pill").textContent = r.prices.vendor + " · " + r.prices.name;
+    document.getElementById("result-sub").textContent =
+      "Себестоимость считается от вызова вендора и раскладывается на баллы; всё остальное — производные от неё.";
+
+    var std = r.packs[1] || r.packs[0];
+    var tiles = [
+      { k: "Себестоимость объекта", v: rub(r.objRub, 2), u: "₽ · " + usd(r.objEff, 4) },
+      { k: "Себестоимость балла", v: rub(r.pointRub, 3), u: "₽ за балл" },
+      { k: "Маржа «" + std.name + "»", v: pct(std.marginPct), u: rub(std.margin, 0) + " ₽ с пакета", cls: std.margin > 0 ? "good" : "bad" },
+      { k: "Безубыточность", v: isFinite(r.breakEven) ? Math.ceil(r.breakEven) : "—", u: "пакетов в месяц", cls: isFinite(r.breakEven) ? "" : "bad" },
+      { k: "Для прибыли " + rub(inp.targetProfit, 0) + " ₽", v: isFinite(r.forTarget) ? Math.ceil(r.forTarget) : "—", u: "пакетов · " + Math.ceil(r.payers) + " платящих · " + Math.ceil(r.regs) + " регистраций" },
+      { k: "Окупаемость вложений", v: isFinite(r.payback) ? r.payback.toFixed(1).replace(".", ",") : "—", u: "мес при " + rub(r.oneTime, 0) + " ₽ единоразовых" }
+    ];
+    document.getElementById("tiles").innerHTML = tiles.map(function (t) {
+      return '<div class="tile ' + (t.cls || "") + '"><div class="k">' + esc(t.k) + '</div><div class="v num">' + t.v + '</div><div class="u">' + esc(t.u) + "</div></div>";
+    }).join("");
+
+    var vs = [];
+    var neg = r.packs.filter(function (p) { return p.margin <= 0; });
+    if (neg.length) {
+      vs.push(["bad", "Убыточные пакеты: " + neg.map(function (p) { return p.name; }).join(", ") +
+        ". При себестоимости балла " + rub(r.pointRub, 3) + " ₽ цена пакета ниже его себестоимости — поднимайте цену или цену объекта в баллах."]);
+    }
+    if (r.contrib <= 0) {
+      vs.push(["bad", "Вклад пакета отрицательный: сколько ни продавай, прибыли не будет. Проверьте стартовые баллы и конверсию — бесплатные баллы съедают всю маржу."]);
+    } else {
+      var freeShare = r.freePerPackage / r.avgPrice * 100;
+      if (freeShare > 35) {
+        vs.push(["warn", "Стартовые баллы съедают " + pct(freeShare) + " среднего чека: " + rub(r.freePerPackage, 0) +
+          " ₽ на каждый проданный пакет при конверсии " + pct(inp.conversion) + ". Уменьшите N или поднимите конверсию."]);
+      }
+    }
+    if (r.packs.length > 1) {
+      var best = r.packs.slice().sort(function (a, b) { return a.perPoint - b.perPoint; })[0];
+      var worst = r.packs.slice().sort(function (a, b) { return b.perPoint - a.perPoint; })[0];
+      if (best.perPoint >= worst.perPoint) {
+        vs.push(["warn", "У пакетов нет скидки за объём: цена балла одинаковая, покупать большой пакет незачем."]);
+      }
+    }
+    if (!vs.length) {
+      vs.push(["ok", "Модель сходится: каждый пакет прибыльный, вклад пакета " + rub(r.contrib, 0) +
+        " ₽, безубыточность — " + Math.ceil(r.breakEven) + " пакетов в месяц."]);
+    }
+    document.getElementById("verdicts").innerHTML = vs.map(function (v) {
+      return '<div class="verdict ' + v[0] + '"><span>' + esc(v[1]) + "</span></div>";
+    }).join("");
+
+    document.getElementById("pack-table").innerHTML =
+      "<thead><tr><th>Пакет</th><th>Баллов</th><th>Цена, ₽</th><th>₽ за балл</th><th>Себестоимость, ₽</th><th>Маржа, ₽</th><th>Маржа, %</th></tr></thead><tbody>" +
+      r.packs.map(function (p) {
+        var c = p.margin < 0 ? ' style="color:var(--neg)"' : "";
+        return "<tr><td>" + esc(p.name) + '</td><td class="num">' + rub(p.points, 0) + '</td><td class="num">' + rub(p.price, 0) +
+          '</td><td class="num">' + rub(p.perPoint, 2) + '</td><td class="num">' + rub(p.cost, 2) +
+          '</td><td class="num"' + c + ">" + rub(p.margin, 0) + '</td><td class="num"' + c + ">" + pct(p.marginPct) + "</td></tr>";
+      }).join("") + "</tbody>";
+
+    chartBreakdown(r);
+    chartVendors(r);
+    chartBreakeven(r);
+    chartWaterfall(r);
+    scheme(r);
+  }
+
+  function decisionSummary(r) {
+    var inp = S.inputs;
+    return {
+      startPoints: inp.startPoints,
+      pointsPerObject: inp.pointsPerObject,
+      cardExtra: inp.cardExtra,
+      maxObjects: inp.maxObjects,
+      packages: inp.packages.map(function (p) { return { name: p.name, points: p.points, price: p.price }; }),
+      vendorBasis: r.prices.vendor + " · " + r.prices.name,
+      costPerObjectRub: +r.objRub.toFixed(2),
+      costPerPointRub: +r.pointRub.toFixed(3),
+      marginPct: r.packs.map(function (p) { return { name: p.name, pct: +p.marginPct.toFixed(1) }; }),
+      breakEvenPackages: isFinite(r.breakEven) ? Math.ceil(r.breakEven) : null,
+      targetProfit: inp.targetProfit,
+      packagesForTarget: isFinite(r.forTarget) ? Math.ceil(r.forTarget) : null,
+      fx: inp.fx
+    };
+  }
+
+  function logEntry(kind, r) {
+    return {
+      ts: new Date().toISOString(),
+      kind: kind,
+      summary: decisionSummary(r),
+      inputs: JSON.parse(JSON.stringify(S.inputs)),
+      math: r.math
+    };
+  }
+
+  function renderLog() {
+    var host = document.getElementById("log");
+    if (!S.log.length) {
+      host.innerHTML = '<p class="card-sub" style="margin:0">Пусто. Нажмите «Зафиксировать расчёт» или «Утвердить цифры» — запись появится здесь.</p>';
+      return;
+    }
+    host.innerHTML = S.log.slice().reverse().map(function (e) {
+      var d = new Date(e.ts);
+      var when = d.toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+      var s = e.summary;
+      return '<div class="log-entry"><div class="log-head"><strong>' +
+        (e.kind === "apply" ? "Утверждено" : "Расчёт") + "</strong><span class=\"mono\">" + when + "</span></div>" +
+        '<div style="font-size:13px;color:var(--ink-2);margin-top:4px">' +
+        esc(s.vendorBasis) + " · объект " + rub(s.costPerObjectRub, 2) + " ₽ · балл " + rub(s.costPerPointRub, 3) +
+        " ₽ · N=" + s.startPoints + " · " + s.pointsPerObject + " баллов за объект · безубыточность " +
+        (s.breakEvenPackages == null ? "—" : s.breakEvenPackages + " пак./мес") + "</div>" +
+        "<details><summary>Арифметика шаг за шагом</summary><div class=\"math\">" +
+        e.math.map(function (line) { return "<div>" + esc(line) + "</div>"; }).join("") + "</div></details></div>";
+    }).join("");
+  }
+
+  function renderDecisionBanner() {
+    var host = document.getElementById("decision-banner");
+    var st = document.getElementById("apply-status");
+    if (!S.decision) {
+      host.innerHTML = "";
+      st.textContent = saveMode === "off"
+        ? "Сохранение в артефакт недоступно в этом окне — расчёт можно скачать журналом."
+        : "Ничего ещё не утверждали.";
+      return;
+    }
+    var d = new Date(S.decision.ts);
+    var when = d.toLocaleString("ru-RU", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    var s = S.decision.summary;
+    host.innerHTML = '<div class="card" style="border-color:var(--brand);background:var(--brand-wash);margin-bottom:16px">' +
+      '<div class="card-h"><h2>Цифры утверждены</h2><span class="pill on mono">' + when + "</span></div>" +
+      "<p style=\"margin:0 0 8px;font-size:14px\">N = <strong>" + s.startPoints + "</strong> стартовых баллов · <strong>" +
+      s.pointsPerObject + "</strong> баллов за объект (+" + s.cardExtra + " за «карточку») · максимум <strong>" + s.maxObjects +
+      "</strong> объектов · пакеты " + s.packages.map(function (p) { return p.points + " за " + p.price + " ₽"; }).join(" · ") + "</p>" +
+      '<p style="margin:0;font-size:13px;color:var(--ink-2)">Основание расчёта — ' + esc(s.vendorBasis) +
+      ", себестоимость балла " + rub(s.costPerPointRub, 3) + " ₽ при курсе " + s.fx + " ₽/$. " +
+      "Дальше: скажите Claude Code «синхронизируй экономику из артефакта» — он закроет пункты §11 ТЗ этими значениями.</p></div>";
+    st.textContent = "Утверждено " + when + ". Ждёт синхронизации в ТЗ.";
+  }
+
+  // ---------- сохранение ----------
+  function saveDraft() {
+    try { localStorage.setItem(DRAFT_KEY, JSON.stringify({ inputs: S.inputs })); } catch (e) { /* нет доступа к хранилищу */ }
+  }
+
+  function saveLogLocally() {
+    try { localStorage.setItem(LOG_KEY, JSON.stringify({ log: S.log, decision: S.decision })); } catch (e) { /* нет доступа к хранилищу */ }
+  }
+
+  function stateJson() {
+    return JSON.stringify(S).replace(/</g, "\\u003c");
+  }
+
+  async function publishState() {
+    if (!artifactNs) throw new Error("no-capability");
+    var src = await fetch(location.href, { cache: "no-store" }).then(function (r) { return r.text(); });
+    var re = /(<script[^>]*id="mk-state"[^>]*>)([\s\S]*?)(<\/script>)/;
+    if (!re.test(src)) throw new Error("no-state-block");
+    var next = src.replace(re, function (m, a, b, c) { return a + "\n" + stateJson() + "\n" + c; });
+    await artifactNs.publish(next);
+  }
+
+  async function commit(kind) {
+    var r = calc(S.inputs);
+    S.log = (S.log || []).concat([logEntry(kind, r)]).slice(-200);
+    if (kind === "apply") S.decision = { ts: new Date().toISOString(), summary: decisionSummary(r) };
+    saveLogLocally();
+    renderLog();
+    renderDecisionBanner();
+    var st = document.getElementById("apply-status");
+    try {
+      sessionStorage.setItem("mk-econ-pending", JSON.stringify(S.inputs));
+    } catch (e) { /* без stash */ }
+    try {
+      await publishState();
+      st.textContent = kind === "apply" ? "Утверждено и сохранено в артефакт." : "Расчёт записан в журнал.";
+    } catch (err) {
+      var code = (err && err.code) || (err && err.message) || "unknown";
+      if (code === "conflict") {
+        st.textContent = "Кто-то сохранил раньше — страница сейчас перезагрузится на его версию.";
+        return;
+      }
+      saveMode = "off";
+      st.textContent = "Сохранить в артефакт не удалось (" + code + "). Запись осталась в этом окне — скачайте журнал, чтобы не потерять.";
+    }
+  }
+
+  // ---------- скачивание журнала ----------
+  function downloadFallback(name, data, mime) {
+    // локально открытый файл: обычная ссылка работает, в размещённом артефакте — нет
+    try {
+      var blob = new Blob([data], { type: mime });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      a.href = url; a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+      return true;
+    } catch (e) { return false; }
+  }
+
+  async function download(kind) {
+    var st = document.getElementById("apply-status");
+    var data, name;
+    if (kind === "json") {
+      name = "merch-kit-economics-log.json";
+      data = JSON.stringify({ decision: S.decision, log: S.log }, null, 2);
+    } else {
+      name = "merch-kit-economics-log.csv";
+      var head = ["Время", "Тип", "Основание", "Курс", "Баллов за объект", "N", "Себестоимость объекта, ₽", "Себестоимость балла, ₽", "Безубыточность, пак/мес", "Целевая прибыль, ₽", "Пакетов для цели"];
+      var rows = S.log.map(function (e) {
+        var s = e.summary;
+        return [e.ts, e.kind, s.vendorBasis, s.fx, s.pointsPerObject, s.startPoints,
+          s.costPerObjectRub, s.costPerPointRub, s.breakEvenPackages, s.targetProfit, s.packagesForTarget]
+          .map(function (v) { return '"' + String(v == null ? "" : v).replace(/"/g, '""') + '"'; }).join(";");
+      });
+      data = "﻿" + [head.join(";")].concat(rows).join("\r\n");
+    }
+    var mime = kind === "json" ? "application/json" : "text/csv";
+    if (!downloadsNs) {
+      st.textContent = downloadFallback(name, data, mime)
+        ? "Журнал сохранён."
+        : "Скачивание в этом окне недоступно — скопируйте записи журнала вручную.";
+      return;
+    }
+    try {
+      await downloadsNs.save({ filename: name, data: data });
+      st.textContent = "Журнал сохранён.";
+    } catch (err) {
+      st.textContent = "Скачивание отменено или недоступно (" + ((err && err.code) || "?") + ").";
+    }
+  }
+
+  // ---------- события ----------
+  function onInput(ev) {
+    var t = ev.target;
+    if (t.name === "vendor") {
+      S.inputs.vendorId = t.value;
+      renderInputs();
+    } else if (t.dataset.path) {
+      var path = t.dataset.path.split(".");
+      var num = t.type === "number" || t.tagName === "SELECT";
+      var val = num ? (parseFloat(t.value) || 0) : t.value;
+      if (path.length === 2) S.inputs[path[0]][path[1]] = val; else S.inputs[path[0]] = val;
+    } else if (t.dataset.pack != null) {
+      var i = +t.dataset.pack, k = t.dataset.key;
+      S.inputs.packages[i][k] = k === "name" ? t.value : (parseFloat(t.value) || 0);
+    } else if (t.dataset.list) {
+      var list = S.inputs[t.dataset.list], idx = +t.dataset.idx;
+      if (t.dataset.key === "on") list[idx].on = t.checked; else list[idx].value = parseFloat(t.value) || 0;
+    } else return;
+    saveDraft();
+    update();
+  }
+
+  function update() {
+    var r = calc(S.inputs);
+    renderResults(r);
+  }
+
+  document.addEventListener("input", onInput);
+  document.addEventListener("change", onInput);
+
+  document.getElementById("btn-apply").addEventListener("click", function () {
+    var b = this;
+    if (b.dataset.confirm !== "1") {
+      b.dataset.confirm = "1";
+      b.textContent = "Точно утвердить? Нажмите ещё раз";
+      setTimeout(function () { if (b.dataset.confirm === "1") { b.dataset.confirm = ""; b.textContent = "Утвердить цифры и применить в проекте"; } }, 6000);
+      return;
+    }
+    b.dataset.confirm = "";
+    b.textContent = "Утвердить цифры и применить в проекте";
+    commit("apply");
+  });
+  document.getElementById("btn-snapshot").addEventListener("click", function () { commit("snapshot"); });
+  document.getElementById("btn-reset").addEventListener("click", function () {
+    S.inputs = JSON.parse(JSON.stringify(PUBLISHED.inputs));
+    try { localStorage.removeItem(DRAFT_KEY); } catch (e) { /* нечего чистить */ }
+    renderInputs();
+    update();
+  });
+  document.getElementById("btn-log-json").addEventListener("click", function () { download("json"); });
+  document.getElementById("btn-log-csv").addEventListener("click", function () { download("csv"); });
+
+  renderInputs();
+  update();
+  renderLog();
+  renderDecisionBanner();
+
+  if (window.claude && window.claude.use) {
+    window.claude.use("artifact").then(function (ns) {
+      artifactNs = ns;
+      saveMode = ns ? "on" : "off";
+      renderDecisionBanner();
+    }).catch(function () { saveMode = "off"; });
+    window.claude.use("downloads").then(function (ns) { downloadsNs = ns; }).catch(function () { });
+  } else {
+    saveMode = "off";
+  }
+})();
+</script>
