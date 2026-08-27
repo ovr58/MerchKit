@@ -156,7 +156,7 @@ write('SignUp', authPage(headerRight('Уже есть аккаунт?', 'Вой�
       ${field({ label: 'Пароль', value: '', placeholder: 'Минимум 8 символов', icon: eyeIcon })}
       ${field({ label: 'Подтверждение пароля', value: '', placeholder: 'Повторите пароль', icon: eyeIcon })}
       ${btn('Создать аккаунт')}
-      <p style="margin: 0; font-size: 13px; line-height: 18px; color: ${C.mutedFg}; text-align: center">Мы отправим письмо со ссылкой подтверждения. До перехода по ней запуск генерации недоступен.</p>`));
+      <p style="margin: 0; font-size: 13px; line-height: 18px; color: ${C.mutedFg}; text-align: center">Мы отправим письмо со ссылкой подтверждения. До перехода по ней вход в приложение недоступен.</p>`));
 
 /* ---------- 4. Регистрация — ошибки полей ---------- */
 write('SignUpErrors', authPage(headerRight('Уже есть аккаунт?', 'Войти'), `
@@ -165,7 +165,7 @@ write('SignUpErrors', authPage(headerRight('Уже есть аккаунт?', '�
       ${field({ label: 'Пароль', value: '••••••••••', icon: eyeIcon })}
       ${field({ label: 'Подтверждение пароля', value: '••••••••', error: 'Подтверждение не совпадает с паролем', icon: eyeIcon })}
       ${btn('Создать аккаунт')}
-      <p style="margin: 0; font-size: 13px; line-height: 18px; color: ${C.mutedFg}; text-align: center">Мы отправим письмо со ссылкой подтверждения. До перехода по ней запуск генерации недоступен.</p>`));
+      <p style="margin: 0; font-size: 13px; line-height: 18px; color: ${C.mutedFg}; text-align: center">Мы отправим письмо со ссылкой подтверждения. До перехода по ней вход в приложение недоступен.</p>`));
 
 /* ---------- 5. Подтвердите email ---------- */
 const mailArt = (stroke) => `<div style="width: 56px; height: 56px; border-radius: 28px; background: ${C.green50}; border: 1px solid ${C.green200}; display: flex; align-items: center; justify-content: center">
@@ -184,7 +184,7 @@ write('ConfirmEmail', authPage(headerRight('Не тот адрес?', 'Выйт�
           <div style="font-size: 13px; color: ${C.mutedFg}">Повторная отправка будет доступна через 0:47</div>
         </div>
         <div style="width: 100%; height: 1px; background: ${C.border}"></div>
-        <p style="margin: 0; font-size: 13px; line-height: 18px; color: ${C.mutedFg}">Письма нет во «Входящих» — проверьте «Спам» и «Промоакции». До подтверждения аккаунт работает, но запуск генерации недоступен.</p>
+        <p style="margin: 0; font-size: 13px; line-height: 18px; color: ${C.mutedFg}">Письма нет во «Входящих» — проверьте «Спам» и «Промоакции». Аккаунт уже создан: регистрироваться заново не нужно, но до перехода по ссылке вход недоступен.</p>
       </div>`));
 
 /* ---------- 6. Восстановление — запрос ---------- */

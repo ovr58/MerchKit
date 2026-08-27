@@ -31,8 +31,10 @@
 
   --success-surface: #f0fdf4;
   --success-foreground: #15803d; /* на success-surface: 4.79:1 */
+  --success-border: #bbf7d0; /* рамка подложки — не текст, порог контраста к ней не применяется */
   --danger-surface: #fef2f2;
   --danger-foreground: #b91c1c; /* на danger-surface: 5.91:1 */
+  --danger-border: #fecaca; /* то же: рамка, а не текст */
 
   --border: #e4e4e7;
   --input: #e4e4e7;
@@ -57,8 +59,10 @@
   --color-destructive-foreground: var(--destructive-foreground);
   --color-success-surface: var(--success-surface);
   --color-success-foreground: var(--success-foreground);
+  --color-success-border: var(--success-border);
   --color-danger-surface: var(--danger-surface);
   --color-danger-foreground: var(--danger-foreground);
+  --color-danger-border: var(--danger-border);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);

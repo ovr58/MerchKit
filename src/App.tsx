@@ -1,72 +1,46 @@
-import { useQuery } from '@tanstack/react-query'
+import { Navigate, Route, Routes } from 'react-router'
 
-import { Button } from '@/components/ui/button'
-import { logger } from '@/lib/logger'
-import { supabase } from '@/lib/supabase'
-
-type HealthResponse = { ok: boolean; service: string; ts: string }
-
-async function fetchHealth(): Promise<HealthResponse> {
-  const { data, error } = await supabase.functions.invoke<HealthResponse>('health')
-
-  if (error) {
-    logger.error('Edge Function health не ответила', { reason: error.message })
-    throw new Error(error.message)
-  }
-  if (!data) {
-    throw new Error('Пустой ответ функции health')
-  }
-
-  logger.info('Edge Function health ответила', { ts: data.ts })
-  return data
-}
+import { RequireAnon, RequireAuth } from '@/features/auth'
+import AuthCallback from '@/screens/AuthCallback'
+import ConfirmEmail from '@/screens/ConfirmEmail'
+import NotFound from '@/screens/NotFound'
+import Profile from '@/screens/Profile'
+import ResetNewPassword from '@/screens/ResetNewPassword'
+import ResetRequest from '@/screens/ResetRequest'
+import SignIn from '@/screens/SignIn'
+import SignUp from '@/screens/SignUp'
 
 /**
- * Экран вехи M1. Продуктовых экранов здесь нет — он показывает единственное, что M1
- * обязан доказать: фронтенд собран, тема и компоненты работают, а Edge Function
- * отвечает браузеру.
+ * Карта маршрутов вехи M2 «Аккаунт».
+ *
+ * Три группы, и разница между ними — не в защите данных, а в том, кому какой экран
+ * осмысленно показывать (данные защищает RLS, см. `features/auth/guards.tsx`):
+ *
+ *   - только гостю — вход и регистрация;
+ *   - только авторизованному — профиль;
+ *   - всем — экраны почтовых сценариев. Переход по ссылке из письма создаёт сессию,
+ *     поэтому `/reset/new` и `/auth/callback` не могут жить под гвардом гостя.
  */
 export default function App() {
-  const health = useQuery({ queryKey: ['health'], queryFn: fetchHealth, retry: false })
-
   return (
-    <main className="mx-auto flex min-h-svh max-w-3xl flex-col gap-6 px-4 py-10 sm:px-6">
-      <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold sm:text-3xl">Merch Kit</h1>
-        <p className="text-muted-foreground text-sm">
-          Веха M1 — каркас. Продуктовых экранов пока нет: страница проверяет, что сборка,
-          тема и связка с Edge Function живы.
-        </p>
-      </header>
+    <Routes>
+      <Route element={<Navigate replace to="/profile" />} path="/" />
 
-      <section
-        aria-live="polite"
-        className="border-border rounded-lg border p-4 sm:p-6"
-        data-testid="health-panel"
-      >
-        <h2 className="text-base font-medium">Связь с Edge Function</h2>
-        <p className="mt-2 text-sm">
-          {health.isPending && 'Проверяем…'}
-          {health.isSuccess && (
-            <span className="bg-success-surface text-success-foreground inline-block rounded-md px-2 py-1">
-              Функция health ответила: {health.data.ts}
-            </span>
-          )}
-          {health.isError && (
-            <span className="bg-danger-surface text-danger-foreground inline-block rounded-md px-2 py-1">
-              Не отвечает: {health.error.message}
-            </span>
-          )}
-        </p>
-        <Button
-          className="mt-4"
-          disabled={health.isFetching}
-          onClick={() => void health.refetch()}
-          type="button"
-        >
-          Проверить ещё раз
-        </Button>
-      </section>
-    </main>
+      <Route element={<RequireAnon />}>
+        <Route element={<SignIn />} path="/signin" />
+        <Route element={<SignUp />} path="/signup" />
+      </Route>
+
+      <Route element={<ConfirmEmail />} path="/confirm-email" />
+      <Route element={<ResetRequest />} path="/reset" />
+      <Route element={<ResetNewPassword />} path="/reset/new" />
+      <Route element={<AuthCallback />} path="/auth/callback" />
+
+      <Route element={<RequireAuth />}>
+        <Route element={<Profile />} path="/profile" />
+      </Route>
+
+      <Route element={<NotFound />} path="*" />
+    </Routes>
   )
 }

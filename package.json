@@ -13,6 +13,7 @@
     "lint": "oxlint",
     "test": "vitest run",
     "test:db": "supabase test db",
+    "test:flow": "node supabase/tests/auth-flow.mjs",
     "test:watch": "vitest"
   },
   "dependencies": {
@@ -30,6 +31,7 @@
     "@tailwindcss/vite": "^4.1.0",
     "@testing-library/jest-dom": "^6.6.0",
     "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.6",
     "@types/node": "^22.15.0",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
