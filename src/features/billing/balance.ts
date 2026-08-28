@@ -10,8 +10,8 @@ import { supabase } from '@/lib/supabase'
  * тут не защита, а способ получить один объект вместо списка. Защита живёт в политике
  * `profiles_select_own` (NFR-04).
  *
- * На вехе M2 значение всегда 0: начисление стартовых баллов требует журнала операций и
- * приезжает на M3 вместе с `ledger`.
+ * Значение производно от журнала `ledger` и меняется только вместе с записью в нём —
+ * ни клиент, ни этот модуль его не двигают (NFR-05).
  */
 export function useBalance(userId: string | undefined): UseQueryResult<number> {
   return useQuery({

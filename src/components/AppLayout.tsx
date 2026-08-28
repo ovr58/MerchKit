@@ -68,9 +68,12 @@ export function AppLayout({
   )
 }
 
-export function Panel({ children }: { children: ReactNode }) {
+export function Panel({ children, id }: { children: ReactNode; id?: string }) {
   return (
-    <section className="bg-background border-border flex flex-col gap-4 rounded-lg border p-5 shadow-sm sm:p-6">
+    <section
+      className="bg-background border-border flex scroll-mt-20 flex-col gap-4 rounded-lg border p-5 shadow-sm sm:p-6"
+      id={id}
+    >
       {children}
     </section>
   )

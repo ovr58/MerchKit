@@ -7,7 +7,10 @@
     "types": ["vite/client"],
     "strict": true,
     "baseUrl": ".",
-    "paths": { "@/*": ["./src/*"] },
+    "paths": {
+      "@/*": ["./src/*"],
+      "@shared/*": ["./supabase/functions/_shared/*"]
+    },
     "allowArbitraryExtensions": true,
     "skipLibCheck": true,
 
