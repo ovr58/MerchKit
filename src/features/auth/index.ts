@@ -16,11 +16,9 @@ export {
 export { RequireAnon, RequireAuth } from './guards'
 export {
   MESSAGES,
-  MIN_PASSWORD_LENGTH,
   validateEmail,
   validatePassword,
   validatePasswordConfirmation,
-  type AuthErrorField,
 } from './messages'
 export { SessionProvider } from './session'
 export { useSession } from './session-context'

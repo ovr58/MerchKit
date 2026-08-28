@@ -208,7 +208,7 @@ write('ResetSent', authPage(headerRight('Вспомнили пароль?', 'В�
 /* ---------- 8. Новый пароль ---------- */
 write('ResetNewPassword', authPage('', `
       ${cardHead('Новый пароль', 'Задайте новый пароль — старый перестанет действовать сразу.')}
-      ${field({ label: 'Новый пароль', value: '', placeholder: 'Минимум 8 символов', hint: 'Минимум 8 символов, буквы и цифры', icon: eyeIcon })}
+      ${field({ label: 'Новый пароль', value: '', placeholder: 'Минимум 8 символов', icon: eyeIcon })}
       ${field({ label: 'Подтверждение пароля', value: '', placeholder: 'Повторите пароль', icon: eyeIcon })}
       ${btn('Сохранить пароль')}`));
 
