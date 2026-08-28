@@ -10,11 +10,16 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+      // Расчёты, обязанные совпадать на клиенте и на сервере, живут одним файлом рядом с
+      // Edge Functions — см. шапку `supabase/functions/_shared/pricing.ts`.
+      '@shared': fileURLToPath(new URL('./supabase/functions/_shared', import.meta.url)),
     },
   },
   test: {
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
-    include: ['src/**/*.test.{ts,tsx}'],
+    // Общий с сервером код лежит вне `src/`, но проверяется тем же прогоном: тест рядом
+    // с модулем, а не в другом дереве.
+    include: ['src/**/*.test.{ts,tsx}', 'supabase/functions/_shared/**/*.test.ts'],
   },
 })

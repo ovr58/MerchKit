@@ -114,8 +114,8 @@ check('US-03 неверная пара не пускает', wrongPassword.statu
 
 const profile = await (await rest('profiles?select=balance', signedIn.body.access_token)).json()
 check(
-  'M2 профиль заведён триггером, баланс 0',
-  profile.length === 1 && profile[0].balance === 0,
+  'M3 профиль заведён триггером, подтверждение начислило 120 (FR-19)',
+  profile.length === 1 && profile[0].balance === 120,
   JSON.stringify(profile),
 )
 

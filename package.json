@@ -13,6 +13,7 @@
     "lint": "oxlint",
     "test": "vitest run",
     "test:db": "supabase test db",
+    "test:billing": "node supabase/tests/billing-flow.mjs",
     "test:flow": "node supabase/tests/auth-flow.mjs",
     "test:watch": "vitest"
   },

@@ -6,6 +6,7 @@
 
 export {
   changePassword,
+  deleteAccount,
   requestPasswordReset,
   resendConfirmation,
   signIn,

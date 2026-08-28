@@ -2,7 +2,10 @@
   "files": [],
   "compilerOptions": {
     "baseUrl": ".",
-    "paths": { "@/*": ["./src/*"] }
+    "paths": {
+      "@/*": ["./src/*"],
+      "@shared/*": ["./supabase/functions/_shared/*"]
+    }
   },
   "references": [
     { "path": "./tsconfig.app.json" },

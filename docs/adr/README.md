@@ -27,3 +27,4 @@
 | [0006](0006-supabase-as-backend.md) | 2026-08-26 | Accepted | Supabase — единственный бэкенд; чтение через RLS, баланс и вызов провайдера — только Edge Functions; баланс производен от журнала `ledger` |
 | [0007](0007-vite-spa-no-ssr.md) | 2026-08-27 | Accepted | Vite + React-SPA без SSR; серверной логике негде жить, кроме Edge Functions |
 | [0008](0008-email-confirmation-gates-sign-in.md) | 2026-08-28 | Accepted | Подтверждение email закрывает вход целиком: у встроенного механизма Supabase нет состояния «вошёл, но не подтвердил» |
+| [0009](0009-ledger-survives-account-deletion.md) | 2026-08-28 | Accepted | Журнал операций переживает удаление аккаунта обезличенным (`on delete set null`), ключ идемпотентности — отпечаток адреса, а не адрес |
