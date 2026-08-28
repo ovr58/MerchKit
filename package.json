@@ -15,7 +15,8 @@
     "test:db": "supabase test db",
     "test:billing": "node supabase/tests/billing-flow.mjs",
     "test:flow": "node supabase/tests/auth-flow.mjs",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:generation": "node supabase/tests/generation-flow.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.58.0",

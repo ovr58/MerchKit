@@ -80,7 +80,10 @@ export async function callDatabase(name: string, args: Record<string, unknown>):
     throw new DatabaseError(typeof message === 'string' ? message : `HTTP ${response.status}`)
   }
 
-  return response.json()
+  // Функция, возвращающая `void`, отвечает 204 без тела — разбирать там нечего. Переходы
+  // статуса генерации именно такие, и `response.json()` на них падал бы разбором пустоты.
+  const payload = await response.text()
+  return payload === '' ? null : JSON.parse(payload)
 }
 
 /** Отказ пришёл из базы, а не из сети: сообщение писала наша же функция и его можно показать. */
@@ -100,4 +103,109 @@ export async function callAdminApi(path: string, method: string): Promise<Respon
     headers: { apikey: secret, Authorization: `Bearer ${secret}` },
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   })
+}
+
+/**
+ * Чтение таблицы или представления с service-role.
+ *
+ * Нужно воркеру и приёмке заявки: они читают чужие по смыслу строки (генерацию, профиль
+ * площадки) от имени сервера, а не пользователя. Клиентские чтения сюда не заезжают — там
+ * работает RLS и обычный запрос из браузера.
+ */
+export async function selectFromDatabase(query: string): Promise<unknown[]> {
+  const secret = requiredEnv('SUPABASE_SERVICE_ROLE_KEY')
+
+  const response = await fetch(`${requiredEnv('SUPABASE_URL')}/rest/v1/${query}`, {
+    headers: { apikey: secret, Authorization: `Bearer ${secret}` },
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+  })
+
+  if (!response.ok) {
+    throw new DatabaseError(`Чтение ${query} вернуло HTTP ${response.status}`)
+  }
+
+  return response.json()
+}
+
+const STORAGE_TIMEOUT_MS = 30_000
+
+/** Скачать файл из приватного бакета. Подписанные ссылки тут не нужны: это сервер. */
+export async function downloadFile(bucket: string, path: string): Promise<Uint8Array> {
+  const secret = requiredEnv('SUPABASE_SERVICE_ROLE_KEY')
+
+  const response = await fetch(
+    `${requiredEnv('SUPABASE_URL')}/storage/v1/object/${bucket}/${path}`,
+    {
+      headers: { apikey: secret, Authorization: `Bearer ${secret}` },
+      signal: AbortSignal.timeout(STORAGE_TIMEOUT_MS),
+    },
+  )
+
+  if (!response.ok) {
+    throw new Error(`Файл ${bucket}/${path} не читается: HTTP ${response.status}`)
+  }
+
+  return new Uint8Array(await response.arrayBuffer())
+}
+
+/**
+ * Положить файл в приватный бакет от имени сервера.
+ *
+ * Результат генерации пишет только эта дорога: политики бакета `results` дают клиенту
+ * чтение и ничего больше (NFR-05). `x-upsert` — ради повторной доставки события: второй
+ * заход воркера кладёт тот же файл на то же место, а не падает на конфликте (NFR-03).
+ */
+export async function uploadFile(
+  bucket: string,
+  path: string,
+  bytes: Uint8Array,
+  contentType: string,
+): Promise<void> {
+  const secret = requiredEnv('SUPABASE_SERVICE_ROLE_KEY')
+
+  const response = await fetch(
+    `${requiredEnv('SUPABASE_URL')}/storage/v1/object/${bucket}/${path}`,
+    {
+      method: 'POST',
+      headers: {
+        apikey: secret,
+        Authorization: `Bearer ${secret}`,
+        'Content-Type': contentType,
+        'x-upsert': 'true',
+      },
+      body: bytes,
+      signal: AbortSignal.timeout(STORAGE_TIMEOUT_MS),
+    },
+  )
+
+  if (!response.ok) {
+    throw new Error(`Файл ${bucket}/${path} не сохранён: HTTP ${response.status}`)
+  }
+}
+
+/** Пришёл ли запрос от нашего же сервера, а не от пользователя с валидным токеном. */
+export function isServiceRoleCaller(request: Request): boolean {
+  const authorization = request.headers.get('Authorization') ?? ''
+  return authorization === `Bearer ${requiredEnv('SUPABASE_SERVICE_ROLE_KEY')}`
+}
+
+/**
+ * Работа, которая продолжается после ответа клиенту.
+ *
+ * Так генерация переживает уход со страницы (NFR-02): заявка отвечает `generationId`
+ * сразу, а воркер дёргается вдогонку и живёт в собственном вызове со своим бюджетом
+ * времени. `EdgeRuntime` есть в рантайме Supabase, но не в любом окружении — поэтому
+ * проверка, а не предположение.
+ */
+export function afterResponse(work: Promise<unknown>): void {
+  const runtime = (globalThis as { EdgeRuntime?: { waitUntil?: (task: Promise<unknown>) => void } })
+    .EdgeRuntime
+
+  const swallowed = work.catch((error: unknown) => {
+    console.error('Фоновая задача завершилась отказом', error)
+  })
+
+  if (typeof runtime?.waitUntil === 'function') {
+    runtime.waitUntil(swallowed)
+  }
 }
