@@ -421,3 +421,43 @@ entrypoint = "./functions/health/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/health/*.html" ]
+
+# ---------------------------------------------------------------------------
+# Прод-профиль. Всё выше — локальный стенд; здесь только то, что на проде обязано
+# отличаться. Накатывается командой `supabase config push --project-ref <ref>` и
+# требует переменных окружения из блока SMTP ниже.
+#
+# Почему отдельным блоком, а не правкой значений выше: локально письма обязаны
+# оставаться в Mailpit. Включи SMTP в корневом `[auth.email]` — и каждый прогон
+# `npm run test:flow` начнёт слать настоящие письма живым людям и жечь дневной лимит.
+# ---------------------------------------------------------------------------
+[remotes.production]
+project_id = "uqybgbudlnlbyarkgcwk"
+
+[remotes.production.auth]
+site_url = "https://merchkit-xi.vercel.app"
+additional_redirect_urls = [
+  "https://merchkit-xi.vercel.app/auth/callback",
+  "https://merchkit-xi.vercel.app/reset/new",
+]
+
+# Внешний SMTP вместо встроенной почты Supabase. Встроенная ограничена двумя письмами
+# в час и самим Supabase помечена как непригодная для прода — на ней подтверждение
+# email (FR-18) не работает уже на втором регистрирующемся.
+#
+# Провайдер — Brevo: 300 писем в сутки бессрочно (у Mailjet 6 000/мес, у Resend
+# 3 000/мес, free-план SendGrid закрыт в 2025). Домена у проекта нет; Brevo в этом
+# случае не заваливает DMARC, а подменяет отправителя на @brevosend.com — письма
+# доходят. Появится домен — DKIM настраивается в Brevo, и адрес станет своим.
+#
+# Секреты живут в переменных окружения, а не здесь: `BREVO_SMTP_USER` — SMTP-логин
+# из раздела «SMTP & API», `BREVO_SMTP_KEY` — SMTP-ключ (не API-ключ),
+# `BREVO_SENDER_EMAIL` — подтверждённый в Brevo адрес отправителя.
+[remotes.production.auth.email.smtp]
+enabled = true
+host = "smtp-relay.brevo.com"
+port = 587
+user = "env(BREVO_SMTP_USER)"
+pass = "env(BREVO_SMTP_KEY)"
+admin_email = "env(BREVO_SENDER_EMAIL)"
+sender_name = "Merch Kit"
