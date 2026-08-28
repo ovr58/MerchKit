@@ -88,7 +88,8 @@ const btn = (text, kind = 'primary') => {
   const styles = {
     primary: `background: ${C.primary}; color: ${C.primaryFg}; border: 1px solid ${C.primary}`,
     outline: `background: ${C.bg}; color: ${C.fg}; border: 1px solid ${C.border}`,
-    ghost: `background: transparent; color: ${C.fg}; border: 1px solid transparent`
+    ghost: `background: transparent; color: ${C.fg}; border: 1px solid transparent`,
+    dangerGhost: `background: transparent; color: ${C.destructive}; border: 1px solid transparent`
   }[kind];
   return `<div style="height: 40px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 500; ${styles}">${text}</div>`;
 };
@@ -261,6 +262,8 @@ const accountPanel = () => panel(`
         <div style="display: flex; flex-direction: column; gap: 8px">
           ${btn('Сменить пароль', 'outline')}
           ${btn('Выйти', 'ghost')}
+          <div style="height: 1px; background: ${C.border}; margin: 4px 0"></div>
+          ${btn('Удалить аккаунт', 'dangerGhost')}
         </div>`);
 
 // Артборда «профиль до подтверждения» здесь нет намеренно: подтверждение email закрывает
