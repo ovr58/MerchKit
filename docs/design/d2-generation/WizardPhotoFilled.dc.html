@@ -1,0 +1,187 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <style>
+    body { margin: 0; font-family: ui-sans-serif, system-ui, "Segoe UI", "Noto Sans", Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+    * { box-sizing: border-box; }
+    a { color: #15803D; text-decoration: none; }
+    a:hover { color: #15803D; }
+  </style>
+</helmet>
+<div style="width: 1440px; height: 1024px; background: #F4F4F5; display: flex; flex-direction: column; position: relative">
+  <header style="height: 64px; flex: none; background: #FFFFFF; border-bottom: 1px solid #E4E4E7; padding: 0 40px; display: flex; align-items: center; justify-content: space-between">
+    <div style="display: flex; align-items: center; gap: 40px">
+      <div style="display: flex; align-items: center; gap: 10px">
+      <div style="width: 28px; height: 28px; border-radius: 8px; background: #15803D; display: flex; align-items: center; justify-content: center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 8-9-5-9 5v8l9 5 9-5Z"></path><path d="m3 8 9 5 9-5"></path><path d="M12 13v8"></path></svg>
+      </div>
+      <span style="font-size: 16px; font-weight: 600; letter-spacing: -0.01em; color: #09090B">Merch Kit</span>
+    </div>
+      <nav style="display: flex; align-items: center; gap: 28px; height: 64px; padding-top: 22px">
+        <span style="font-size: 14px; font-weight: 500; color: #09090B; padding: 8px 0; border-bottom: 2px solid #16A34A">Создать генерацию</span>
+        <span style="font-size: 14px; font-weight: 400; color: #52525B; padding: 8px 0; border-bottom: 2px solid transparent">Каталог</span>
+        <span style="font-size: 14px; font-weight: 400; color: #52525B; padding: 8px 0; border-bottom: 2px solid transparent">Профиль</span>
+      </nav>
+    </div>
+    <div style="display: flex; align-items: center; gap: 16px">
+      <div style="display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px; border-radius: 16px; background: #F0FDF4; border: 1px solid #BBF7D0">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v10M9.5 9.5h3.5a1.75 1.75 0 0 1 0 3.5H9.5"></path></svg>
+        <span style="font-size: 13px; font-weight: 500; color: #15803D">120 баллов</span>
+      </div>
+      <div style="width: 32px; height: 32px; border-radius: 16px; background: #F4F4F5; border: 1px solid #E4E4E7; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; color: #52525B">ИП</div>
+    </div>
+  </header>
+  <main style="flex: 1; overflow: hidden; padding: 32px 40px">
+    <div style="max-width: 1120px; margin: 0 auto; height: 100%; display: flex; flex-direction: column; gap: 20px">
+      <h1 style="margin: 0; font-size: 30px; font-weight: 600; letter-spacing: -0.02em; color: #09090B">Создать генерацию</h1>
+      <div style="flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 20px; align-items: start">
+        <div style="display: flex; flex-direction: column; gap: 20px"><section style="background: #FFFFFF; border: 1px solid #E4E4E7; border-radius: 8px; box-shadow: 0 1px 3px rgba(9, 9, 11, 0.06); padding: 24px; display: flex; flex-direction: column; gap: 16px"><div style="display: flex; align-items: flex-start">
+        <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px">
+          <div style="width: 100%; display: flex; align-items: flex-start">
+            <div style="flex: 1"></div>
+            <div style="width: 28px; height: 28px; flex: none; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; background: #FFFFFF; border: 2px solid #15803D; color: #15803D">1</div>
+            <div style="flex: 1; height: 2px; margin-top: 13px; background: #E4E4E7"></div>
+          </div>
+          <span style="font-size: 13px; font-weight: 500; color: #09090B">Фото</span>
+        </div><div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px">
+          <div style="width: 100%; display: flex; align-items: flex-start">
+            <div style="flex: 1; height: 2px; margin-top: 13px; background: #E4E4E7"></div>
+            <div style="width: 28px; height: 28px; flex: none; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; background: #F4F4F5; border: 1px solid #E4E4E7; color: #52525B">2</div>
+            <div style="flex: 1; height: 2px; margin-top: 13px; background: #E4E4E7"></div>
+          </div>
+          <span style="font-size: 13px; font-weight: 400; color: #52525B">Товар</span>
+        </div><div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px">
+          <div style="width: 100%; display: flex; align-items: flex-start">
+            <div style="flex: 1; height: 2px; margin-top: 13px; background: #E4E4E7"></div>
+            <div style="width: 28px; height: 28px; flex: none; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; background: #F4F4F5; border: 1px solid #E4E4E7; color: #52525B">3</div>
+            <div style="flex: 1; height: 2px; margin-top: 13px; background: #E4E4E7"></div>
+          </div>
+          <span style="font-size: 13px; font-weight: 400; color: #52525B">Площадка</span>
+        </div><div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px">
+          <div style="width: 100%; display: flex; align-items: flex-start">
+            <div style="flex: 1; height: 2px; margin-top: 13px; background: #E4E4E7"></div>
+            <div style="width: 28px; height: 28px; flex: none; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; background: #F4F4F5; border: 1px solid #E4E4E7; color: #52525B">4</div>
+            <div style="flex: 1; height: 2px; margin-top: 13px; background: #E4E4E7"></div>
+          </div>
+          <span style="font-size: 13px; font-weight: 400; color: #52525B">Тип</span>
+        </div><div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px">
+          <div style="width: 100%; display: flex; align-items: flex-start">
+            <div style="flex: 1; height: 2px; margin-top: 13px; background: #E4E4E7"></div>
+            <div style="width: 28px; height: 28px; flex: none; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; background: #F4F4F5; border: 1px solid #E4E4E7; color: #52525B">5</div>
+            <div style="flex: 1; height: 2px; margin-top: 13px; background: #E4E4E7"></div>
+          </div>
+          <span style="font-size: 13px; font-weight: 400; color: #52525B">Показ</span>
+        </div><div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px">
+          <div style="width: 100%; display: flex; align-items: flex-start">
+            <div style="flex: 1; height: 2px; margin-top: 13px; background: #E4E4E7"></div>
+            <div style="width: 28px; height: 28px; flex: none; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; background: #F4F4F5; border: 1px solid #E4E4E7; color: #52525B">6</div>
+            <div style="flex: 1"></div>
+          </div>
+          <span style="font-size: 13px; font-weight: 400; color: #52525B">Запуск</span>
+        </div>
+      </div>
+        <div style="height: 1px; background: #E4E4E7"></div>
+        <div style="display: flex; flex-direction: column; gap: 4px">
+        <h2 style="margin: 0; font-size: 16px; font-weight: 600; color: #09090B">Фото товара</h2>
+        <p style="margin: 0; font-size: 13px; line-height: 18px; color: #52525B">До 4 фотографий с разных сторон — так товар на выходе получается узнаваемым</p>
+      </div>
+        <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px">
+          <div style="position: relative; border-radius: 8px; overflow: hidden; border: 1px solid #E4E4E7; background: #F4F4F5; height: 168px">
+          <svg width="100%" height="100%" viewBox="0 0 120 160" preserveAspectRatio="xMidYMid slice" fill="#FFFFFF" stroke="#E4E4E7" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"><circle cx="60" cy="26" r="11"></circle>
+    <path d="M44 46 h32 l10 8 -4 46 h-44 l-4 -46 z"></path>
+    <path d="M44 46 l-14 8 -5 34 10 3 9 -30"></path>
+    <path d="M76 46 l14 8 5 34 -10 3 -9 -30"></path>
+    <path d="M46 100 h28 v46 h-11 v-32 h-6 v32 h-11 z"></path></svg>
+          <div style="position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border-radius: 12px; background: #FFFFFF; border: 1px solid #E4E4E7; display: flex; align-items: center; justify-content: center">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#09090B" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+          </div>
+        </div><div style="position: relative; border-radius: 8px; overflow: hidden; border: 1px solid #E4E4E7; background: #F4F4F5; height: 168px">
+          <svg width="100%" height="100%" viewBox="0 0 120 160" preserveAspectRatio="xMidYMid slice" fill="#FFFFFF" stroke="#E4E4E7" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"><path d="M60 20 a7 7 0 1 1 7 7 v5"></path>
+    <path d="M30 50 L60 32 L90 50"></path>
+    <path d="M44 50 h32 l10 8 -4 46 h-44 l-4 -46 z"></path>
+    <path d="M44 50 l-14 8 -5 34 10 3 9 -30"></path>
+    <path d="M76 50 l14 8 5 34 -10 3 -9 -30"></path></svg>
+          <div style="position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border-radius: 12px; background: #FFFFFF; border: 1px solid #E4E4E7; display: flex; align-items: center; justify-content: center">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#09090B" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+          </div>
+        </div><div style="position: relative; border-radius: 8px; overflow: hidden; border: 1px solid #E4E4E7; background: #F4F4F5; height: 168px">
+          <svg width="100%" height="100%" viewBox="0 0 120 160" preserveAspectRatio="xMidYMid slice" fill="#FFFFFF" stroke="#E4E4E7" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"><path d="M46 44 h28 l6 10 h20 l6 14 -20 8 -4 -8 v52 h-38 v-52 l-4 8 -20 -8 6 -14 h20 z"></path></svg>
+          <div style="position: absolute; top: 6px; right: 6px; width: 24px; height: 24px; border-radius: 12px; background: #FFFFFF; border: 1px solid #E4E4E7; display: flex; align-items: center; justify-content: center">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#09090B" stroke-width="2.5" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+          </div>
+        </div>
+          <div style="height: 168px; border: 1px dashed #E4E4E7; border-radius: 8px; background: #F4F4F5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#52525B" stroke-width="1.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
+          <span style="font-size: 13px; color: #52525B">Добавить</span>
+        </div>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between">
+          <span style="font-size: 13px; color: #52525B">JPG, PNG, WebP или HEIC · до 10 МБ каждый файл — как принимают маркетплейсы</span>
+          <span style="font-size: 13px; color: #52525B">Очистить</span>
+        </div>
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-top: 16px; border-top: 1px solid #E4E4E7">
+        <span style="font-size: 13px; color: #52525B">3 из 4 фото</span>
+        <div style="display: flex; gap: 10px"><div style="width: 140px"><div style="height: 40px; padding: 0 16px; border-radius: 6px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; font-weight: 500; background: #15803D; color: #FFFFFF; border: 1px solid #15803D">Далее</div></div></div>
+      </div></section></div>
+        <div style="display: flex; flex-direction: column; gap: 20px"><section style="background: #FFFFFF; border: 1px solid #E4E4E7; border-radius: 8px; box-shadow: 0 1px 3px rgba(9, 9, 11, 0.06); padding: 24px; display: flex; flex-direction: column; gap: 16px"><div style="display: flex; flex-direction: column; gap: 4px">
+        <h2 style="margin: 0; font-size: 16px; font-weight: 600; color: #09090B">Результаты</h2>
+        
+      </div>
+        <div style="height: 268px; border: 1px dashed #E4E4E7; border-radius: 8px; background: #F4F4F5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; padding: 24px">
+          <div style="width: 52px; height: 52px; border-radius: 26px; background: #FFFFFF; border: 1px solid #E4E4E7; display: flex; align-items: center; justify-content: center">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#52525B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="9" r="1.5"></circle><path d="m21 15-5-5L5 21"></path></svg>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px; max-width: 260px">
+            <span style="font-size: 15px; font-weight: 500; color: #09090B">Здесь появятся результаты</span>
+            <span style="font-size: 13px; line-height: 18px; color: #52525B">Готовое изображение можно будет скачать и найти потом в каталоге.</span>
+          </div>
+        </div></section><section style="background: #FFFFFF; border: 1px solid #E4E4E7; border-radius: 8px; box-shadow: 0 1px 3px rgba(9, 9, 11, 0.06); padding: 24px; display: flex; flex-direction: column; gap: 16px"><div style="display: flex; flex-direction: column; gap: 4px">
+        <h2 style="margin: 0; font-size: 16px; font-weight: 600; color: #09090B">Ваша генерация</h2>
+        
+      </div>
+        <div style="display: flex; flex-direction: column; gap: 10px">
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 13px">
+          <span style="flex: none; color: #52525B">Фото</span>
+          <span style="text-align: right; color: #09090B; font-weight: 500">3 из 4</span>
+        </div>
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 13px">
+          <span style="flex: none; color: #52525B">Товар</span>
+          <span style="text-align: right; color: #09090B; font-weight: 500">—</span>
+        </div>
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 13px">
+          <span style="flex: none; color: #52525B">Категория</span>
+          <span style="text-align: right; color: #09090B; font-weight: 500">—</span>
+        </div>
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 13px">
+          <span style="flex: none; color: #52525B">Площадка</span>
+          <span style="text-align: right; color: #09090B; font-weight: 500">—</span>
+        </div>
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 13px">
+          <span style="flex: none; color: #52525B">Тип</span>
+          <span style="text-align: right; color: #09090B; font-weight: 500">—</span>
+        </div>
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 13px">
+          <span style="flex: none; color: #52525B">Как показать</span>
+          <span style="text-align: right; color: #09090B; font-weight: 500">—</span>
+        </div>
+        </div>
+        <div style="height: 1px; background: #E4E4E7"></div>
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px">
+          <span style="font-size: 15px; color: #09090B; font-weight: 500">К списанию</span>
+          <span style="font-size: 15px; font-weight: 600; color: #09090B">—</span>
+        </div>
+        <span style="font-size: 12px; line-height: 16px; color: #52525B">Одна генерация — один объект: вся мощность вызова идёт на один результат.</span></section></div>
+      </div>
+    </div>
+  </main>
+  
+</div>
+</x-dc>
+</body>
+</html>
