@@ -8,7 +8,7 @@
  */
 
 /** Поле формы, к которому относится ошибка. `null` — ошибка всей формы. */
-export type AuthErrorField = 'email' | 'password' | 'passwordConfirm' | null
+export type AuthErrorField = 'email' | 'password' | 'passwordConfirm' | 'currentPassword' | null
 
 export type AuthFailure = {
   message: string
@@ -26,6 +26,8 @@ export const MESSAGES = {
   requestRateLimit: 'Слишком много попыток подряд. Подождите немного и попробуйте снова.',
   weakPassword: 'Пароль слишком короткий — нужно минимум 8 символов.',
   samePassword: 'Новый пароль совпадает с текущим. Придумайте другой.',
+  currentPasswordWrong: 'Текущий пароль указан неверно',
+  passwordChanged: 'Пароль изменён',
   passwordMismatch: 'Подтверждение не совпадает с паролем',
   emailRequired: 'Укажите email',
   emailMalformed: 'Похоже, в адресе опечатка',

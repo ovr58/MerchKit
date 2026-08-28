@@ -13,8 +13,13 @@ insert into auth.users (id, email) values
   ('aaaaaaaa-0000-4000-8000-000000000001', 'seller-a@example.com'),
   ('bbbbbbbb-0000-4000-8000-000000000002', 'seller-b@example.com');
 
+-- Считаем только своих подопытных, а не все строки таблицы: прогон не должен зависеть от
+-- того, что осталось в базе от ручных проверок. Тест, который проходит лишь на свежем
+-- `db reset`, однажды соврёт — и не о том, что сломалось.
 select is(
-  (select count(*)::int from public.profiles),
+  (select count(*)::int from public.profiles
+   where id in ('aaaaaaaa-0000-4000-8000-000000000001',
+                'bbbbbbbb-0000-4000-8000-000000000002')),
   2,
   'Триггер завёл профиль каждому новому пользователю Auth'
 );

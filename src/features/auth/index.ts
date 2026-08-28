@@ -5,6 +5,7 @@
  */
 
 export {
+  changePassword,
   requestPasswordReset,
   resendConfirmation,
   signIn,

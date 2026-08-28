@@ -37,6 +37,13 @@ describe('describeAuthError', () => {
     )
   })
 
+  it('неверный текущий пароль привязан к своему полю, а не к форме', () => {
+    // Ошибку показывает поле «Текущий пароль»: человек должен видеть, что именно он ввёл
+    // не так, а не гадать между тремя полями формы смены пароля.
+    expect(describeAuthError({ code: 'same_password' }).field).toBe('password')
+    expect(MESSAGES.currentPasswordWrong).toBeTruthy()
+  })
+
   it('незнакомый код не протекает наружу английским текстом', () => {
     expect(describeAuthError({ code: 'some_new_code_from_gotrue' })).toEqual({
       message: MESSAGES.unknown,

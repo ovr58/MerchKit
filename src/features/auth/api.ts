@@ -105,6 +105,34 @@ export async function requestPasswordReset(email: string): Promise<void> {
   }
 }
 
+/**
+ * Смена пароля изнутри приложения, для уже вошедшего человека.
+ *
+ * Текущий пароль проверяется повторным входом, а не доверием к тому, что вкладка открыта:
+ * иначе сменить пароль смог бы любой, кто добрался до чужого незалоченного экрана.
+ *
+ * Почему не встроенный `secure_password_change`: он подтверждает смену **одноразовым кодом
+ * из письма**. Это возвращает человека в почту ровно там, где мы от неё уходим, и тратит
+ * часовую квоту писем, которой у нас 30 (docs/SPEC.md §8).
+ */
+export async function changePassword(
+  email: string,
+  currentPassword: string,
+  newPassword: string,
+): Promise<AuthOutcome> {
+  const { error: reauth } = await supabase.auth.signInWithPassword({
+    email,
+    password: currentPassword,
+  })
+
+  if (reauth) {
+    logger.info('Смена пароля отклонена на проверке текущего', { reason: reauth.code })
+    return fail({ message: MESSAGES.currentPasswordWrong, field: 'currentPassword' })
+  }
+
+  return updatePassword(newPassword)
+}
+
 export async function updatePassword(password: string): Promise<AuthOutcome> {
   const { error } = await supabase.auth.updateUser({ password })
 

@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router'
 
 import { AppLayout, Panel, PanelTitle } from '@/components/AppLayout'
+import { ChangePasswordForm } from '@/components/ChangePasswordForm'
 import { Button } from '@/components/ui/button'
-import { signOut, useSession } from '@/features/auth'
+import { MESSAGES, signOut, useSession } from '@/features/auth'
 import { useBalance } from '@/features/billing/balance'
 
 /**
@@ -17,6 +19,8 @@ export default function Profile() {
   const { session } = useSession()
   const user = session?.user
   const balance = useBalance(user?.id)
+  const [changing, setChanging] = useState(false)
+  const [changed, setChanged] = useState(false)
 
   const email = user?.email ?? ''
   const initials = email.slice(0, 2).toUpperCase()
@@ -94,14 +98,40 @@ export default function Profile() {
 
           <hr className="border-border" />
 
-          <div className="flex flex-col gap-2">
-            <Button onClick={() => void navigate('/reset')} size="lg" variant="outline">
-              Сменить пароль
-            </Button>
-            <Button onClick={() => void handleSignOut()} size="lg" variant="ghost">
-              Выйти
-            </Button>
-          </div>
+          {changing ? (
+            <ChangePasswordForm
+              email={email}
+              onCancel={() => setChanging(false)}
+              onSuccess={() => {
+                setChanging(false)
+                setChanged(true)
+              }}
+            />
+          ) : (
+            <div className="flex flex-col gap-2">
+              {changed && (
+                <p
+                  className="bg-success-surface border-success-border text-success-foreground rounded-md border px-3 py-2 text-[13px]"
+                  role="status"
+                >
+                  {MESSAGES.passwordChanged}
+                </p>
+              )}
+              <Button
+                onClick={() => {
+                  setChanged(false)
+                  setChanging(true)
+                }}
+                size="lg"
+                variant="outline"
+              >
+                Сменить пароль
+              </Button>
+              <Button onClick={() => void handleSignOut()} size="lg" variant="ghost">
+                Выйти
+              </Button>
+            </div>
+          )}
         </Panel>
       </div>
     </AppLayout>
