@@ -78,23 +78,48 @@ function toGeneration(row: Row): Generation {
 export type Recognized = { categoryId: string | null; productTitle: string | null }
 
 /**
+ * Исход распознавания. `limitReached` отделяет «кончилось» от «не смогли»: для сценария оба
+ * ведут в US-E2 — поля заполняются руками, — но человеку это разные новости, и во втором
+ * случае ему есть что сделать (войти).
+ */
+export type RecognizeOutcome = Recognized & { limitReached: boolean }
+
+/**
+ * Лимит бесплатных распознаваний исчерпан? `supabase-js` отдаёт неуспешный HTTP отдельным
+ * типом ошибки и прячет тело ответа в `context`. Без разбора тела «кончилось» неотличимо от
+ * «сломалось» — а различие тут и есть весь смысл.
+ */
+async function isLimitReached(error: unknown): Promise<boolean> {
+  const response = (error as { context?: unknown } | null)?.context
+  if (!(response instanceof Response)) return false
+
+  const body: unknown = await response.clone().json().catch(() => null)
+  return (body as { code?: unknown } | null)?.code === 'recognize_limit'
+}
+
+/**
  * Распознаёт товар по фото. Фото уезжают телом запроса, а не путями в бакете: у гостя
  * своей папки в `uploads` нет, а мастер он проходит наравне со всеми (FR-12).
  *
  * Отказ провайдера не роняет шаг: пустой ответ — штатный исход US-E2.
  */
-export async function recognizePhotos(photos: DraftPhoto[]): Promise<Recognized> {
+export async function recognizePhotos(photos: DraftPhoto[]): Promise<RecognizeOutcome> {
   const form = new FormData()
   for (const photo of photos) form.append('photo', photo.blob, photo.name)
 
   const { data, error } = await supabase.functions.invoke<Recognized>('recognize', { body: form })
 
   if (error || !data) {
-    logger.warn('Распознавание не удалось', { reason: error?.message })
-    return { categoryId: null, productTitle: null }
+    const limitReached = await isLimitReached(error)
+
+    // Исчерпанный лимит — не сбой, и в предупреждения ему незачем: иначе журнал забьётся
+    // штатным исходом, и в нём потеряются настоящие отказы провайдера.
+    if (!limitReached) logger.warn('Распознавание не удалось', { reason: error?.message })
+
+    return { categoryId: null, productTitle: null, limitReached }
   }
 
-  return data
+  return { ...data, limitReached: false }
 }
 
 /* --------------------------------------------------------------- запуск заявки (US-01) */

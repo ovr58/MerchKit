@@ -384,6 +384,14 @@ deno_version = 2
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
+# Лимит бесплатных распознаваний (веха M5, шаг 5) поднят только для local. Из среды
+# разработки все прогоны приходят с одного адреса и складываются в один счётчик — прод-лимит
+# в 10 остановил бы пятый запуск `npm run test:generation` за сутки. На проде этих переменных
+# нет, и действуют значения из `supabase/functions/recognize/index.ts`.
+[edge_runtime.secrets]
+RECOGNIZE_GUEST_DAILY_LIMIT = "10000"
+RECOGNIZE_MEMBER_DAILY_LIMIT = "10000"
+
 [analytics]
 enabled = true
 port = 54327

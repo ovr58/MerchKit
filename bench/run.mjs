@@ -306,10 +306,13 @@ for (const sample of samples) {
     form.append('photo', new Blob([readFileSync(file)], { type }), basename(file))
   }
 
+  // Распознавание идёт от имени пользователя стенда, а не гостем: у гостя лимит бесплатных
+  // распознаваний в сутки (веха M5, шаг 5), и выборка из полутора десятков наборов упёрлась
+  // бы в него на середине прогона. Качество распознавания от того, кто спрашивает, не зависит.
   const recognizeStarted = Date.now()
   const recognizeRes = await fetch(`${FUNCTIONS}/recognize`, {
     method: 'POST',
-    headers: { apikey: KEY },
+    headers: { apikey: KEY, Authorization: `Bearer ${user.token}` },
     body: form,
   })
   const recognizeMs = Date.now() - recognizeStarted

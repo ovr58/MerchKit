@@ -27,6 +27,8 @@ export type Wizard = {
   restored: boolean
   rejected: RejectedPhoto[]
   recognizing: boolean
+  /** Бесплатные распознавания на сегодня кончились — это не сбой, и говорить надо иначе. */
+  recognitionLimited: boolean
   update: (patch: Partial<WizardDraft>) => void
   addPhotos: (files: File[]) => void
   removePhoto: (id: string) => void
@@ -57,6 +59,7 @@ export function useWizard(): Wizard {
   const [restored, setRestored] = useState(false)
   const [rejected, setRejected] = useState<RejectedPhoto[]>([])
   const [recognizing, setRecognizing] = useState(false)
+  const [recognitionLimited, setRecognitionLimited] = useState(false)
   const recognitionRun = useRef(0)
   const photoCount = draft.photos.length
 
@@ -191,6 +194,8 @@ export function useWizard(): Wizard {
       // набор перетёр бы то, что он уже поправил руками.
       if (run !== recognitionRun.current) return
 
+      setRecognitionLimited(guess.limitReached)
+
       setDraft((latest) => ({
         ...latest,
         recognized: true,
@@ -217,6 +222,7 @@ export function useWizard(): Wizard {
     restored,
     rejected,
     recognizing,
+    recognitionLimited,
     update,
     addPhotos,
     removePhoto,
