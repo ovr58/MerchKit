@@ -15,14 +15,14 @@
 
 ## О проекте
 
-- **Стек:** React 18 + TypeScript (Vite) · Supabase (Postgres + RLS, Auth, Storage, Realtime, Edge Functions на Deno) · AI-провайдер за абстракцией, вендор не выбран (ADR-0005)
+- **Стек:** React 18 + TypeScript (Vite) · Supabase (Postgres + RLS, Auth, Storage, Edge Functions на Deno) · AI-провайдер за абстракцией, вендор не выбран (ADR-0005)
 - **Архитектура (обзор):**
   React-SPA (точка входа `src/main.tsx`, запуск `npm run dev`) разговаривает напрямую с
   Supabase: Auth — вход по email+паролю, Postgres — чтение **своих** данных под RLS,
-  Storage — приватные бакеты, Realtime — статус генерации. Отдельного бэкенд-сервиса нет.
+  Storage — приватные бакеты. Отдельного бэкенд-сервиса нет.
   Всё, что нельзя доверить браузеру — вызов AI-провайдера, списание и начисление баллов —
   живёт в Edge Functions (Deno) с service-role. Генерация асинхронная: заявка возвращает
-  `generationId`, статус живёт в БД. Провайдер скрыт за интерфейсом `ai-provider`.
+  `generationId`, статус живёт в БД и читается опросом (`SPEC.md` §3). Провайдер скрыт за интерфейсом `ai-provider`.
   Детали — `docs/SPEC.md`, схемы — `docs/VISUALS.md` (V-02, V-03, V-07).
 
 ## Что умеет твой хост (и чего не умеет)

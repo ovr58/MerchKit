@@ -384,6 +384,28 @@ deno_version = 2
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
+# Лимит бесплатных распознаваний (веха M5, шаг 5) поднят только для local. Из среды
+# разработки все прогоны приходят с одного адреса и складываются в один счётчик — прод-лимит
+# в 10 остановил бы пятый запуск `npm run test:generation` за сутки. На проде этих переменных
+# нет, и действуют значения из `supabase/functions/recognize/index.ts`.
+[edge_runtime.secrets]
+RECOGNIZE_GUEST_DAILY_LIMIT = "10000"
+RECOGNIZE_MEMBER_DAILY_LIMIT = "10000"
+
+# Профиль AI-провайдера для локального стенда. Значения берутся из окружения и в git не
+# попадают — здесь только имена. **Не заданы — все пять приезжают пустыми строками, и
+# `ai-provider` остаётся на заглушке** (`index.ts`, ветка `||`): разработка не должна жечь
+# бюджет, это требование шага 7 вехи M5. Живой вендор включается осознанно — заданием
+# переменных перед `supabase start`.
+AI_PROVIDER = "env(AI_PROVIDER)"
+AI_PROVIDER_BASE_URL = "env(AI_PROVIDER_BASE_URL)"
+AI_PROVIDER_API_KEY = "env(AI_PROVIDER_API_KEY)"
+AI_PROVIDER_IMAGE_MODEL = "env(AI_PROVIDER_IMAGE_MODEL)"
+AI_PROVIDER_TEXT_MODEL = "env(AI_PROVIDER_TEXT_MODEL)"
+# Эксперимент шага 2 (не решение): референсные карточки docs/assets/cardsforsysprompt/ как
+# визуальный пример дизайна в запросе на generateImages. См. aitunnel.ts.
+AI_PROVIDER_CARD_REFERENCES = "env(AI_PROVIDER_CARD_REFERENCES)"
+
 [analytics]
 enabled = true
 port = 54327

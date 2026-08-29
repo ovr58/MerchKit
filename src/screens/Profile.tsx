@@ -31,7 +31,6 @@ export default function Profile() {
   const [deleteError, setDeleteError] = useState<string | null>(null)
 
   const email = user?.email ?? ''
-  const initials = email.slice(0, 2).toUpperCase()
   const createdAt = user?.created_at
     ? new Date(user.created_at).toLocaleDateString('ru-RU', {
         day: 'numeric',
@@ -64,7 +63,7 @@ export default function Profile() {
   }
 
   return (
-    <AppLayout balance={balanceText} initials={initials}>
+    <AppLayout active="profile" balance={balanceText} email={email}>
       <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Профиль</h1>
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] lg:items-start">
