@@ -17,6 +17,7 @@ export type {
   AiProvider,
   CardTexts,
   GeneratedImage,
+  Moderated,
   OutputProfile,
   ProductBrief,
   ProviderProfile,

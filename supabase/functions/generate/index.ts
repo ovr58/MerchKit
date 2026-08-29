@@ -10,6 +10,12 @@
  * человеку до запуска (FR-11), но списывается посчитанная здесь. Расхождение — ошибка, а
  * не «клиент прав», поэтому цена из тела запроса не принимается вовсе.
  *
+ * **Модерация — здесь, а не на распознавании** (решение шага 0 вехи M5). Мимо `generate`
+ * не проходит ни одна заявка: повесь проверку только на `recognize`, её обойдёт любой, кто
+ * не нажмёт «распознать» и заполнит поля руками. Отказ — до `create_generation`, баллы не
+ * списываются, ответ неотличим по форме от нехватки баллов (US-E3): пользователю не нужно
+ * знать, что сработала именно модерация.
+ *
  * Проверить локально:
  *   supabase functions serve
  *   curl -sX POST http://127.0.0.1:54321/functions/v1/generate \
@@ -18,12 +24,14 @@
  *          "presetId":"clothing-model","productTitle":"Куртка-бомбер","photoPaths":[]}'
  */
 
+import { createProvider } from '../_shared/ai-provider/index.ts'
 import {
   afterResponse,
   callDatabase,
   callerId,
   CORS_HEADERS,
   DatabaseError,
+  downloadFile,
   failure,
   json,
 } from '../_shared/edge.ts'
@@ -100,6 +108,18 @@ Deno.serve(async (request: Request): Promise<Response> => {
   const price = generationPrice(kind as GenerationKind, MAX_OBJECTS_PER_GENERATION)
 
   try {
+    // Модерация — до списания баллов (решение шага 0 вехи M5), не на шаге распознавания:
+    // к моменту запуска фото могли поменяться, а списывается ровно этот набор. Отказ
+    // тихий — тем же по форме ответом, что и нехватка баллов (US-E3): пользователь не
+    // узнаёт, что сработала именно модерация.
+    const photos = await Promise.all(photoPaths.map((path) => downloadFile('uploads', path)))
+    const moderation = await createProvider().moderate(photos)
+
+    if (!moderation.allowed) {
+      console.info('Заявка отклонена модерацией', moderation.reason)
+      return json({ error: 'Заявка не принята: проверьте загруженные фото', code: 'moderation_rejected' }, 409)
+    }
+
     const generationId = await callDatabase('create_generation', {
       owner_id: owner,
       generation_kind: kind,

@@ -122,7 +122,10 @@ function jpegSize(bytes) {
 /** Фото, которое стоит отправить: заглушке важен только размер, содержимое ей безразлично. */
 const photoBytes = () => Buffer.alloc(8192, 0x42)
 
-async function uploadPhoto(user, name) {
+/** Крючок заглушки для `moderate` (stub.ts): первый байт 0x00 ни один настоящий формат не даёт. */
+const moderationRejectedBytes = () => Buffer.concat([Buffer.from([0x00]), Buffer.alloc(8191, 0x42)])
+
+async function uploadPhoto(user, name, bytes = photoBytes()) {
   const path = `${user.id}/${name}`
   const res = await fetch(`${STORAGE}/object/uploads/${path}`, {
     method: 'POST',
@@ -132,7 +135,7 @@ async function uploadPhoto(user, name) {
       'Content-Type': 'image/jpeg',
       'x-upsert': 'true',
     },
-    body: photoBytes(),
+    body: bytes,
   })
   return { status: res.status, path }
 }
@@ -335,6 +338,31 @@ check(
   'US-E4 неуспешные генерации не засоряют каталог как готовые',
   catalog.length === 2 && catalog.every((row) => row.status === 'done'),
   `в каталоге ${catalog.length}`,
+)
+
+// --- Модерация: тихий отказ до списания (решение шага 0 вехи M5) ---------------
+const rejectedUpload = await uploadPhoto(seller, 'photo-moderation.jpg', moderationRejectedBytes())
+const balanceBeforeModeration = await balanceOf(seller.token)
+const catalogBeforeModeration = await (
+  await rest('generations?select=id', seller.token)
+).json()
+const moderated = await launch(seller.token, { photoPaths: [rejectedUpload.path] })
+check(
+  'Модерация отклоняет заявку тем же по форме ответом, что и US-E3',
+  moderated.status === 409 && moderated.body.code === 'moderation_rejected',
+  JSON.stringify(moderated.body),
+)
+check(
+  'Модерация: баллы не списаны',
+  (await balanceOf(seller.token)) === balanceBeforeModeration,
+)
+const catalogAfterModeration = await (
+  await rest('generations?select=id', seller.token)
+).json()
+check(
+  'Модерация: заявка не создана вовсе, не только не оплачена',
+  catalogAfterModeration.length === catalogBeforeModeration.length,
+  `было ${catalogBeforeModeration.length}, стало ${catalogAfterModeration.length}`,
 )
 
 // --- US-E3: баллов не хватает --------------------------------------------------
