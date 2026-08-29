@@ -10,6 +10,7 @@
  * `VITE_*`-переменной: всё с этим префиксом попадает в браузерный бандл.
  */
 
+import { createAitunnelProvider } from './aitunnel.ts'
 import { createStubProvider } from './stub.ts'
 import type { AiProvider, ProviderProfile } from './types.ts'
 
@@ -44,8 +45,9 @@ export function providerProfile(): ProviderProfile {
  */
 export function createProvider(profile: ProviderProfile = providerProfile()): AiProvider {
   if (profile.name === 'stub') return createStubProvider()
+  if (profile.name === 'aitunnel') return createAitunnelProvider(profile)
 
   throw new Error(
-    `Неизвестный AI-провайдер: ${profile.name}. Реализация подставляется на вехе M5 (ADR-0005)`,
+    `Неизвестный AI-провайдер: ${profile.name}. Известны: stub, aitunnel`,
   )
 }

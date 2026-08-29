@@ -45,6 +45,7 @@
  */
 
 import { blockCount, encodeBlockJpeg, type Rgb } from '../jpeg.ts'
+import { CATEGORY_IDS } from './categories.ts'
 import type {
   AiProvider,
   CardTexts,
@@ -56,9 +57,6 @@ import type {
 } from './types.ts'
 
 const DEFAULT_DELAY_MS = 1200
-
-/** Категории из справочника `public.categories`. Заглушке нужен сам перечень, не смысл. */
-const CATEGORY_IDS = ['clothing', 'accessories', 'food', 'beauty', 'tech', 'home', 'other']
 
 const GUESSES: Record<string, string> = {
   clothing: 'Куртка-бомбер',
