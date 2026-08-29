@@ -33,8 +33,18 @@ import type {
   OutputProfile,
   ProductBrief,
   ProviderProfile,
+  ProviderUsage,
   Recognized,
 } from './types.ts'
+
+const VENDOR = 'aitunnel'
+
+/** `usage.cost_rub` шлюза — если поле пропало или не число, 0, а не отказ вызова: себестоимость
+ *  не должна ронять генерацию, ради которой уже потрачены деньги. */
+function costRub(result: any): number {
+  const value = result?.usage?.cost_rub
+  return typeof value === 'number' && Number.isFinite(value) ? value : 0
+}
 
 const CHAT_TIMEOUT_MS = 20_000
 const IMAGE_TIMEOUT_MS = 60_000
@@ -150,11 +160,18 @@ async function callGateway(url: string, apiKey: string, body: unknown, timeoutMs
   }
 }
 
-/** Один вызов `chat/completions` с требованием строгого JSON-объекта в ответе. */
+/**
+ * Один вызов `chat/completions` с требованием строгого JSON-объекта в ответе.
+ *
+ * `record` — необязательный: `recognize` его не передаёт (шаг мастера без генерации,
+ * себестоимость сюда не пишется — см. миграцию `20260830000000_generation_costs.sql`),
+ * остальные три текстовые операции контракта передают своё имя и общий колбэк `onUsage`.
+ */
 async function chatJson(
   config: Config,
   systemPrompt: string,
   userContent: string | unknown[],
+  record?: { operation: ProviderUsage['operation']; onUsage?: (usage: ProviderUsage) => void },
 ): Promise<Record<string, unknown>> {
   const started = Date.now()
 
@@ -167,15 +184,18 @@ async function chatJson(
     response_format: { type: 'json_object' },
   }, CHAT_TIMEOUT_MS)
 
+  const durationMs = Date.now() - started
   const text = result?.choices?.[0]?.message?.content
+
+  console.info('AITunnel', config.textModel, durationMs, 'мс', 'cost_rub', costRub(result))
+
+  if (record !== undefined) {
+    record.onUsage?.({ operation: record.operation, vendor: VENDOR, costRub: costRub(result), durationMs })
+  }
+
   if (typeof text !== 'string' || text.trim() === '') {
     throw new Error('AITunnel: текстовая модель вернула пустой ответ')
   }
-
-  console.info(
-    'AITunnel', config.textModel, Date.now() - started, 'мс',
-    'cost_rub', result?.usage?.cost_rub ?? '?',
-  )
 
   return parseJsonObject(text)
 }
@@ -302,7 +322,10 @@ function imagePrompt(
   ].filter((line) => line !== '').join(' ')
 }
 
-export function createAitunnelProvider(providerProfile: ProviderProfile): AiProvider {
+export function createAitunnelProvider(
+  providerProfile: ProviderProfile,
+  onUsage?: (usage: ProviderUsage) => void,
+): AiProvider {
   return {
     async moderate(photos: Uint8Array[]): Promise<Moderated> {
       // Контракт (types.ts): пустой список проходит тривиально — проверять нечего.
@@ -312,7 +335,7 @@ export function createAitunnelProvider(providerProfile: ProviderProfile): AiProv
       const verdict = await chatJson(config, MODERATION_SYSTEM_PROMPT, [
         { type: 'text', text: 'Проверь приложенные фотографии.' },
         ...imageContentParts(photos),
-      ])
+      ], { operation: 'moderate', onUsage })
 
       if (typeof verdict.allowed !== 'boolean') {
         throw new Error('AITunnel: модерация вернула ответ неожиданного формата')
@@ -361,6 +384,9 @@ export function createAitunnelProvider(providerProfile: ProviderProfile): AiProv
           response_format: 'b64_json',
         }, IMAGE_TIMEOUT_MS)
 
+        const durationMs = Date.now() - started
+        onUsage?.({ operation: 'generateImages', vendor: VENDOR, costRub: costRub(result), durationMs })
+
         const item = result?.data?.[0]
         const encoded: string | null =
           typeof item?.b64_json === 'string'
@@ -377,8 +403,8 @@ export function createAitunnelProvider(providerProfile: ProviderProfile): AiProv
         const info = readImageInfo(bytes)
 
         console.info(
-          'AITunnel', config.imageModel, Date.now() - started, 'мс',
-          'cost_rub', result?.usage?.cost_rub ?? '?',
+          'AITunnel', config.imageModel, durationMs, 'мс',
+          'cost_rub', costRub(result),
           'запрошено', `${profile.width}×${profile.height}`,
           'получено', info === null ? '?' : `${info.width}×${info.height} ${info.format}`,
         )
@@ -408,6 +434,7 @@ export function createAitunnelProvider(providerProfile: ProviderProfile): AiProv
         config,
         COMPOSE_CARD_SYSTEM_PROMPT,
         composeCardPrompt(product, profile),
+        { operation: 'composeCard', onUsage },
       )
 
       const title = typeof parsed.title === 'string' ? parsed.title.trim() : ''
@@ -427,6 +454,7 @@ export function createAitunnelProvider(providerProfile: ProviderProfile): AiProv
         config,
         NAME_GENERATION_SYSTEM_PROMPT,
         `Товар: ${product.title}${scenario}.`,
+        { operation: 'nameGeneration', onUsage },
       )
 
       const title = typeof parsed.title === 'string' ? parsed.title.trim() : ''

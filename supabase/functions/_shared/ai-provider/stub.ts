@@ -53,6 +53,7 @@ import type {
   Moderated,
   OutputProfile,
   ProductBrief,
+  ProviderUsage,
   Recognized,
 } from './types.ts'
 
@@ -173,12 +174,24 @@ function paint(profile: OutputProfile, seed: number, withLayout: boolean): Uint8
   })
 }
 
-export function createStubProvider(): AiProvider {
+/** Заглушка не тратит рубли, но пишет ту же форму записи — местный прогон упражняет
+ *  весь путь `record_generation_costs`, не только живой вендор (шаг 4 плана вехи M5). */
+function recordZeroCost(
+  onUsage: ((usage: ProviderUsage) => void) | undefined,
+  operation: ProviderUsage['operation'],
+  durationMs: number,
+): void {
+  onUsage?.({ operation, vendor: 'stub', costRub: 0, durationMs })
+}
+
+export function createStubProvider(onUsage?: (usage: ProviderUsage) => void): AiProvider {
   const delay = Number(Deno.env.get('AI_STUB_DELAY_MS') ?? DEFAULT_DELAY_MS)
 
   return {
     async moderate(photos: Uint8Array[]): Promise<Moderated> {
+      const started = Date.now()
       await wait(Math.min(delay, 300))
+      recordZeroCost(onUsage, 'moderate', Date.now() - started)
 
       if (moderationRejected(photos)) {
         return { allowed: false, reason: 'заглушка: первый байт фото 0x00 либо AI_STUB_FAILURE=moderation' }
@@ -201,25 +214,35 @@ export function createStubProvider(): AiProvider {
     },
 
     async generateImages({ product, profile, kind, objects }): Promise<GeneratedImage[]> {
-      await wait(delay)
-
       const failure = requestedFailure(product)
-      if (failure === 'images' || failure === 'all') {
-        throw new Error('Заглушка провайдера: изображение не получено')
-      }
-
       const seed = hash(`${product.title}|${product.presetPrompt ?? product.wishes}`)
 
-      return Array.from({ length: objects }, (_unused, index) => ({
-        bytes: paint(profile, seed + index * 7919, kind === 'card'),
-        contentType: 'image/jpeg',
-        width: profile.width,
-        height: profile.height,
-      }))
+      const images: GeneratedImage[] = []
+      for (let index = 0; index < objects; index++) {
+        const started = Date.now()
+        await wait(delay)
+
+        if (failure === 'images' || failure === 'all') {
+          recordZeroCost(onUsage, 'generateImages', Date.now() - started)
+          throw new Error('Заглушка провайдера: изображение не получено')
+        }
+
+        recordZeroCost(onUsage, 'generateImages', Date.now() - started)
+        images.push({
+          bytes: paint(profile, seed + index * 7919, kind === 'card'),
+          contentType: 'image/jpeg',
+          width: profile.width,
+          height: profile.height,
+        })
+      }
+
+      return images
     },
 
     async composeCard({ product, profile }): Promise<CardTexts> {
+      const started = Date.now()
       await wait(Math.min(delay, 600))
+      recordZeroCost(onUsage, 'composeCard', Date.now() - started)
 
       const failure = requestedFailure(product)
       if (failure === 'card' || failure === 'all') {
@@ -237,7 +260,9 @@ export function createStubProvider(): AiProvider {
     },
 
     async nameGeneration({ product }): Promise<string> {
+      const started = Date.now()
       await wait(Math.min(delay, 300))
+      recordZeroCost(onUsage, 'nameGeneration', Date.now() - started)
 
       const failure = requestedFailure(product)
       if (failure === 'all') {

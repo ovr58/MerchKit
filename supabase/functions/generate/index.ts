@@ -24,7 +24,7 @@
  *          "presetId":"clothing-model","productTitle":"Куртка-бомбер","photoPaths":[]}'
  */
 
-import { createProvider } from '../_shared/ai-provider/index.ts'
+import { createProvider, type ProviderUsage } from '../_shared/ai-provider/index.ts'
 import {
   afterResponse,
   callDatabase,
@@ -112,8 +112,9 @@ Deno.serve(async (request: Request): Promise<Response> => {
     // к моменту запуска фото могли поменяться, а списывается ровно этот набор. Отказ
     // тихий — тем же по форме ответом, что и нехватка баллов (US-E3): пользователь не
     // узнаёт, что сработала именно модерация.
+    const usage: ProviderUsage[] = []
     const photos = await Promise.all(photoPaths.map((path) => downloadFile('uploads', path)))
-    const moderation = await createProvider().moderate(photos)
+    const moderation = await createProvider(undefined, (entry) => usage.push(entry)).moderate(photos)
 
     if (!moderation.allowed) {
       console.info('Заявка отклонена модерацией', moderation.reason)
@@ -138,6 +139,12 @@ Deno.serve(async (request: Request): Promise<Response> => {
     }
 
     console.info('Генерация принята', generationId, 'списано', price)
+
+    // Себестоимость модерации известна только теперь, когда generationId уже существует
+    // (шаг 4 плана вехи M5) — писать её раньше некуда. Не блокирует ответ пользователю.
+    if (usage.length > 0) {
+      afterResponse(callDatabase('record_generation_costs', { target_generation: generationId, entries: usage }))
+    }
 
     // Воркер запускается вдогонку: ответ уже ушёл, и вкладку можно закрывать (NFR-02).
     afterResponse(startWorker(generationId))

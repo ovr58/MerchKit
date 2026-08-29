@@ -17,7 +17,12 @@
  *     -d '{"generationId":"<id>"}'
  */
 
-import { createProvider, type OutputProfile, type ProductBrief } from '../_shared/ai-provider/index.ts'
+import {
+  createProvider,
+  type OutputProfile,
+  type ProductBrief,
+  type ProviderUsage,
+} from '../_shared/ai-provider/index.ts'
 import {
   callDatabase,
   CORS_HEADERS,
@@ -109,12 +114,20 @@ Deno.serve(async (request: Request): Promise<Response> => {
 
   await callDatabase('start_generation', { target_generation: generationId })
 
+  // Собирается за весь прогон и пишется в БД на ОБОИХ исходах (шаг 4 плана вехи M5): вендор
+  // мог быть оплачен до отказа (например, изображение получено, а тексты карточки — нет),
+  // и эти рубли реальны независимо от того, что решит `fail_generation`.
+  const usage: ProviderUsage[] = []
+
   try {
-    const status = await run(generation)
+    const status = await run(generation, usage)
+    await persistCosts(generationId, usage)
     return json({ status })
   } catch (error: unknown) {
     const reason = error instanceof Error ? error.message : 'Провайдер не ответил'
     console.error('Генерация', generationId, 'не удалась:', reason)
+
+    await persistCosts(generationId, usage)
 
     // Единственная точка неуспеха: статус и полный возврат — одной транзакцией.
     await callDatabase('fail_generation', {
@@ -127,6 +140,18 @@ Deno.serve(async (request: Request): Promise<Response> => {
   }
 })
 
+/** Бухгалтерия себестоимости не должна ронять и не должна откатывать саму генерацию — отказ
+ *  записи только логируется, а не превращает удавшуюся генерацию в неудавшуюся. */
+async function persistCosts(generationId: string, usage: ProviderUsage[]): Promise<void> {
+  if (usage.length === 0) return
+
+  try {
+    await callDatabase('record_generation_costs', { target_generation: generationId, entries: usage })
+  } catch (error: unknown) {
+    console.error('Генерация', generationId, 'себестоимость не записана:', error)
+  }
+}
+
 /** Наружу уходит человеческий текст: устройство провайдера — не дело пользователя. */
 function humanReason(reason: string): string {
   if (reason.includes('тексты карточки')) return 'Карточка не собралась целиком'
@@ -134,7 +159,7 @@ function humanReason(reason: string): string {
   return 'Провайдер не смог выполнить генерацию'
 }
 
-async function run(generation: GenerationRow): Promise<string> {
+async function run(generation: GenerationRow, usage: ProviderUsage[]): Promise<string> {
   const [profileRow] = (await selectFromDatabase(
     `marketplace_output_profiles?marketplace_id=eq.${generation.marketplace_id}` +
       `&category_id=eq.${generation.category_id}&select=*`,
@@ -175,7 +200,7 @@ async function run(generation: GenerationRow): Promise<string> {
     generation.source_paths.map((path) => downloadFile('uploads', path)),
   )
 
-  const provider = createProvider()
+  const provider = createProvider(undefined, (entry) => usage.push(entry))
 
   const images = await provider.generateImages({
     photos,

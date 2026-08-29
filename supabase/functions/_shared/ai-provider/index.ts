@@ -12,7 +12,7 @@
 
 import { createAitunnelProvider } from './aitunnel.ts'
 import { createStubProvider } from './stub.ts'
-import type { AiProvider, ProviderProfile } from './types.ts'
+import type { AiProvider, ProviderProfile, ProviderUsage } from './types.ts'
 
 export type {
   AiProvider,
@@ -22,6 +22,7 @@ export type {
   OutputProfile,
   ProductBrief,
   ProviderProfile,
+  ProviderUsage,
   Recognized,
 } from './types.ts'
 
@@ -46,10 +47,19 @@ export function providerProfile(): ProviderProfile {
  *
  * Неизвестное имя — это отказ, а не тихий откат на заглушку: незамеченная опечатка в
  * `AI_PROVIDER` на проде означала бы, что пользователи платят баллами за плейсхолдеры.
+ *
+ * **`onUsage`** — необязательный побочный канал себестоимости (шаг 4 плана вехи M5): вызовы
+ * пяти операций контракта возвращают только домен (`Recognized`, `CardTexts`…), а не деньги
+ * и не время, поэтому колбэк передаётся сюда, а не в саму операцию. Заглушка тоже его
+ * вызывает — нулевой ценой, но той же формой записи, чтобы путь записи в БД проверялся на
+ * local и в тестах, а не только на живом вендоре.
  */
-export function createProvider(profile: ProviderProfile = providerProfile()): AiProvider {
-  if (profile.name === 'stub') return createStubProvider()
-  if (profile.name === 'aitunnel') return createAitunnelProvider(profile)
+export function createProvider(
+  profile: ProviderProfile = providerProfile(),
+  onUsage?: (usage: ProviderUsage) => void,
+): AiProvider {
+  if (profile.name === 'stub') return createStubProvider(onUsage)
+  if (profile.name === 'aitunnel') return createAitunnelProvider(profile, onUsage)
 
   throw new Error(
     `Неизвестный AI-провайдер: ${profile.name}. Известны: stub, aitunnel`,
