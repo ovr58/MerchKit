@@ -80,6 +80,47 @@ function imageContentParts(photos: Uint8Array[]): unknown[] {
   return photos.map((photo) => ({ type: 'image_url', image_url: { url: inputDataUri(photo) } }))
 }
 
+/**
+ * Референсные карточки (`docs/assets/cardsforsysprompt/`) — эксперимент шага 2 плана вехи M5,
+ * до сих пор не проверенный: даёт ли модели картинку-пример дизайна лучший результат, чем
+ * словесное описание в `imagePrompt`. Выключено по умолчанию — карточка без них уже стоит
+ * денег, а эффект не подтверждён; включается `AI_PROVIDER_CARD_REFERENCES=true` вручную на
+ * время сравнения, не автоматикой самого стенда.
+ *
+ * Путь — модуль-относительный (`import.meta.url`), не от рабочей директории процесса: у
+ * `Deno.readFile` со строкой это была бы CWD, а она не гарантирована при разных способах
+ * запуска функции. Каталог лежит вне `supabase/functions/` — для локального
+ * `functions serve` это нормально (полный доступ к репозиторию), в реальный деплой эти файлы
+ * сейчас не попадают: решение, копировать ли их в границу деплоя, — только если эксперимент
+ * подтвердит эффект (шаг 2), не раньше.
+ */
+const CARD_REFERENCE_DIR = new URL('../../../../docs/assets/cardsforsysprompt/', import.meta.url)
+
+let cardReferenceCache: unknown[] | null = null
+
+async function cardReferenceParts(): Promise<unknown[]> {
+  if (Deno.env.get('AI_PROVIDER_CARD_REFERENCES') !== 'true') return []
+  if (cardReferenceCache !== null) return cardReferenceCache
+
+  const parts: unknown[] = []
+
+  try {
+    for await (const entry of Deno.readDir(CARD_REFERENCE_DIR)) {
+      if (!entry.isFile || !entry.name.toLowerCase().endsWith('.png')) continue
+      const bytes = await Deno.readFile(new URL(entry.name, CARD_REFERENCE_DIR))
+      parts.push({ type: 'image_url', image_url: { url: `data:image/png;base64,${toBase64(bytes)}` } })
+    }
+  } catch (error) {
+    // Не найдены — едем без них, а не роняем генерацию: это необязательный эксперимент,
+    // а не часть контракта.
+    console.error('AITunnel: референсные карточки не прочитаны', error)
+    return []
+  }
+
+  cardReferenceCache = parts
+  return parts
+}
+
 /** Модель иногда оборачивает JSON в ```-заборы, несмотря на `response_format`. */
 function parseJsonObject(text: string): Record<string, unknown> {
   const stripped = text.trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '')
@@ -214,7 +255,12 @@ function resolutionParam(profile: OutputProfile): string {
   return '4K'
 }
 
-function imagePrompt(product: ProductBrief, profile: OutputProfile, kind: GenerationKind): string {
+function imagePrompt(
+  product: ProductBrief,
+  profile: OutputProfile,
+  kind: GenerationKind,
+  referenceCount: number,
+): string {
   const scenario = product.presetPrompt ?? product.wishes.trim()
   const scenarioLine = scenario === ''
     ? 'Сцена показа — на усмотрение, товар должен быть виден полностью и чётко.'
@@ -226,6 +272,16 @@ function imagePrompt(product: ProductBrief, profile: OutputProfile, kind: Genera
       'карточки товара — не поверх самого товара.'
     : 'Это витринное фото без текста и вёрстки — ничего, кроме товара на фоне, не рисовать.'
 
+  // Без этой оговорки риск в том, что модель перенесёт с референса не оформление, а сам товар,
+  // человека или бренд — референсные PNG в docs/assets/cardsforsysprompt/ это готовые
+  // лайфстайл-карточки, не пустые шаблоны.
+  const referenceLine = referenceCount === 0
+    ? ''
+    : `Первые изображения — фото вашего товара, сохранить точно. Последние ${referenceCount} — ` +
+      'только референс СТИЛЯ оформления карточки: цветовые акценты, типографика, расположение ' +
+      'текстового блока. Товар, человека и бренд с этих референсов не копировать и не ' +
+      'использовать — они не про то, что нарисовать, а про то, как оформить текст.'
+
   return [
     `Товар: ${product.title} (категория «${product.categoryTitle}»).`,
     product.description.trim() === '' ? '' : `Описание: ${product.description.trim()}.`,
@@ -235,6 +291,7 @@ function imagePrompt(product: ProductBrief, profile: OutputProfile, kind: Genera
       'сохранить форму, цвет, надписи и логотипы, число объектов не менять.',
     `Кадр строго ${aspectRatioParam(profile)}, фон ${profile.backgroundTitle} ` +
       `(${profile.backgroundHex}), товар не обрезан по краю кадра.`,
+    referenceLine,
   ].filter((line) => line !== '').join(' ')
 }
 
@@ -281,13 +338,17 @@ export function createAitunnelProvider(providerProfile: ProviderProfile): AiProv
       const config = requireConfig(providerProfile)
       const images: GeneratedImage[] = []
 
+      // Только для карточки: витринному фото ("photo") дизайн-референс не про что применять —
+      // там самого текстового блока нет (шаг 3 плана, ветка kind === 'photo' в imagePrompt).
+      const references = kind === 'card' ? await cardReferenceParts() : []
+
       for (let index = 0; index < objects; index++) {
         const started = Date.now()
 
         const result = await callGateway(`${config.baseUrl}/images/generations`, config.apiKey, {
           model: config.imageModel,
-          prompt: imagePrompt(product, profile, kind),
-          input_references: imageContentParts(photos),
+          prompt: imagePrompt(product, profile, kind, references.length),
+          input_references: [...imageContentParts(photos), ...references],
           resolution: resolutionParam(profile),
           aspect_ratio: aspectRatioParam(profile),
           response_format: 'b64_json',
