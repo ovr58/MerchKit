@@ -261,7 +261,11 @@ export default function Generation() {
                         if (!asset) return
                         void downloadResult(
                           asset.storagePath,
-                          `${row.title ?? row.productTitle}.jpg`,
+                          // Расширение — из формата самого файла, а не зашитое: вендор
+                          // выбирает формат сам, и результат бывает PNG (миграция
+                          // 20260829140000). Зашитый `.jpg` отдавал бы человеку PNG под
+                          // чужим именем — ровно то, что он понесёт на площадку.
+                          `${row.title ?? row.productTitle}.${asset.format}`,
                         ).then((ok) => setDownloadFailed(!ok))
                       }}
                       size="lg"
