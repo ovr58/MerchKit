@@ -5,7 +5,7 @@ import { useEffect } from 'react'
 import { logger } from '@/lib/logger'
 import { supabase } from '@/lib/supabase'
 
-import { writeDraft, type DraftPhoto, type WizardDraft } from './draft'
+import { LAST_STEP, writeDraft, type DraftPhoto, type WizardDraft } from './draft'
 
 /**
  * Модуль `generation-wizard` со стороны данных: распознавание, загрузка фото, запуск
@@ -310,7 +310,7 @@ export async function restoreDraftFrom(generation: Generation): Promise<void> {
 
   const draft: WizardDraft = {
     // Человек уже всё выбрал: возвращаем его на шаг запуска, а не в начало мастера.
-    step: 5,
+    step: LAST_STEP,
     photos,
     productTitle: generation.productTitle,
     productDescription: generation.productDescription,

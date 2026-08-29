@@ -31,6 +31,8 @@ import {
 import { readJpegSize } from '../_shared/jpeg.ts'
 import type { GenerationKind } from '../_shared/pricing.ts'
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 type GenerationRow = {
   id: string
   user_id: string
@@ -77,7 +79,9 @@ Deno.serve(async (request: Request): Promise<Response> => {
   const body: unknown = await request.json().catch(() => null)
   const generationId = (body as { generationId?: unknown } | null)?.generationId
 
-  if (typeof generationId !== 'string' || generationId === '') {
+  // Идентификатор уходит в фильтр запроса, поэтому проверяется его форма, а не только тип.
+  // Значение приходит от нашего же сервера — но «приходит от своих» не проверка.
+  if (typeof generationId !== 'string' || !UUID.test(generationId)) {
     return failure('Не указана генерация', 400)
   }
 

@@ -153,13 +153,27 @@ export default function Wizard() {
       return
     }
 
+    // Дойти сюда без категории и площадки штатным путём нельзя — подвал шага не пускает
+    // дальше. Но черновик приезжает из хранилища браузера и мог быть записан прошлой
+    // версией мастера: молча отправить заявку с пустым полем и получить отказ сервера
+    // хуже, чем вернуть человека на тот шаг, где чего-то не хватает.
+    if (draft.categoryId === null) {
+      wizard.goTo(1)
+      return
+    }
+
+    if (draft.marketplaceId === null) {
+      wizard.goTo(2)
+      return
+    }
+
     setLaunching(true)
     const outcome = await launchGeneration({
       userId: user.id,
       photos: draft.photos,
       kind: draft.kind,
-      marketplaceId: draft.marketplaceId!,
-      categoryId: draft.categoryId!,
+      marketplaceId: draft.marketplaceId,
+      categoryId: draft.categoryId,
       presetId: draft.presetId,
       productTitle: draft.productTitle.trim(),
       productDescription: draft.productDescription.trim(),
