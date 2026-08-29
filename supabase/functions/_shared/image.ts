@@ -35,6 +35,13 @@ export function mimeOf(format: ImageFormat): string {
 function readPngSize(bytes: Uint8Array): { width: number; height: number } | null {
   if (bytes.length < 24) return null
 
+  // Что первый чанк — именно IHDR, проверяем, а не принимаем на веру: по спецификации иначе
+  // не бывает, но байты приезжают из чужого API, и на чужом нарушении смещения 16/20 дали бы
+  // не размер, а мусор — молча и правдоподобно.
+  if (bytes[12] !== 0x49 || bytes[13] !== 0x48 || bytes[14] !== 0x44 || bytes[15] !== 0x52) {
+    return null
+  }
+
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
   return { width: view.getUint32(16), height: view.getUint32(20) }
 }
