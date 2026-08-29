@@ -1,8 +1,8 @@
 import type { SVGProps } from 'react'
 
 /**
- * Иконки артбордов D1, вписанные как есть. Библиотека иконок ради шести штук не заводится:
- * это шесть строк разметки против ещё одной зависимости в бандле.
+ * Иконки артбордов D1 и D2, вписанные как есть. Библиотека иконок ради десятка штук не
+ * заводится: это десяток строк разметки против ещё одной зависимости в бандле.
  *
  * Все — декоративные (`aria-hidden`): смысл несёт текст рядом, а не рисунок.
  */
@@ -82,6 +82,70 @@ export function CoinIcon(props: IconProps) {
     <Icon {...props}>
       <circle cx="12" cy="12" r="9" />
       <path d="M12 7v10M9.5 9.5h3.5a1.75 1.75 0 0 1 0 3.5H9.5" />
+    </Icon>
+  )
+}
+
+export function CheckIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M20 6 9 17l-5-5" />
+    </Icon>
+  )
+}
+
+export function ImageIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect height="18" rx="2" width="18" x="3" y="3" />
+      <circle cx="8.5" cy="9" r="1.5" />
+      <path d="m21 15-5-5L5 21" />
+    </Icon>
+  )
+}
+
+export function UploadIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M12 16V4" />
+      <path d="m7 9 5-5 5 5" />
+      <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
+    </Icon>
+  )
+}
+
+export function DownloadIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M12 4v12" />
+      <path d="m7 11 5 5 5-5" />
+      <path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" />
+    </Icon>
+  )
+}
+
+export function AlertTriangleIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M12 3 2 20h20L12 3Z" />
+      <path d="M12 10v4M12 17h.01" />
+    </Icon>
+  )
+}
+
+export function CloseIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M18 6 6 18M6 6l12 12" />
+    </Icon>
+  )
+}
+
+export function SparkIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M12 3v4M12 17v4M3 12h4M17 12h4" />
+      <path d="M7.5 7.5 5 5M16.5 7.5 19 5M7.5 16.5 5 19M16.5 16.5 19 19" />
     </Icon>
   )
 }

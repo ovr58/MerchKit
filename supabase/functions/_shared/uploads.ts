@@ -43,7 +43,9 @@ export function rejectPhoto(file: { name: string; type: string; size: number }):
   }
 
   if (file.size > MAX_PHOTO_BYTES) {
-    const megabytes = Math.round((file.size / 1024 / 1024) * 10) / 10
+    // Округление ВВЕРХ, а не к ближайшему: файл в 10 МБ и один байт при обычном округлении
+    // назвался бы «10 МБ», и отказ читался бы как «10 МБ больше предела в 10 МБ».
+    const megabytes = Math.ceil((file.size / 1024 / 1024) * 10) / 10
     return `${megabytes} МБ, это больше предела в ${MAX_PHOTO_HUMAN}. Уменьшите файл и попробуйте снова`
   }
 
