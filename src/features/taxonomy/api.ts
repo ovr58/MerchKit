@@ -31,8 +31,13 @@ export type OutputProfile = {
   categoryId: string
   width: number
   height: number
+  /** Порог площадки: ниже него файл не примут. Целевой кадр выше по типу — то, что мы
+   *  запрашиваем у провайдера и обещаем человеку (миграция 20260829140000). */
+  minWidth: number
+  minHeight: number
   aspectLabel: string
-  format: string
+  /** Форматы, принимаемые площадкой: вендор выбирает из них сам. */
+  formats: string[]
   colorSpace: string
   backgroundHex: string
   backgroundTitle: string
@@ -87,7 +92,7 @@ export function useTaxonomy(): UseQueryResult<Taxonomy> {
         supabase
           .from('marketplace_output_profiles')
           .select(
-            'marketplace_id, category_id, width, height, aspect_label, format, color_space, background_hex, background_title',
+            'marketplace_id, category_id, width, height, min_width, min_height, aspect_label, formats, color_space, background_hex, background_title',
           ),
       ])
 
@@ -108,8 +113,10 @@ export function useTaxonomy(): UseQueryResult<Taxonomy> {
           categoryId: row.category_id as string,
           width: row.width as number,
           height: row.height as number,
+          minWidth: row.min_width as number,
+          minHeight: row.min_height as number,
           aspectLabel: row.aspect_label as string,
-          format: row.format as string,
+          formats: row.formats as string[],
           colorSpace: row.color_space as string,
           backgroundHex: row.background_hex as string,
           backgroundTitle: row.background_title as string,

@@ -12,19 +12,17 @@
  * это то же решение ADR-0005, что и у заглушки — частичный неуспех (изображение получено,
  * тексты нет) обязан остаться различимым, а не потеряться внутри одного ответа.
  *
- * **Незакрытый риск, найденный при написании этого файла.** У `generateImages` каталог
- * шлюза даёт только *бакеты* разрешения (`512`/`1K`/`2K`/`4K`) и соотношение сторон — не
- * произвольные пиксели. Профиль площадки (FR-25) требует **точный** `width`×`height`
- * (1200×1600 или 1600×1600), и `generation-worker` уже сверяет это равенством без допуска
- * (`readJpegSize`, M4). Совпадёт ли бакет+аспект с нужными пикселями 1-в-1 — неизвестно без
- * реального вызова: это первое, что покажет шаг 2 (прогон на живом вендоре). Если не
- * совпадёт, `generateImages` бросает диагностическую ошибку с фактическими и ожидаемыми
- * размерами вместо тихой подгонки — решать (донастройка параметров запроса, или отдельный
- * шаг ресэмплинга, которого в проекте сейчас нет) предстоит по факту первого прогона, не
- * здесь.
+ * **Риск бакетов — закрыт прогоном 2026-08-29.** Опасение из первой редакции файла
+ * подтвердилось: шлюз принимает не пиксели, а *бакеты* разрешения (`512`/`1K`/`2K`/`4K`)
+ * плюс соотношение сторон, и точного `width`×`height` не даст никакая его модель. Формат
+ * он выбирает сам — на семи одинаковых запросах вернул JPEG трижды и PNG четырежды.
+ * Решение принято не здесь, а в профиле площадки: он теперь описан порогом и допустимыми
+ * форматами, как их формулируют сами площадки (миграция `20260829140000`), а сверка вынесена
+ * в общий `output-profile.ts` — одно правило на провайдера и воркер.
  */
 
-import { readJpegSize } from '../jpeg.ts'
+import { mimeOf, readImageInfo } from '../image.ts'
+import { describeProfileMismatch } from '../output-profile.ts'
 import type { GenerationKind } from '../pricing.ts'
 import { CATEGORY_IDS, CATEGORY_TITLES } from './categories.ts'
 import type {
@@ -70,27 +68,12 @@ function fromBase64(base64: string): Uint8Array {
   return bytes
 }
 
-/** По магическим байтам, не по расширению — файл пришёл как поток байт без имени. */
-function sniffImageType(bytes: Uint8Array): string | null {
-  if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return 'image/jpeg'
-  if (bytes.length >= 4 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) {
-    return 'image/png'
-  }
-  if (
-    bytes.length >= 12 &&
-    bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 &&
-    bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50
-  ) {
-    return 'image/webp'
-  }
-  return null
-}
-
 /** Входные фото уже прошли проверку формата на загрузке (`uploads.ts`) — не распознали, значит
  *  редкий формат из того же принятого набора (HEIC/HEIF), а не мусор. JPEG как ярлык безопасен:
  *  это только подпись `data:`-URL, шлюз читает содержимое сам. */
 function inputDataUri(photo: Uint8Array): string {
-  return `data:${sniffImageType(photo) ?? 'image/jpeg'};base64,${toBase64(photo)}`
+  const info = readImageInfo(photo)
+  return `data:${info === null ? 'image/jpeg' : mimeOf(info.format)};base64,${toBase64(photo)}`
 }
 
 function imageContentParts(photos: Uint8Array[]): unknown[] {
@@ -197,24 +180,37 @@ function composeCardPrompt(product: ProductBrief, profile: OutputProfile): strin
   ].filter((line) => line !== '').join(' ')
 }
 
-function gcd(a: number, b: number): number {
-  return b === 0 ? a : gcd(b, a % b)
-}
-
-/** `profile.aspectLabel` — для человека, формат `"3 : 4"` с пробелами (миграция таксономии).
- *  Шлюзу нужен компактный `"3:4"` из собственного перечня `supported_aspect_ratios`. */
+/**
+ * Соотношение сторон для шлюза: компактный `"3:4"` из его перечня `supported_aspect_ratios`
+ * (`profile.aspectLabel` — та же величина для человека, с пробелами).
+ *
+ * Берётся из объявленного соотношения профиля, а **не** сокращением целевых пикселей.
+ * Первая редакция делила `width` на `height` и на кадре 1792 × 2400 получала `56:75` —
+ * шлюз отвечал `HTTP 400: не поддерживается соотношение сторон "56:75"` (поймано первым же
+ * прогоном боевого пути 2026-08-29). Пиксели подобраны под бакет вендора и ровному
+ * отношению не обязаны.
+ */
 function aspectRatioParam(profile: OutputProfile): string {
-  const divisor = gcd(profile.width, profile.height)
-  return `${profile.width / divisor}:${profile.height / divisor}`
+  return `${profile.aspectW}:${profile.aspectH}`
 }
 
-/** Каталог шлюза даёт только бакеты, не пиксели — см. риск в шапке файла. Берём бакет не
- *  меньше длинной стороны профиля, чтобы не апскейлить с потерей резкости. */
+/**
+ * Бакет разрешения под целевой кадр профиля.
+ *
+ * Пиксели бакетов **замерены вызовами**, а не взяты из каталога: каталог публикует только
+ * имена (`512`/`1K`/`2K`/`4K`). На 3 : 4 бакет `1K` даёт 896 × 1200, `2K` — 1792 × 2400;
+ * на 1 : 1 `1K` даёт 1024 × 1024. Целевые кадры в `marketplace_profiles` записаны ровно
+ * этими числами, поэтому выбор сводится к длинной стороне и не требует таблицы соответствий.
+ *
+ * Порог сравнения — длинная сторона **целевого кадра**, а не порога площадки: профиль уже
+ * выбрал самый дешёвый бакет, проходящий порог (см. миграцию `20260829140000`, случай
+ * Ozon с одеждой и аксессуарами, где 1K не дотягивает до 900 × 1200 четырёх пикселей).
+ */
 function resolutionParam(profile: OutputProfile): string {
   const longEdge = Math.max(profile.width, profile.height)
-  if (longEdge <= 512) return '512'
-  if (longEdge <= 1024) return '1K'
-  if (longEdge <= 2048) return '2K'
+  if (longEdge <= 600) return '512'
+  if (longEdge <= 1200) return '1K'
+  if (longEdge <= 2400) return '2K'
   return '4K'
 }
 
@@ -310,31 +306,29 @@ export function createAitunnelProvider(providerProfile: ProviderProfile): AiProv
         }
 
         const bytes = fromBase64(encoded)
-        const contentType = sniffImageType(bytes)
+        const info = readImageInfo(bytes)
 
         console.info(
           'AITunnel', config.imageModel, Date.now() - started, 'мс',
           'cost_rub', result?.usage?.cost_rub ?? '?',
           'запрошено', `${profile.width}×${profile.height}`,
+          'получено', info === null ? '?' : `${info.width}×${info.height} ${info.format}`,
         )
 
-        if (contentType !== 'image/jpeg') {
-          throw new Error(
-            `AITunnel вернул ${contentType ?? 'нераспознанный формат'} вместо JPEG — профиль ` +
-              'площадки требует JPEG (FR-25)',
-          )
+        // Правило одно на провайдера и воркер (`output-profile.ts`): здесь оно срабатывает
+        // раньше и с именем вендора в сообщении, чтобы в логах было видно, чей выход не подошёл.
+        const mismatch = describeProfileMismatch(bytes, profile)
+
+        if (mismatch !== null || info === null) {
+          throw new Error(`AITunnel: ${mismatch ?? 'формат готового файла не распознан'}`)
         }
 
-        const size = readJpegSize(bytes)
-
-        if (size === null || size.width !== profile.width || size.height !== profile.height) {
-          throw new Error(
-            `AITunnel вернул изображение ${size?.width ?? '?'}×${size?.height ?? '?'} вместо ` +
-              `${profile.width}×${profile.height} — см. риск в шапке aitunnel.ts`,
-          )
-        }
-
-        images.push({ bytes, contentType, width: size.width, height: size.height })
+        images.push({
+          bytes,
+          contentType: mimeOf(info.format),
+          width: info.width,
+          height: info.height,
+        })
       }
 
       return images

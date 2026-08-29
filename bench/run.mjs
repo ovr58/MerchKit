@@ -407,13 +407,28 @@ for (const sample of samples) {
 
       const size = imageSize(file.bytes)
       outputs.push({ path: `out/${name}`, size, type: file.type })
+
+      // Сверяется тем же правилом, что и продукт (`supabase/functions/_shared/output-profile.ts`):
+      // порог площадки, принятый формат, соотношение сторон с допуском и предел веса.
+      // Равенства пикселей здесь нет намеренно — вендор отдаёт размер бакетами, а площадки
+      // формулируют требование порогом (веха M5, шаг 2).
+      const aspectOk =
+        size !== null &&
+        Math.abs(size.width / size.height - profile.aspect_w / profile.aspect_h) /
+            (profile.aspect_w / profile.aspect_h) <= 0.02
+
       check(
-        `FR-25 файл ${index + 1} совпал с профилем ${sample.marketplaceId} × ${sample.categoryId}`,
+        `FR-25 файл ${index + 1} соответствует требованиям ${sample.marketplaceId} × ${sample.categoryId}`,
         Boolean(profile) &&
-          size?.width === profile.width &&
-          size?.height === profile.height &&
-          size?.format === profile.format,
-        `${size?.width} × ${size?.height} ${size?.format} против ${profile?.width} × ${profile?.height} ${profile?.format}`,
+          size !== null &&
+          profile.formats.includes(size.format) &&
+          size.width >= profile.min_width &&
+          size.height >= profile.min_height &&
+          aspectOk &&
+          file.bytes.length <= profile.max_bytes,
+        `${size?.width} × ${size?.height} ${size?.format}, ${(file.bytes.length / 1048576).toFixed(1)} МБ · ` +
+          `порог ${profile?.min_width} × ${profile?.min_height}, кадр ${profile?.aspect_label}, ` +
+          `форматы ${profile?.formats?.join('/')}`,
       )
     }
   }

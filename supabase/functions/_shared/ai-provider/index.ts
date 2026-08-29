@@ -30,7 +30,11 @@ const DEFAULT_PROVIDER = 'stub'
 
 export function providerProfile(): ProviderProfile {
   return {
-    name: Deno.env.get('AI_PROVIDER') ?? DEFAULT_PROVIDER,
+    // `||`, а не `??`: локальный стенд объявляет эти секреты подстановкой `env(...)` из
+    // окружения, и незаданная переменная приезжает **пустой строкой**, а не `undefined`.
+    // С `??` пустая строка прошла бы дальше и уронила `createProvider` на «неизвестный
+    // провайдер» — то есть разработка без ключа перестала бы работать вовсе.
+    name: Deno.env.get('AI_PROVIDER') || DEFAULT_PROVIDER,
     baseUrl: Deno.env.get('AI_PROVIDER_BASE_URL') ?? null,
     imageModel: Deno.env.get('AI_PROVIDER_IMAGE_MODEL') ?? null,
     textModel: Deno.env.get('AI_PROVIDER_TEXT_MODEL') ?? null,

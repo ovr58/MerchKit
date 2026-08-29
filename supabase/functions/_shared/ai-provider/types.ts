@@ -29,10 +29,24 @@ export type OutputProfile = {
   marketplaceId: string
   marketplaceTitle: string
   categoryId: string
+  /** Целевой кадр: что запрашиваем у провайдера и показываем пользователю до списания. */
   width: number
   height: number
+  /** Порог площадки. Ниже — файл не примут; это и есть настоящее требование FR-25, тогда
+   *  как целевой кадр выбираем мы под возможности вендора (миграция 20260829140000). */
+  minWidth: number
+  minHeight: number
+  /** Соотношение сторон, которого требует площадка. Хранится отдельно от пикселей и НЕ
+   *  выводится из них: целевой кадр под бакет вендора (1792 × 2400) сокращается в 56 : 75,
+   *  а площадке и вендору нужны ровные 3 : 4. */
+  aspectW: number
+  aspectH: number
   aspectLabel: string
-  format: string
+  /** Форматы, которые площадка принимает. Множественное число — не запас на будущее:
+   *  модели изображений выбирают формат сами и на одинаковых запросах отдают то JPEG,
+   *  то PNG (проверено на живом вендоре 2026-08-29). */
+  formats: string[]
+  maxBytes: number
   colorSpace: string
   backgroundHex: string
   backgroundTitle: string

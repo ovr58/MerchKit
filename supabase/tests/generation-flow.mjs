@@ -266,8 +266,11 @@ check('FR-14 результат сохранён одним изображени
 const file = await downloadResult(seller.token, asset.storage_path)
 const size = file ? jpegSize(file.bytes) : null
 check(
-  'FR-25 файл соответствует профилю пары Ozon × «Одежда и обувь»: 3 : 4, 1200 × 1600, JPEG',
-  size?.width === 1200 && size?.height === 1600 && file?.type === 'image/jpeg',
+  // Числа сменились на M5: профиль описан порогом площадки и целевым кадром, достижимым
+  // бакетом вендора. У пары Ozon × «Одежда и обувь» порог 900 × 1200, а бакет 1K даёт
+  // 896 × 1200 — на четыре пикселя ниже, поэтому здесь остаётся 2K (миграция 20260829140000).
+  'FR-25 файл соответствует профилю пары Ozon × «Одежда и обувь»: 3 : 4, 1792 × 2400, JPEG',
+  size?.width === 1792 && size?.height === 2400 && file?.type === 'image/jpeg',
   `${size?.width} × ${size?.height}, ${file?.type}`,
 )
 
@@ -291,8 +294,8 @@ const [squareAsset] = await (
 const squareFile = squareAsset ? await downloadResult(seller.token, squareAsset.storage_path) : null
 const squareSize = squareFile ? jpegSize(squareFile.bytes) : null
 check(
-  'FR-25 исключение Ozon Fresh: «Еда и напитки» уходит квадратом 1600 × 1600',
-  squareDone?.status === 'done' && squareSize?.width === 1600 && squareSize?.height === 1600,
+  'FR-25 исключение Ozon Fresh: «Еда и напитки» уходит квадратом 1024 × 1024',
+  squareDone?.status === 'done' && squareSize?.width === 1024 && squareSize?.height === 1024,
   `${squareSize?.width} × ${squareSize?.height}`,
 )
 

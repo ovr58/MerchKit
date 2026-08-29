@@ -206,7 +206,12 @@ export function OutputParams({ note, profile }: { note?: string; profile: Output
   const rows: [string, ReactNode][] = [
     ['Кадр', profile.aspectLabel],
     ['Размер', `${profile.width} × ${profile.height}`],
-    ['Формат', `${profile.format.toUpperCase()}, ${profile.colorSpace}`],
+    // Форматов несколько, и выбирает из них вендор, а не мы: обещать один — обещать то,
+    // чем мы не управляем. Площадка принимает любой из перечисленных (FR-25).
+    [
+      'Формат',
+      `${profile.formats.map((format) => format.toUpperCase()).join(' или ')}, ${profile.colorSpace}`,
+    ],
     [
       'Фон',
       <span className="flex items-center gap-2" key="bg">

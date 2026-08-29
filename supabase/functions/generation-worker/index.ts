@@ -28,7 +28,8 @@ import {
   selectFromDatabase,
   uploadFile,
 } from '../_shared/edge.ts'
-import { readJpegSize } from '../_shared/jpeg.ts'
+import { readImageInfo } from '../_shared/image.ts'
+import { describeProfileMismatch } from '../_shared/output-profile.ts'
 import type { GenerationKind } from '../_shared/pricing.ts'
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -54,8 +55,13 @@ type GenerationRow = {
 type ProfileRow = {
   width: number
   height: number
+  min_width: number
+  min_height: number
+  aspect_w: number
+  aspect_h: number
   aspect_label: string
-  format: string
+  formats: string[]
+  max_bytes: number
   color_space: string
   background_hex: string
   background_title: string
@@ -144,8 +150,13 @@ async function run(generation: GenerationRow): Promise<string> {
     categoryId: generation.category_id,
     width: profileRow.width,
     height: profileRow.height,
+    minWidth: profileRow.min_width,
+    minHeight: profileRow.min_height,
+    aspectW: profileRow.aspect_w,
+    aspectH: profileRow.aspect_h,
     aspectLabel: profileRow.aspect_label,
-    format: profileRow.format,
+    formats: profileRow.formats,
+    maxBytes: profileRow.max_bytes,
     colorSpace: profileRow.color_space,
     backgroundHex: profileRow.background_hex,
     backgroundTitle: profileRow.background_title,
@@ -182,17 +193,10 @@ async function run(generation: GenerationRow): Promise<string> {
   // это файл, за который пользователь заплатил зря (FR-25). На M5 это останется
   // единственной проверкой между настоящим вендором и карточкой, которую не примут.
   for (const image of images) {
-    const size = readJpegSize(image.bytes)
+    const mismatch = describeProfileMismatch(image.bytes, profile)
 
-    if (image.contentType !== 'image/jpeg' || profile.format !== 'jpeg') {
-      throw new Error('Изображение вернулось не в том формате, что требует профиль площадки')
-    }
-
-    if (size === null || size.width !== profile.width || size.height !== profile.height) {
-      throw new Error(
-        `Изображение ${size?.width ?? '?'} × ${size?.height ?? '?'} не совпадает с профилем ` +
-          `${profile.width} × ${profile.height}`,
-      )
+    if (mismatch !== null) {
+      throw new Error(`Изображение не подходит профилю площадки: ${mismatch}`)
     }
   }
 
@@ -211,9 +215,13 @@ async function run(generation: GenerationRow): Promise<string> {
 
   const assets = await Promise.all(
     images.map(async (image, index) => {
-      const path = `${generation.user_id}/${generation.id}/result-${index + 1}.jpg`
+      // Формат берётся из самого файла, а не из профиля: профиль перечисляет, что площадка
+      // ПРИНИМАЕТ, а вендор выбирает из этого списка сам. Записать сюда `profile.formats[0]`
+      // значило бы положить в каталог PNG под именем `.jpg` и с записью «jpeg» в базе.
+      const info = readImageInfo(image.bytes)!
+      const path = `${generation.user_id}/${generation.id}/result-${index + 1}.${info.format}`
       await uploadFile('results', path, image.bytes, image.contentType)
-      return { storage_path: path, width: image.width, height: image.height, format: profile.format }
+      return { storage_path: path, width: info.width, height: info.height, format: info.format }
     }),
   )
 
