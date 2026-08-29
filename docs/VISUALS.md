@@ -94,7 +94,6 @@ flowchart TB
             AUTH["Auth<br/>email + пароль"]
             DB[("Postgres + RLS<br/>profiles · ledger · generations<br/>presets · packages")]
             ST[("Storage<br/>uploads · results (приватные)")]
-            RT["Realtime<br/>статус генерации"]
             EF["Edge Functions (Deno)<br/>generation-service · generation-worker<br/>billing · ai-provider"]
         end
     end
@@ -102,9 +101,8 @@ flowchart TB
 
     U --> UI
     UI --> AUTH
-    UI -->|чтение своих данных, RLS| DB
+    UI -->|чтение своих данных и статуса генерации, RLS| DB
     UI -->|подписанные ссылки| ST
-    UI -->|подписка на статус| RT
     UI -->|запуск генерации, пополнение| EF
     EF -->|service-role: баланс, результаты| DB
     EF --> ST
