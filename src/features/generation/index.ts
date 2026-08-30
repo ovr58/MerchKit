@@ -12,6 +12,7 @@ export {
   useCatalog,
   useGeneration,
   useInvalidateAfterLaunch,
+  type DraftRestore,
   type Generation,
   type GenerationStatus,
   type LaunchOutcome,

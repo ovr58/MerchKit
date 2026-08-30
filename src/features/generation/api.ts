@@ -310,17 +310,38 @@ export async function downloadResult(storagePath: string, fileName: string): Pro
  * генерацию **с теми же параметрами**»).
  *
  * Фото приходится выкачивать обратно из `uploads`: черновик очищается при запуске, иначе
- * человек рисковал бы случайно оплатить ту же генерацию второй раз. Файлы при этом никуда
- * не делись — они лежат в его же папке бакета и читаются под RLS.
+ * человек рисковал бы случайно оплатить ту же генерацию второй раз. Внутри срока хранения
+ * файлы лежат в его же папке бакета и читаются под RLS.
+ *
+ * **За сроком хранения фото не будет, и это штатный исход, а не сбой** (веха M5, шаг 6):
+ * `UPLOAD_RETENTION_DAYS` дня спустя уборка их удаляет, о чём человеку сказано на экране
+ * загрузки. Поэтому пропажа не пишется в `logger.warn` наравне с настоящими отказами и
+ * возвращается вызывающему числом: мастер обязан сказать «параметры восстановлены, фото
+ * загрузите заново», а не подсунуть пустую загрузку под кнопку «Запустить».
  */
-export async function restoreDraftFrom(generation: Generation): Promise<void> {
+export type DraftRestore = {
+  /** Сколько фото исходной заявки вернулось в черновик. */
+  restored: number
+  /** Сколько не вернулось из-за срока хранения — их и называем человеку. */
+  expired: number
+}
+
+export async function restoreDraftFrom(generation: Generation): Promise<DraftRestore> {
   const photos: DraftPhoto[] = []
+  let expired = 0
 
   for (const path of generation.sourcePaths) {
     const { data, error } = await supabase.storage.from('uploads').download(path)
 
     if (error || !data) {
-      logger.warn('Фото исходной заявки не восстановлено', { reason: error?.message })
+      // 404 — файл убран по сроку хранения; всё остальное (сеть, права, сбой Storage) —
+      // настоящий отказ, и он по-прежнему попадает в лог.
+      if (isMissingFile(error)) {
+        expired += 1
+      } else {
+        logger.warn('Фото исходной заявки не восстановлено', { reason: error?.message })
+      }
+
       continue
     }
 
@@ -335,7 +356,12 @@ export async function restoreDraftFrom(generation: Generation): Promise<void> {
 
   const draft: WizardDraft = {
     // Человек уже всё выбрал: возвращаем его на шаг запуска, а не в начало мастера.
-    step: LAST_STEP,
+    // Кроме случая, когда фото не пережили срок хранения: возвращаем на «Фото» и при
+    // частичной пропаже тоже. Иначе человек оказался бы перед кнопкой «Запустить» с
+    // неполным набором и заплатил за генерацию по одному фото вместо четырёх, ничего об
+    // этом не узнав. Остальные параметры при этом остаются — распознавание их не
+    // перетрёт, оно заполняет только пустое.
+    step: expired > 0 ? 0 : LAST_STEP,
     photos,
     productTitle: generation.productTitle,
     productDescription: generation.productDescription,
@@ -348,6 +374,22 @@ export async function restoreDraftFrom(generation: Generation): Promise<void> {
   }
 
   await writeDraft(draft)
+
+  return { restored: photos.length, expired }
+}
+
+/**
+ * Файла нет — против «не смогли его прочитать».
+ *
+ * Storage отвечает на пропажу 404, и `StorageApiError` несёт код и статусом (`status`), и
+ * строкой (`statusCode`) — в разных версиях клиента по-разному, поэтому смотрим оба, а не
+ * разбираем текст сообщения.
+ */
+function isMissingFile(error: unknown): boolean {
+  if (error === null || typeof error !== 'object') return false
+
+  const { status, statusCode } = error as { status?: unknown; statusCode?: unknown }
+  return status === 404 || statusCode === '404' || statusCode === 404
 }
 
 /** После запуска баланс и каталог другие — обе выборки перечитываются. */

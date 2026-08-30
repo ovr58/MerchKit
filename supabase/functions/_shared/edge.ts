@@ -183,6 +183,34 @@ export async function uploadFile(
   }
 }
 
+/**
+ * Удалить файлы из приватного бакета от имени сервера.
+ *
+ * Одним запросом на пачку, а не по файлу: уборка по сроку хранения (веха M5, шаг 6) ходит
+ * сотнями путей за прогон. Поле называется `prefixes` исторически — Storage удаляет по
+ * точному имени объекта, а не по началу пути, и передавать сюда «папку» бессмысленно.
+ */
+export async function removeFiles(bucket: string, paths: string[]): Promise<void> {
+  if (paths.length === 0) return
+
+  const secret = requiredEnv('SUPABASE_SERVICE_ROLE_KEY')
+
+  const response = await fetch(`${requiredEnv('SUPABASE_URL')}/storage/v1/object/${bucket}`, {
+    method: 'DELETE',
+    headers: {
+      apikey: secret,
+      Authorization: `Bearer ${secret}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ prefixes: paths }),
+    signal: AbortSignal.timeout(STORAGE_TIMEOUT_MS),
+  })
+
+  if (!response.ok) {
+    throw new Error(`Файлы бакета ${bucket} не удалены: HTTP ${response.status}`)
+  }
+}
+
 /** Пришёл ли запрос от нашего же сервера, а не от пользователя с валидным токеном. */
 export function isServiceRoleCaller(request: Request): boolean {
   const authorization = request.headers.get('Authorization') ?? ''

@@ -102,8 +102,13 @@ export default function Generation() {
   // запуске очищается, поэтому исходники выкачиваются обратно из бакета.
   async function retry(generation: GenerationRow) {
     setRetrying(true)
-    await restoreDraftFrom(generation)
-    void navigate('/generate')
+    const restore = await restoreDraftFrom(generation)
+
+    // Фото старше срока хранения уже убраны (веха M5, шаг 6) — мастер обязан объяснить
+    // это сам, иначе человек увидит пустую загрузку и решит, что мы потеряли его файлы.
+    void navigate('/generate', {
+      state: restore.expired > 0 ? { expiredPhotos: restore.expired } : undefined,
+    })
   }
 
   const resolve = useCallback((path: string) => signedResultUrl(path), [])
