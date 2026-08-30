@@ -41,7 +41,13 @@ const MIME = {
 /* ------------------------------------------------------------------------- аргументы */
 
 function args(argv) {
-  const parsed = { samples: join(ROOT, 'bench', 'samples'), only: null, label: null, out: null }
+  const parsed = {
+    samples: join(ROOT, 'bench', 'samples'),
+    only: null,
+    label: null,
+    out: null,
+    repeat: '1',
+  }
 
   for (let at = 0; at < argv.length; at += 2) {
     const key = argv[at]?.replace(/^--/, '')
@@ -53,6 +59,11 @@ function args(argv) {
 
   // Без метки прогон не с чем сравнить, а вся ценность стенда — в сравнении кандидатов.
   if (!parsed.label) throw new Error('Не указан --label: имя кандидата в отчёте обязательно')
+
+  parsed.repeat = Number(parsed.repeat)
+  if (!Number.isInteger(parsed.repeat) || parsed.repeat < 1) {
+    throw new Error(`--repeat принимает целое ≥ 1, получено: ${parsed.repeat}`)
+  }
   return parsed
 }
 
@@ -261,7 +272,26 @@ function costOf(row) {
 /* ---------------------------------------------------------------------------- прогон */
 
 const options = args(process.argv.slice(2))
-const samples = readSamples(options.samples, options.only)
+
+/**
+ * Повторы одного набора.
+ *
+ * Часть брака вендора **недетерминирована**: один и тот же набор `accessories-watch` в двух
+ * вызовах подряд дал сначала верное «СДЕЛАНО В СССР», потом искажённое «СЕКЗАНО & СССР»
+ * (запись B11 в `planning/BACKLOG.md`). На одном прогоне такую частоту не измерить, а без
+ * частоты правку промпта не с чем сравнить: улучшение неотличимо от везения.
+ *
+ * Повторы разворачиваются здесь, а не внутри цикла: ниже `sample.id` служит и именем файла
+ * в `in/`/`out/`, и путём в бакете, и именем группы радиокнопок в отчёте — повторы с общим
+ * идентификатором затирали бы друг друга. Порядок — по набору, чтобы его повторы легли в
+ * отчёте рядом и сравнивались глазами без прокрутки. При `--repeat 1` (умолчание)
+ * идентификаторы остаются прежними: старые прогоны и их отчёты сравнимы с новыми.
+ */
+const samples = readSamples(options.samples, options.only).flatMap((sample) =>
+  options.repeat === 1
+    ? [sample]
+    : Array.from({ length: options.repeat }, (_, n) => ({ ...sample, id: `${sample.id}-r${n + 1}` })),
+)
 
 const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\..+/, '')
 const outDir = options.out ?? join(ROOT, 'bench', 'runs', `${options.label}-${stamp}`)
@@ -452,13 +482,28 @@ for (const sample of samples) {
 
 /* ---------------------------------------------------------------------------- отчёты */
 
-/** Критерий берётся из README, а не переписывается здесь: две копии формулировки разъедутся. */
-function criterion() {
+/** Формулировки берутся из README, а не переписываются здесь: две копии разъедутся. */
+function readmeSection(heading) {
   const text = readFileSync(README, 'utf8')
-  const from = text.indexOf('## Критерий узнаваемости')
+  const from = text.indexOf(heading)
   const to = text.indexOf('\n---', from)
-  return from < 0 ? '(критерий не найден в bench/README.md)' : text.slice(from, to).trim()
+  return from < 0 ? `(раздел «${heading}» не найден в bench/README.md)` : text.slice(from, to).trim()
 }
+
+const criterion = () => readmeSection('## Критерий узнаваемости')
+
+/**
+ * Категории брака текстового блока карточки (план `active/card-text-block_2026-08-30.md`,
+ * шаг 1). Порядок и формулировки — те же, что в README; ключ уходит в имя поля отчёта и в
+ * выгрузку, поэтому меняется вместе с README, а не отдельно.
+ */
+const CARD_DEFECTS = [
+  ['A', 'искажение или дублирование слова'],
+  ['B', 'невыполненный плейсхолдер шаблона'],
+  ['C', 'чужой брендинг или водяной знак'],
+  ['D', 'текст поверх самого товара'],
+  ['E', 'текстового блока нет вовсе'],
+]
 
 const esc = (value) =>
   String(value ?? '').replace(
@@ -517,7 +562,7 @@ writeFileSync(
 
 const sections = report
   .map(
-    (item) => `<section class="sample" data-id="${esc(item.sample.id)}">
+    (item) => `<section class="sample" data-id="${esc(item.sample.id)}" data-kind="${esc(item.sample.kind)}">
  <h2>${esc(item.sample.id)}${item.sample.note ? ` — ${esc(item.sample.note)}` : ''}</h2>
  <div class="row">
   <div class="col"><h3>Вход</h3>${item.inputs.map((src) => `<img src="${esc(src)}" alt="">`).join('')}</div>
@@ -549,6 +594,17 @@ const sections = report
   <label><input type="radio" name="v-${esc(item.sample.id)}" value="не узнаваем"> не узнаваем</label>
   <input type="text" name="n-${esc(item.sample.id)}" placeholder="чем именно не тот предмет" size="52">
  </div>
+ ${
+   item.sample.kind !== 'card'
+     ? ''
+     : `<div class="verdict defects">
+  <span class="label">Брак текстового блока</span>
+  ${CARD_DEFECTS.map(
+    ([key, title]) =>
+      `<label><input type="checkbox" name="d-${esc(item.sample.id)}-${key}" value="${key}"> ${key} — ${esc(title)}</label>`,
+  ).join('')}
+ </div>`
+ }
 </section>`,
   )
   .join('\n')
@@ -570,6 +626,8 @@ writeFileSync(
  .pass{color:#15803d}
  .fail{color:#b91c1c;font-weight:600}
  .verdict{margin-top:12px;padding-top:12px;border-top:1px solid #e4e4e7;display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+ .defects{font-size:13px;gap:12px}
+ .defects .label{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#71717a}
  dl{margin:0;font-size:14px} dt{color:#71717a;font-size:12px;margin-top:8px} dd{margin:0}
  small{color:#a1a1aa}
  textarea{width:100%;min-height:140px;font:13px/1.4 ui-monospace,monospace;margin-top:8px}
@@ -577,6 +635,11 @@ writeFileSync(
 <h1>Приёмочный стенд — ${esc(options.label)}</h1>
 <p class="meta">Наборов: ${report.length} · машинных провалов: ${failed} · прогон ${esc(stamp)}</p>
 <div class="criterion">${esc(criterion())}</div>
+${
+  report.some((item) => item.sample.kind === 'card')
+    ? `<div class="criterion">${esc(readmeSection('## Брак текстового блока карточки'))}</div>`
+    : ''
+}
 ${sections}
 <h2>Вердикты</h2>
 <p>Проставленное глазами собирается сюда, отсюда уходит в ADR-0006. Сохраняется в браузере.</p>
@@ -591,10 +654,11 @@ ${sections}
    const saved = state[el.name];
    if (saved !== undefined) {
      if (el.type === 'radio') el.checked = el.value === saved;
+     else if (el.type === 'checkbox') el.checked = saved === true;
      else el.value = saved;
    }
    el.addEventListener('input', () => {
-     state[el.name] = el.value;
+     state[el.name] = el.type === 'checkbox' ? el.checked : el.value;
      try { localStorage.setItem(KEY, JSON.stringify(state)) } catch {}
    });
  }
@@ -602,11 +666,32 @@ ${sections}
  document.getElementById('collect').addEventListener('click', () => {
    const rows = [...document.querySelectorAll('section.sample')].map((s) => ({
      id: s.dataset.id,
+     kind: s.dataset.kind,
      verdict: s.querySelector('input[type=radio]:checked')?.value ?? null,
      note: s.querySelector('input[type=text]').value,
+     defects: [...s.querySelectorAll('.defects input:checked')].map((el) => el.value),
    }));
-   document.getElementById('out').value =
-     JSON.stringify({ label: ${JSON.stringify(options.label)}, verdicts: rows }, null, 2);
+
+   // Ради частоты стенд и заводился: считать её глазами по тридцати кадрам — это ошибиться.
+   // Знаменатель — только карточки: у типа «фото» текстового блока нет, и включать их в
+   // долю значило бы занижать её ровно на их число.
+   const cards = rows.filter((row) => row.kind === 'card');
+   const defectCounts = {};
+   for (const row of cards) {
+     for (const key of row.defects) defectCounts[key] = (defectCounts[key] ?? 0) + 1;
+   }
+
+   document.getElementById('out').value = JSON.stringify(
+     {
+       label: ${JSON.stringify(options.label)},
+       cardFrames: cards.length,
+       cardsWithDefect: cards.filter((row) => row.defects.length > 0).length,
+       defectCounts,
+       verdicts: rows,
+     },
+     null,
+     2,
+   );
  });
 </script>
 </html>`,
