@@ -246,29 +246,30 @@ npm run build
   стека в облако с чужим адресом. В развёрнутом проекте — Supabase Cron (`pg_cron`),
   ежедневно; вызов тот же, что руками:
 
-  ```sql
-  -- Один раз на окружение: ключ кладётся в Vault, а не в текст задания. Команда задания
-  -- хранится в `cron.job` открытым текстом, и вписанный туда service-role стал бы вечным
-  -- ключом от всего проекта, видимым каждому, кто дотянулся до базы.
-  select vault.create_secret('<service-role-key>', 'service_role_key');
+  **Заводится один раз на окружение, тремя шагами.** Ключом расписания служит не
+  service-role, а отдельный секрет `PURGE_TOKEN`: команда задания хранится в `cron.job`
+  открытым текстом, и вписанный туда service-role стал бы вечным ключом от всего проекта
+  для любого, кто дотянулся до базы. Токен уборки не умеет ничего, кроме уборки, поэтому у
+  `purge-uploads` снята проверка JWT на шлюзе — авторизацию делает сама функция.
 
-  select cron.schedule('purge-uploads', '0 3 * * *', $$
-    select net.http_post(
-      url := 'https://<ref>.supabase.co/functions/v1/purge-uploads',
-      headers := jsonb_build_object(
-        'Content-Type', 'application/json',
-        'Authorization', 'Bearer ' || (
-          select decrypted_secret from vault.decrypted_secrets where name = 'service_role_key'
-        )
-      )
-    )
-  $$);
+  ```sql
+  -- 1. Расширения (в облаке ставятся и через Database → Extensions)
+  create extension if not exists pg_net with schema extensions;
+  create extension if not exists pg_cron;
+
+  -- 2. Тот же токен, что положен в секреты функций как PURGE_TOKEN
+  select vault.create_secret('<токен>', 'purge_token');
+
+  -- 3. Расписание. Одной строкой: Management API ломается на многострочных $$-литералах
+  select cron.schedule('purge-uploads','0 3 * * *',$job$select net.http_post(url:='https://<ref>.supabase.co/functions/v1/purge-uploads',headers:=jsonb_build_object('Content-Type','application/json','Authorization','Bearer '||(select decrypted_secret from vault.decrypted_secrets where name='purge_token')))$job$);
   ```
 
-  Требуются расширения `pg_cron` и `pg_net` — включаются один раз в Database → Extensions.
+  Токен генерируется на месте (`openssl rand -hex 32`) и ставится в секреты функций
+  `supabase secrets set PURGE_TOKEN=…` — в git он не попадает, как и любой другой секрет.
   Локально расписания нет
   намеренно: уборка запускается руками, `curl` из шапки `supabase/functions/purge-uploads/index.ts`.
-  Проверка, что расписание живо: `select * from cron.job_run_details order by start_time desc limit 5`.
+  Проверка, что расписание живо: `select * from cron.job_run_details order by start_time desc limit 5`;
+  ответ самого вызова виден в `select status_code, content from net._http_response order by id desc limit 1`.
 - **Версионирование:** > TODO(пользователь): semver по тегам или просто по коммитам?
 - **Наблюдаемость:** логируются регистрация, запуск генерации, списание / возврат баллов,
   вызов провайдера с длительностью и себестоимостью, ошибки провайдера — всё с

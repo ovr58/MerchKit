@@ -12,8 +12,18 @@
  * прописанный в миграции job уехал бы с локального стека на стейдж вместе с чужим
  * адресом. Как заводится — `docs/SPEC.md` §8.
  *
- * **Ключ service-role обязателен.** Функция удаляет чужие файлы по всему бакету — это
- * ровно то, чего не должен уметь ни один вошедший пользователь (NFR-04, NFR-05).
+ * **Посторонний вызвать не может.** Функция удаляет чужие файлы по всему бакету — это
+ * ровно то, чего не должен уметь ни один вошедший пользователь (NFR-04, NFR-05). Пускаем
+ * двоих:
+ * - service-role — наш собственный сервер, как у воркера;
+ * - `PURGE_TOKEN` — **отдельный секрет только для расписания**. Задание `cron` хранит свой
+ *   заголовок в базе, и положить туда service-role значило бы завести в таблице вечный
+ *   ключ от всего проекта. Токен уборки не умеет ничего, кроме этой уборки, и она удаляет
+ *   только то, что и так подлежит удалению по сроку.
+ *
+ * Из-за второго проверка `verify_jwt` у этой функции снята (`supabase/config.toml`):
+ * шлюз отбил бы токен, не являющийся JWT, ещё до обработчика. Авторизацию делает сама
+ * функция — ниже, до единого обращения к данным.
  *
  * Проверить локально:
  *   curl -sX POST http://127.0.0.1:54321/functions/v1/purge-uploads \
@@ -31,6 +41,20 @@ import { UPLOAD_RETENTION_DAYS } from '../_shared/uploads.ts'
  */
 const BATCH = 500
 
+/**
+ * Пришёл ли вызов от расписания.
+ *
+ * `PURGE_TOKEN` может не существовать вовсе — локально расписания нет (`docs/SPEC.md` §8).
+ * Тогда эта дорога просто закрыта, и остаётся service-role: пустой секрет не должен
+ * превращаться в «пускаем любого без заголовка».
+ */
+function isScheduleCaller(request: Request): boolean {
+  const expected = Deno.env.get('PURGE_TOKEN') ?? ''
+  if (expected === '') return false
+
+  return (request.headers.get('Authorization') ?? '') === `Bearer ${expected}`
+}
+
 Deno.serve(async (request: Request): Promise<Response> => {
   if (request.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: CORS_HEADERS })
@@ -40,7 +64,7 @@ Deno.serve(async (request: Request): Promise<Response> => {
     return failure('Метод не поддерживается', 405)
   }
 
-  if (!isServiceRoleCaller(request)) {
+  if (!isServiceRoleCaller(request) && !isScheduleCaller(request)) {
     return failure('Уборка запускается только сервером', 401)
   }
 
