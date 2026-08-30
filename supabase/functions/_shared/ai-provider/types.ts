@@ -151,5 +151,13 @@ export type ProviderProfile = {
   name: string
   baseUrl: string | null
   imageModel: string | null
+  /** Модель, на которую уходит повтор при отказе основной **по содержанию** запроса
+   *  (ADR-0011). Не задана — повтора нет, поведение прежнее. */
+  imageModelFallback: string | null
+  /** Размеры кадра, которые принимает модель изображений, через запятую (`1024x1024,…`).
+   *  Пусто — модель принимает бакеты разрешения, а не пиксели. Живёт в конфигурации, а не в
+   *  коде: имён моделей и их особенностей в коде нет (docs/SPEC.md §5). */
+  imageSizes: string | null
+  imageSizesFallback: string | null
   textModel: string | null
 }

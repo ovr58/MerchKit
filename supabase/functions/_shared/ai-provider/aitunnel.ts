@@ -19,10 +19,17 @@
  * Решение принято не здесь, а в профиле площадки: он теперь описан порогом и допустимыми
  * форматами, как их формулируют сами площадки (миграция `20260829140000`), а сверка вынесена
  * в общий `output-profile.ts` — одно правило на провайдера и воркер.
+ *
+ * **Уточнено ADR-0011: бакеты — не свойство шлюза, а свойство модели.** Модели OpenAI на том
+ * же шлюзе бакетов не принимают вовсе и требуют размер в пикселях (`size`); у `gpt-image-2`
+ * в каталоге шлюза оба списка — `supported_resolutions` и `supported_aspect_ratios` — пусты.
+ * Поэтому форма запроса выбирается по конфигурации модели (`AI_PROVIDER_IMAGE_SIZES`), а не
+ * зашита одна на вендора. Наружу интерфейса `ai-provider` это не протекает: профиль площадки
+ * по-прежнему говорит порогом и соотношением, а не пикселями.
  */
 
 import { mimeOf, readImageInfo } from '../image.ts'
-import { describeProfileMismatch } from '../output-profile.ts'
+import { ASPECT_TOLERANCE, describeProfileMismatch } from '../output-profile.ts'
 import type { GenerationKind } from '../pricing.ts'
 import { CATEGORY_IDS, CATEGORY_TITLES } from './categories.ts'
 import type {
@@ -47,9 +54,35 @@ function costRub(result: any): number {
 }
 
 const CHAT_TIMEOUT_MS = 20_000
-const IMAGE_TIMEOUT_MS = 60_000
 
-type Config = { apiKey: string; baseUrl: string; imageModel: string; textModel: string }
+/**
+ * Потолок вызова изображения — выбран по замерам, а не круглым числом (B13, ADR-0011).
+ *
+ * Двенадцать вызовов `gpt-image-2` дали 17,9–51,9 с на проводе (`bench/model-probe.mjs`,
+ * прогоны 2026-08-30), а боевой конвейер добавляет к вызову ещё около 32 с сверх провода —
+ * это измерено контрольным экспериментом и **пока не исправлено** (B13). Худшая
+ * наблюдённая сумма ≈ 84 с: прежние 60 с резали бы даже успешные генерации.
+ *
+ * 150 с — та же сумма с запасом на полтора. Число временное по своей природе: как только
+ * B13 уберёт наши 32 с, потолок обязан вернуться к времени вендора, иначе неудача будет
+ * доходить до пользователя вдвое дольше, чем нужно. Жёсткого обещания по времени генерации
+ * в `docs/TZ.md` нет (NFR-02 требует видимого прогресса, а не срока), поэтому подъём не
+ * ломает контракта.
+ */
+const IMAGE_TIMEOUT_MS = 150_000
+
+/**
+ * Модель изображений вместе с формой запроса, которую она принимает.
+ *
+ * `sizes` пуст — модель принимает бакеты (`resolution` + `aspect_ratio`), как Gemini.
+ * Непустой — модель требует размер в пикселях (`size`), как модели OpenAI: у `gpt-image-2`
+ * в каталоге шлюза оба списка (`supported_resolutions`, `supported_aspect_ratios`) пусты, и
+ * бакетный запрос он отвергает с HTTP 400. Список приходит из окружения, а не из кода:
+ * имён моделей в коде нет (`ai-provider/index.ts`, docs/SPEC.md §5).
+ */
+type ImageModelSpec = { model: string; sizes: string[] }
+
+type Config = { apiKey: string; baseUrl: string; imageModels: ImageModelSpec[]; textModel: string }
 
 /** Читается на каждый вызов, а не один раз при создании: секрет может обновиться без передеплоя. */
 function requireConfig(profile: ProviderProfile): Config {
@@ -59,7 +92,27 @@ function requireConfig(profile: ProviderProfile): Config {
   if (!profile.imageModel) throw new Error('Не задана переменная окружения AI_PROVIDER_IMAGE_MODEL')
   if (!profile.textModel) throw new Error('Не задана переменная окружения AI_PROVIDER_TEXT_MODEL')
 
-  return { apiKey, baseUrl: profile.baseUrl, imageModel: profile.imageModel, textModel: profile.textModel }
+  // Резервная модель — не запас на будущее, а закрытие дыры смены модели (ADR-0011):
+  // основная отказывает по классу товара (лицензионный мерч), резервная этот класс рисует.
+  // Не задана — список из одной модели, поведение прежнее.
+  const imageModels: ImageModelSpec[] = [
+    { model: profile.imageModel, sizes: parseSizes(profile.imageSizes) },
+  ]
+
+  if (profile.imageModelFallback) {
+    imageModels.push({
+      model: profile.imageModelFallback,
+      sizes: parseSizes(profile.imageSizesFallback),
+    })
+  }
+
+  return { apiKey, baseUrl: profile.baseUrl, imageModels, textModel: profile.textModel }
+}
+
+/** `1024x1024,1536x2048` → список. Пустая строка и незаданная переменная — пустой список,
+ *  то есть бакетная форма запроса. */
+function parseSizes(raw: string | null): string[] {
+  return (raw ?? '').split(',').map((size) => size.trim()).filter((size) => size !== '')
 }
 
 function toBase64(bytes: Uint8Array): string {
@@ -139,6 +192,85 @@ function parseJsonObject(text: string): Record<string, unknown> {
   return parsed as Record<string, unknown>
 }
 
+/**
+ * Ошибка шлюза с сохранённым статусом и телом ответа.
+ *
+ * Класс, а не строка: по телу ответа надо отличать отказ **по содержанию** (его лечит
+ * резервная модель) от всех прочих 400 — например от «не поддерживается разрешение», где
+ * повтор на другой модели ничего не даст. Разбор строки сообщения был бы тем же разбором,
+ * только хрупким.
+ */
+export class GatewayError extends Error {
+  constructor(readonly status: number, readonly payload: string) {
+    super(`AITunnel HTTP ${status}: ${payload.slice(0, 500)}`)
+    this.name = 'GatewayError'
+  }
+}
+
+/**
+ * Отказ провайдера по содержанию запроса — то есть «это я рисовать не буду», а не «я не
+ * смог». Такой отказ бесплатен, воспроизводим и не лечится ни повтором, ни промптом:
+ * `gpt-image-2` так отвергает коллекционную фигурку с лицензионным персонажем (замер
+ * 2026-08-30, набор `other-bobblehead`). Единственное лечение — другая модель.
+ */
+export function isContentRefusal(error: unknown): boolean {
+  if (!(error instanceof GatewayError) || error.status !== 400) return false
+
+  return /safety|moderation|content[_ ]?policy|flagged|violat/i.test(error.payload)
+}
+
+/**
+ * Размер кадра в пикселях для моделей, не принимающих бакеты, или `null` — если модель
+ * бакетная и форму запроса менять не надо.
+ *
+ * Выбирается **самый дешёвый подходящий**: у моделей OpenAI цена кадра растёт с площадью,
+ * а профиль площадки требует не конкретного размера, а порога и соотношения (FR-25,
+ * `output-profile.ts`). Список размеров — из окружения; ошибку в нём лучше поймать здесь и
+ * с внятным текстом, чем получить от шлюза 400 на каждой генерации.
+ */
+export function imageSizeParam(profile: OutputProfile, sizes: string[]): string | null {
+  if (sizes.length === 0) return null
+
+  const parsed = sizes.map((size) => {
+    const match = /^(\d+)x(\d+)$/.exec(size)
+
+    if (match === null) {
+      throw new Error(
+        `AI_PROVIDER_IMAGE_SIZES: «${size}» — не размер вида 1024x1024`,
+      )
+    }
+
+    return { size, width: Number(match[1]), height: Number(match[2]) }
+  })
+
+  const wanted = profile.aspectW / profile.aspectH
+  const sameAspect = parsed.filter(
+    (candidate) => Math.abs(candidate.width / candidate.height - wanted) / wanted <= ASPECT_TOLERANCE,
+  )
+
+  if (sameAspect.length === 0) {
+    throw new Error(
+      `AI_PROVIDER_IMAGE_SIZES: ни один размер (${sizes.join(', ')}) не даёт соотношения ` +
+        `${profile.aspectLabel}, которого требует площадка`,
+    )
+  }
+
+  const fits = sameAspect.filter(
+    (candidate) => candidate.width >= profile.minWidth && candidate.height >= profile.minHeight,
+  )
+
+  if (fits.length === 0) {
+    throw new Error(
+      `AI_PROVIDER_IMAGE_SIZES: все размеры соотношения ${profile.aspectLabel} ниже порога ` +
+        `площадки ${profile.minWidth} × ${profile.minHeight}`,
+    )
+  }
+
+  return fits.reduce((cheapest, candidate) =>
+    candidate.width * candidate.height < cheapest.width * cheapest.height ? candidate : cheapest
+  ).size
+}
+
 async function callGateway(url: string, apiKey: string, body: unknown, timeoutMs: number): Promise<any> {
   const response = await fetch(url, {
     method: 'POST',
@@ -150,7 +282,7 @@ async function callGateway(url: string, apiKey: string, body: unknown, timeoutMs
   const payload = await response.text()
 
   if (!response.ok) {
-    throw new Error(`AITunnel HTTP ${response.status}: ${payload.slice(0, 500)}`)
+    throw new GatewayError(response.status, payload)
   }
 
   try {
@@ -301,12 +433,16 @@ function cardLayoutLine(product: ProductBrief, card: CardTexts | null): string {
       'даже если сам товар и надписи на упаковке англоязычные.'
   }
 
+  // Описание в кадр НЕ диктуется — решение шага 5 (ADR-0011), и оно измерено, а не выбрано
+  // на вкус: у `gpt-image-2` весь брак пришёлся на длинную строку описания, тогда как
+  // заголовок вышел дословным 13 раз из 13. Описание остаётся в БД (`card_description`) и
+  // показывается рядом с изображением. Оговорки про русский язык здесь нет намеренно: строка
+  // диктуется готовой, сочинять модели нечего — именно в таком виде она и замерена.
   return `В кадре, помимо товара, нужен аккуратный текстовый блок — рядом с товаром, не ` +
-    `поверх него. Крупной строкой: «${card.title}». Под ней, помельче: «${card.description}». ` +
-    'Воспроизвести эти две строки дословно, слово в слово, ничего не добавляя и не сокращая. ' +
-    'Никакого другого текста в кадре: ни подписей к этим строкам, ни дополнительных полей и ' +
-    'характеристик, ни логотипов, водяных знаков и названий магазинов, которых нет на фото ' +
-    'товара.'
+    `поверх него. Одной крупной строкой: «${card.title}». Воспроизвести её дословно, слово ` +
+    'в слово, ничего не добавляя и не сокращая. Никакого другого текста в кадре: ни описания, ' +
+    'ни подписей к строке, ни дополнительных полей и характеристик, ни логотипов, водяных ' +
+    'знаков и названий магазинов, которых нет на фото товара.'
 }
 
 function imagePrompt(
@@ -405,19 +541,49 @@ export function createAitunnelProvider(
       // там самого текстового блока нет (шаг 3 плана, ветка kind === 'photo' в imagePrompt).
       const references = kind === 'card' ? await cardReferenceParts() : []
 
+      const prompt = imagePrompt(product, profile, kind, card, references.length)
+      const inputReferences = [...imageContentParts(photos), ...references]
+
       for (let index = 0; index < objects; index++) {
-        const started = Date.now()
+        let result: any = null
+        let model = ''
+        let durationMs = 0
 
-        const result = await callGateway(`${config.baseUrl}/images/generations`, config.apiKey, {
-          model: config.imageModel,
-          prompt: imagePrompt(product, profile, kind, card, references.length),
-          input_references: [...imageContentParts(photos), ...references],
-          resolution: resolutionParam(profile),
-          aspect_ratio: aspectRatioParam(profile),
-          response_format: 'b64_json',
-        }, IMAGE_TIMEOUT_MS)
+        // Отказ по содержанию — единственный повод перейти на резервную модель (ADR-0011).
+        // Всё остальное (таймаут, сбой шлюза, ошибка конфигурации) выбрасывается сразу:
+        // повторять на другой модели то, что не связано с содержанием, — жечь деньги и время.
+        for (const spec of config.imageModels) {
+          const started = Date.now()
+          const size = imageSizeParam(profile, spec.sizes)
 
-        const durationMs = Date.now() - started
+          try {
+            result = await callGateway(`${config.baseUrl}/images/generations`, config.apiKey, {
+              model: spec.model,
+              prompt,
+              input_references: inputReferences,
+              ...(size === null
+                ? { resolution: resolutionParam(profile), aspect_ratio: aspectRatioParam(profile) }
+                : { size }),
+              response_format: 'b64_json',
+            }, IMAGE_TIMEOUT_MS)
+
+            durationMs = Date.now() - started
+            model = spec.model
+            break
+          } catch (error) {
+            const isLast = spec === config.imageModels[config.imageModels.length - 1]
+
+            if (!isContentRefusal(error) || isLast) throw error
+
+            // Отказ бесплатен, поэтому в себестоимость не пишется; в лог — обязательно,
+            // иначе переход на резерв незаметен, а он меняет и цену кадра, и его качество.
+            console.warn(
+              'AITunnel', spec.model, 'отказ по содержанию за', Date.now() - started, 'мс',
+              '— повтор на резервной модели',
+            )
+          }
+        }
+
         onUsage?.({ operation: 'generateImages', vendor: VENDOR, costRub: costRub(result), durationMs })
 
         const item = result?.data?.[0]
@@ -436,7 +602,7 @@ export function createAitunnelProvider(
         const info = readImageInfo(bytes)
 
         console.info(
-          'AITunnel', config.imageModel, durationMs, 'мс',
+          'AITunnel', model, durationMs, 'мс',
           'cost_rub', costRub(result),
           'запрошено', `${profile.width}×${profile.height}`,
           'получено', info === null ? '?' : `${info.width}×${info.height} ${info.format}`,

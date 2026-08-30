@@ -38,6 +38,9 @@ export function providerProfile(): ProviderProfile {
     name: Deno.env.get('AI_PROVIDER') || DEFAULT_PROVIDER,
     baseUrl: Deno.env.get('AI_PROVIDER_BASE_URL') ?? null,
     imageModel: Deno.env.get('AI_PROVIDER_IMAGE_MODEL') ?? null,
+    imageModelFallback: Deno.env.get('AI_PROVIDER_IMAGE_MODEL_FALLBACK') || null,
+    imageSizes: Deno.env.get('AI_PROVIDER_IMAGE_SIZES') || null,
+    imageSizesFallback: Deno.env.get('AI_PROVIDER_IMAGE_SIZES_FALLBACK') || null,
     textModel: Deno.env.get('AI_PROVIDER_TEXT_MODEL') ?? null,
   }
 }
