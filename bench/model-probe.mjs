@@ -109,8 +109,16 @@ async function probe(model, config, photoDataUri) {
       body: JSON.stringify({
         model,
         prompt: PROMPT,
-        resolution: RESOLUTION,
-        aspect_ratio: ASPECT,
+        // Часть моделей каталога объявляет пустой список разрешений и отвергает параметр
+        // целиком («Доступные: —», HTTP 400) — их проверяем без него. Боевой код шлёт
+        // `resolution` всегда, так что успех без него — это находка про наш код, а не только
+        // про модель: см. `resolutionParam` в aitunnel.ts.
+        // Третья форма: OpenAI-совместимые модели ждут `size` в пикселях вместо пары
+        // «бакет + соотношение». Наш боевой код её не умеет вовсе.
+        ...(sizeParam ? { size: sizeParam } : {
+          ...(noResolution ? {} : { resolution: RESOLUTION }),
+          aspect_ratio: ASPECT,
+        }),
         input_references: [{ type: 'image_url', image_url: { url: photoDataUri } }],
       }),
       signal: AbortSignal.timeout(TIMEOUT_MS),
@@ -161,6 +169,8 @@ const models = String(arg('models', '')).split(',').map((m) => m.trim()).filter(
 if (models.length === 0) throw new Error('Укажите --models через запятую')
 
 const repeat = Number(arg('repeat', '1'))
+const noResolution = process.argv.includes('--no-resolution')
+const sizeParam = arg('size', '')
 const stamp = new Date().toISOString().replace(/[-:]/g, '').slice(0, 15)
 const outDir = join(ROOT, 'bench', 'runs', `model-probe-${stamp}`)
 mkdirSync(outDir, { recursive: true })
