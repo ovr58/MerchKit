@@ -1,7 +1,12 @@
 import { generationPrice, MAX_OBJECTS_PER_GENERATION, OBJECT_PRICE } from '@shared/pricing.ts'
-import { ACCEPTED_FORMATS_HUMAN, ACCEPTED_MIME_TYPES, MAX_PHOTOS } from '@shared/uploads.ts'
+import {
+  ACCEPTED_FORMATS_HUMAN,
+  ACCEPTED_MIME_TYPES,
+  MAX_PHOTOS,
+  UPLOAD_RETENTION_HUMAN,
+} from '@shared/uploads.ts'
 import { useEffect, useMemo, useRef, useState, type DragEvent } from 'react'
-import { Link, useNavigate } from 'react-router'
+import { Link, useLocation, useNavigate } from 'react-router'
 
 import { AppLayout, Panel, PanelTitle } from '@/components/AppLayout'
 import { ImageIcon, UploadIcon } from '@/components/icons'
@@ -118,6 +123,12 @@ export default function Wizard() {
   const [launchError, setLaunchError] = useState<string | null>(null)
   const [dragging, setDragging] = useState(false)
   const filePicker = useRef<HTMLInputElement>(null)
+
+  // Сколько фото прежней генерации не пережили срок хранения (веха M5, шаг 6). Приезжает
+  // состоянием перехода из карточки генерации, а не полем черновика: это разовое
+  // объяснение для одного захода на мастер, а не часть настройки, которую надо хранить.
+  const expiredHint = (useLocation().state as { expiredPhotos?: unknown } | null)?.expiredPhotos
+  const expiredPhotos = typeof expiredHint === 'number' ? expiredHint : 0
 
   const urls = usePhotoUrls(draft.photos)
   const data = taxonomy.data
@@ -253,6 +264,17 @@ export default function Wizard() {
                 title="Фото товара"
               />
 
+              {expiredPhotos > 0 && (
+                <Notice tone="info">
+                  <span>
+                    Параметры прежней генерации восстановлены, а{' '}
+                    {expiredPhotos === 1 ? 'одно фото' : `${expiredPhotos} фото`} — нет: загруженные
+                    фото храним {UPLOAD_RETENTION_HUMAN}, и этот срок уже прошёл. Загрузите{' '}
+                    {expiredPhotos === 1 ? 'его' : 'их'} заново — остальные шаги мастера заполнены.
+                  </span>
+                </Notice>
+              )}
+
               {wizard.rejected.length > 0 && (
                 <Notice tone="error">
                   <span>
@@ -330,7 +352,9 @@ export default function Wizard() {
 
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-muted-foreground text-[13px]">
-                  {ACCEPTED_FORMATS_HUMAN} · до 10 МБ каждый файл — как принимают маркетплейсы
+                  {ACCEPTED_FORMATS_HUMAN} · до 10 МБ каждый файл — как принимают маркетплейсы.
+                  Загруженные фото храним {UPLOAD_RETENTION_HUMAN}, готовые генерации остаются
+                  в каталоге
                 </span>
                 {draft.photos.length > 0 && (
                   <button
