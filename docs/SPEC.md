@@ -247,15 +247,26 @@ npm run build
   ежедневно; вызов тот же, что руками:
 
   ```sql
+  -- Один раз на окружение: ключ кладётся в Vault, а не в текст задания. Команда задания
+  -- хранится в `cron.job` открытым текстом, и вписанный туда service-role стал бы вечным
+  -- ключом от всего проекта, видимым каждому, кто дотянулся до базы.
+  select vault.create_secret('<service-role-key>', 'service_role_key');
+
   select cron.schedule('purge-uploads', '0 3 * * *', $$
     select net.http_post(
       url := 'https://<ref>.supabase.co/functions/v1/purge-uploads',
-      headers := jsonb_build_object('Authorization', 'Bearer ' || current_setting('app.service_role_key'))
+      headers := jsonb_build_object(
+        'Content-Type', 'application/json',
+        'Authorization', 'Bearer ' || (
+          select decrypted_secret from vault.decrypted_secrets where name = 'service_role_key'
+        )
+      )
     )
   $$);
   ```
 
-  Ключ в текст job не вписывается — он берётся из Vault проекта. Локально расписания нет
+  Требуются расширения `pg_cron` и `pg_net` — включаются один раз в Database → Extensions.
+  Локально расписания нет
   намеренно: уборка запускается руками, `curl` из шапки `supabase/functions/purge-uploads/index.ts`.
   Проверка, что расписание живо: `select * from cron.job_run_details order by start_time desc limit 5`.
 - **Версионирование:** > TODO(пользователь): semver по тегам или просто по коммитам?
