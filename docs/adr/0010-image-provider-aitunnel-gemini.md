@@ -1,6 +1,6 @@
 # ADR-0010: Провайдер изображений — AITunnel / `gemini-3.1-flash-image`, узнаваемость 6 из 7
 
-- **Status:** Accepted
+- **Status:** Accepted · в части модели изображений уточнён [ADR-0011](0011-image-model-gpt-image-2-with-fallback.md) (2026-08-31)
 - **Date:** 2026-08-30
 - **Related:** [ADR-0005](0005-ai-provider-abstraction.md) · `docs/SPEC.md` §2, §5 ·
   `docs/TZ.md` §10, §11 · план вехи M5, шаги 0 и 2

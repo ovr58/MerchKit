@@ -28,4 +28,5 @@
 | [0007](0007-vite-spa-no-ssr.md) | 2026-08-27 | Accepted | Vite + React-SPA без SSR; серверной логике негде жить, кроме Edge Functions |
 | [0008](0008-email-confirmation-gates-sign-in.md) | 2026-08-28 | Accepted | Подтверждение email закрывает вход целиком: у встроенного механизма Supabase нет состояния «вошёл, но не подтвердил» |
 | [0009](0009-ledger-survives-account-deletion.md) | 2026-08-28 | Accepted | Журнал операций переживает удаление аккаунта обезличенным (`on delete set null`), ключ идемпотентности — отпечаток адреса, а не адрес |
-| [0010](0010-image-provider-aitunnel-gemini.md) | 2026-08-30 | Accepted | Провайдер изображений — AITunnel / `gemini-3.1-flash-image` + `gemini-3.1-flash-lite`; узнаваемость 6 из 7 на контрольной выборке |
+| [0010](0010-image-provider-aitunnel-gemini.md) | 2026-08-30 | Accepted · уточнён 0011 | Провайдер изображений — AITunnel / `gemini-3.1-flash-image` + `gemini-3.1-flash-lite`; узнаваемость 6 из 7 на контрольной выборке |
+| [0011](0011-image-model-gpt-image-2-with-fallback.md) | 2026-08-31 | Accepted | Модель изображений — `gpt-image-2` (заголовок верен 13 из 13); `gemini-3.1-flash-image` остаётся резервом на отказ по контенту; текст по-прежнему рисует вендор |
