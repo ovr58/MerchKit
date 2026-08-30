@@ -202,11 +202,26 @@ async function run(generation: GenerationRow, usage: ProviderUsage[]): Promise<s
 
   const provider = createProvider(undefined, (entry) => usage.push(entry))
 
+  // Тексты карточки — вторая независимая операция, и её отказ равносилен отказу целиком
+  // (US-E4). Идут ПЕРВЫМИ, потому что их же и нужно нарисовать в кадре (FR-07): модель
+  // изображений получает готовый текст вместо задания «придумай», иначе она сочиняет
+  // содержимое сама — выдуманные характеристики и подписи полей вместо текста (замер
+  // 2026-08-30, план card-text-block). Побочно: отказ текстов больше не стоит уже
+  // оплаченной генерации изображения.
+  const card = generation.kind === 'card'
+    ? await provider.composeCard({ product, profile })
+    : null
+
+  if (card !== null && (card.title.trim() === '' || card.description.trim() === '')) {
+    throw new Error('Провайдер не вернул тексты карточки')
+  }
+
   const images = await provider.generateImages({
     photos,
     product,
     profile,
     kind: generation.kind,
+    card,
     objects: generation.objects_count,
   })
 
@@ -223,17 +238,6 @@ async function run(generation: GenerationRow, usage: ProviderUsage[]): Promise<s
     if (mismatch !== null) {
       throw new Error(`Изображение не подходит профилю площадки: ${mismatch}`)
     }
-  }
-
-  // Тексты карточки — вторая независимая операция, и её отказ равносилен отказу целиком
-  // (US-E4). Порядок важен: тексты пишутся ДО сохранения файлов, чтобы неуспех не оставлял
-  // в бакете мусор, за который никто не заплатил.
-  const card = generation.kind === 'card'
-    ? await provider.composeCard({ product, profile })
-    : null
-
-  if (card !== null && (card.title.trim() === '' || card.description.trim() === '')) {
-    throw new Error('Провайдер не вернул тексты карточки')
   }
 
   const title = await provider.nameGeneration({ product })
