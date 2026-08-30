@@ -4,7 +4,7 @@
 - **Date:** 2026-08-31
 - **Related:** уточняет [ADR-0010](0010-image-provider-aitunnel-gemini.md) в части модели
   изображений · [ADR-0005](0005-ai-provider-abstraction.md) · `docs/TZ.md` FR-07 ·
-  план `planning/active/card-text-block_2026-08-30.md`, шаги 2–5 · `planning/BACKLOG.md` B13, B14
+  план `planning/archive/plans/card-text-block_2026-08-30.md`, шаги 2–5 · `planning/BACKLOG.md` B13, B14
 
 ## Context
 

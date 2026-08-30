@@ -130,7 +130,7 @@ export interface AiProvider {
     /** Готовые тексты карточки — ровно то, что нужно нарисовать в блоке. NULL у типа «фото».
      *  Передаются намеренно, чтобы модель изображений не сочиняла содержимое сама: на замере
      *  2026-08-30 сочинение давало выдуманные характеристики и подписи полей вместо текста
-     *  (план `planning/active/card-text-block_2026-08-30.md`). Поэтому `composeCard`
+     *  (план `planning/archive/plans/card-text-block_2026-08-30.md`). Поэтому `composeCard`
      *  вызывается ДО `generateImages`, хотя операции по-прежнему независимы. */
     card: CardTexts | null
     objects: number
