@@ -1,0 +1,520 @@
+{
+  "source": "docs/assets/cardsforsysprompt/пример карточки верхней одежды.png",
+  "layout": {
+    "id": "jacket-outventure",
+    "title": "Верхняя одежда: заголовок слева, стопка модулей-плашек поверх фото",
+    "canvas": {
+      "aspectW": 667,
+      "aspectH": 890,
+      "background": {
+        "kind": "solid",
+        "color": "#dcd6cc"
+      }
+    },
+    "layers": [
+      {
+        "id": "frame",
+        "type": "frame",
+        "z": 0,
+        "box": {
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.65,
+          "y": 0.4
+        },
+        "bind": {
+          "kind": "frame"
+        }
+      },
+      {
+        "id": "logo",
+        "type": "asset",
+        "z": 10,
+        "box": {
+          "x": 0.355,
+          "y": 0.014,
+          "w": 0.3,
+          "h": 0.056
+        },
+        "fit": "contain",
+        "bind": {
+          "kind": "logo"
+        }
+      },
+      {
+        "id": "title",
+        "type": "text",
+        "z": 20,
+        "box": {
+          "x": 0.045,
+          "y": 0.222,
+          "w": 0.62,
+          "h": 0.07
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "title"
+        },
+        "style": {
+          "role": "display",
+          "size": 0.056,
+          "weight": 900,
+          "color": "#1c1c1c",
+          "align": "left",
+          "valign": "top",
+          "lineHeight": 1,
+          "transform": "upper"
+        }
+      },
+      {
+        "id": "subtitle",
+        "type": "text",
+        "z": 20,
+        "box": {
+          "x": 0.047,
+          "y": 0.292,
+          "w": 0.5,
+          "h": 0.04
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "subtitle"
+        },
+        "style": {
+          "role": "heading",
+          "size": 0.026,
+          "weight": 700,
+          "color": "#1c1c1c",
+          "align": "left",
+          "valign": "top",
+          "lineHeight": 1,
+          "transform": "upper",
+          "tracking": 0.02
+        }
+      },
+      {
+        "id": "temp",
+        "type": "group",
+        "z": 30,
+        "box": {
+          "x": 0.04,
+          "y": 0.345,
+          "w": 0.29,
+          "h": 0.085
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 0
+        },
+        "children": [
+          {
+            "id": "temp-icon",
+            "type": "asset",
+            "z": 1,
+            "box": {
+              "x": 0.031,
+              "y": 0.059,
+              "w": 0.203,
+              "h": 0.8
+            },
+            "fit": "contain",
+            "bind": {
+              "kind": "prop",
+              "index": 0,
+              "part": "icon"
+            }
+          },
+          {
+            "id": "temp-value",
+            "type": "text",
+            "z": 2,
+            "box": {
+              "x": 0.4,
+              "y": 0,
+              "w": 0.6,
+              "h": 1
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 0,
+              "part": "value"
+            },
+            "style": {
+              "role": "heading",
+              "size": 0.027,
+              "weight": 700,
+              "color": "#1c1c1c",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1.13
+            }
+          }
+        ]
+      },
+      {
+        "id": "pill-1",
+        "type": "group",
+        "z": 40,
+        "box": {
+          "x": 0.051,
+          "y": 0.456,
+          "w": 0.387,
+          "h": 0.0787
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 1
+        },
+        "children": [
+          {
+            "id": "pill-1-plate",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0,
+              "y": 0,
+              "w": 1,
+              "h": 1
+            },
+            "shape": {
+              "form": "rect",
+              "radius": 0.031
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#141210",
+              "opacity": 0.42
+            },
+            "effects": [
+              {
+                "kind": "shadow",
+                "dx": 0,
+                "dy": 0.004,
+                "blur": 0.009,
+                "color": "#000000",
+                "opacity": 0.28
+              },
+              {
+                "kind": "stroke",
+                "color": "#e6e2dc",
+                "thickness": 0.0013,
+                "opacity": 0.75
+              }
+            ]
+          },
+          {
+            "id": "pill-1-badge",
+            "type": "shape",
+            "z": 2,
+            "box": {
+              "x": -0.06,
+              "y": 0.278,
+              "w": 0.12,
+              "h": 0.444
+            },
+            "shape": {
+              "form": "ellipse"
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#e8590c"
+            },
+            "effects": [
+              {
+                "kind": "stroke",
+                "color": "#f4f1ec",
+                "thickness": 0.0028,
+                "opacity": 0.95
+              }
+            ]
+          },
+          {
+            "id": "pill-1-plus",
+            "type": "text",
+            "z": 3,
+            "box": {
+              "x": -0.06,
+              "y": 0.278,
+              "w": 0.12,
+              "h": 0.444
+            },
+            "lines": [
+              "+"
+            ],
+            "style": {
+              "role": "label",
+              "size": 0.024,
+              "weight": 700,
+              "color": "#ffffff",
+              "align": "center",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          },
+          {
+            "id": "pill-1-label",
+            "type": "text",
+            "z": 4,
+            "box": {
+              "x": 0.145,
+              "y": 0,
+              "w": 0.83,
+              "h": 1
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 1,
+              "part": "label"
+            },
+            "style": {
+              "role": "heading",
+              "size": 0.03,
+              "weight": 700,
+              "color": "#ffffff",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "pill-2",
+        "type": "group",
+        "z": 50,
+        "box": {
+          "x": 0.051,
+          "y": 0.573,
+          "w": 0.404,
+          "h": 0.119
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 2
+        },
+        "children": [
+          {
+            "id": "pill-2-plate",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0,
+              "y": 0,
+              "w": 1,
+              "h": 1
+            },
+            "shape": {
+              "form": "rect",
+              "radius": 0.031
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#141210",
+              "opacity": 0.42
+            },
+            "effects": [
+              {
+                "kind": "shadow",
+                "dx": 0,
+                "dy": 0.004,
+                "blur": 0.009,
+                "color": "#000000",
+                "opacity": 0.28
+              },
+              {
+                "kind": "stroke",
+                "color": "#e6e2dc",
+                "thickness": 0.0013,
+                "opacity": 0.75
+              }
+            ]
+          },
+          {
+            "id": "pill-2-badge",
+            "type": "shape",
+            "z": 2,
+            "box": {
+              "x": -0.057,
+              "y": 0.185,
+              "w": 0.115,
+              "h": 0.295
+            },
+            "shape": {
+              "form": "ellipse"
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#e8590c"
+            },
+            "effects": [
+              {
+                "kind": "stroke",
+                "color": "#f4f1ec",
+                "thickness": 0.0028,
+                "opacity": 0.95
+              }
+            ]
+          },
+          {
+            "id": "pill-2-plus",
+            "type": "text",
+            "z": 3,
+            "box": {
+              "x": -0.057,
+              "y": 0.185,
+              "w": 0.115,
+              "h": 0.295
+            },
+            "lines": [
+              "+"
+            ],
+            "style": {
+              "role": "label",
+              "size": 0.024,
+              "weight": 700,
+              "color": "#ffffff",
+              "align": "center",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          },
+          {
+            "id": "pill-2-label",
+            "type": "text",
+            "z": 4,
+            "box": {
+              "x": 0.145,
+              "y": 0.14,
+              "w": 0.83,
+              "h": 0.29
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 2,
+              "part": "label"
+            },
+            "style": {
+              "role": "heading",
+              "size": 0.03,
+              "weight": 700,
+              "color": "#ffffff",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          },
+          {
+            "id": "pill-2-mark-group",
+            "type": "group",
+            "z": 5,
+            "box": {
+              "x": 0.066,
+              "y": 0.521,
+              "w": 0.898,
+              "h": 0.445
+            },
+            "children": [
+              {
+                "id": "pill-2-mark",
+                "type": "shape",
+                "z": 1,
+                "box": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 1,
+                  "h": 1
+                },
+                "shape": {
+                  "form": "rect",
+                  "radius": 0.014
+                },
+                "fill": {
+                  "kind": "solid",
+                  "color": "#ffffff",
+                  "opacity": 0.9
+                }
+              },
+              {
+                "id": "pill-2-value",
+                "type": "text",
+                "z": 2,
+                "box": {
+                  "x": 0.09,
+                  "y": 0,
+                  "w": 0.62,
+                  "h": 1
+                },
+                "bind": {
+                  "kind": "prop",
+                  "index": 2,
+                  "part": "value"
+                },
+                "style": {
+                  "role": "display",
+                  "size": 0.026,
+                  "weight": 900,
+                  "color": "#1a1a1a",
+                  "align": "left",
+                  "valign": "middle",
+                  "lineHeight": 1,
+                  "transform": "upper"
+                }
+              },
+              {
+                "id": "pill-2-icon",
+                "type": "asset",
+                "z": 3,
+                "box": {
+                  "x": 0.8,
+                  "y": 0.16,
+                  "w": 0.11,
+                  "h": 0.68
+                },
+                "fit": "contain",
+                "bind": {
+                  "kind": "prop",
+                  "index": 2,
+                  "part": "icon"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "content": {
+    "texts": {
+      "title": [
+        "Куртка"
+      ],
+      "subtitle": [
+        "Мужская"
+      ]
+    },
+    "props": [
+      {
+        "value": "до\n+5 °C",
+        "icon": "thermometer"
+      },
+      {
+        "label": "Для походов"
+      },
+      {
+        "label": "Пропитка",
+        "value": "+Add Shield",
+        "icon": "droplet"
+      }
+    ],
+    "swatches": []
+  },
+  "notes": [
+    "Логотип бренда в базу не заводится — он принадлежит продавцу. Слой остаётся в макете и снимается правилом K-3, композиция держится.",
+    "Плашка «+ADD SHIELD» — общий случай «в плашке может быть картинка, может быть текст, может быть и то и другое». Привязок у самой плашки нет: она живёт, пока жив хоть один её слой с содержимым, и уходит вместе с последним."
+  ]
+}

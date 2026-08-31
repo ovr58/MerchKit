@@ -1,0 +1,596 @@
+{
+  "source": "bench/samples/wb-starter/женщинам/Джинсы/Снимок экрана 2026-08-31 174330.jpg",
+  "layout": {
+    "id": "jeans-comfort-style",
+    "title": "Джинсы: светлая текстовая колонка слева, стопка капсул-плашек, ростовка внизу",
+    "canvas": {
+      "aspectW": 632,
+      "aspectH": 846,
+      "background": {
+        "kind": "solid",
+        "color": "#ececec"
+      }
+    },
+    "layers": [
+      {
+        "id": "frame",
+        "type": "frame",
+        "z": 0,
+        "box": {
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.72,
+          "y": 0.5
+        },
+        "bind": {
+          "kind": "frame"
+        }
+      },
+      {
+        "id": "title",
+        "type": "text",
+        "z": 20,
+        "box": {
+          "x": 0.041,
+          "y": 0.117,
+          "w": 0.47,
+          "h": 0.115
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "title"
+        },
+        "style": {
+          "role": "display",
+          "size": 0.048,
+          "weight": 700,
+          "color": "#2f2f2f",
+          "align": "left",
+          "valign": "top",
+          "lineHeight": 1.18
+        }
+      },
+      {
+        "id": "claim",
+        "type": "group",
+        "z": 30,
+        "box": {
+          "x": 0.038,
+          "y": 0.293,
+          "w": 0.755,
+          "h": 0.128
+        },
+        "children": [
+          {
+            "id": "claim-plate",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0,
+              "y": 0,
+              "w": 1,
+              "h": 1
+            },
+            "shape": {
+              "form": "rect",
+              "radius": 0.16
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#ffffff"
+            },
+            "effects": [
+              {
+                "kind": "shadow",
+                "dx": 0,
+                "dy": 0.003,
+                "blur": 0.012,
+                "color": "#000000",
+                "opacity": 0.08
+              }
+            ]
+          },
+          {
+            "id": "claim-line-1",
+            "type": "text",
+            "z": 2,
+            "box": {
+              "x": 0.05,
+              "y": 0.24,
+              "w": 0.9,
+              "h": 0.26
+            },
+            "bind": {
+              "kind": "text",
+              "slot": "body"
+            },
+            "style": {
+              "role": "body",
+              "size": 0.0207,
+              "weight": 400,
+              "color": "#333333",
+              "align": "center",
+              "valign": "middle",
+              "lineHeight": 1.25
+            }
+          },
+          {
+            "id": "claim-line-2",
+            "type": "text",
+            "z": 3,
+            "box": {
+              "x": 0.05,
+              "y": 0.47,
+              "w": 0.9,
+              "h": 0.26
+            },
+            "bind": {
+              "kind": "text",
+              "slot": "subtitle"
+            },
+            "style": {
+              "role": "heading",
+              "size": 0.0207,
+              "weight": 700,
+              "color": "#232323",
+              "align": "center",
+              "valign": "middle",
+              "lineHeight": 1.25
+            }
+          }
+        ]
+      },
+      {
+        "id": "pill-0",
+        "type": "group",
+        "z": 40,
+        "box": {
+          "x": 0.038,
+          "y": 0.448,
+          "w": 0.437,
+          "h": 0.0426
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 0
+        },
+        "children": [
+          {
+            "id": "pill-0-plate",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0.138,
+              "y": 0,
+              "w": 0.862,
+              "h": 1
+            },
+            "shape": {
+              "form": "rect",
+              "radius": 0.5
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#e8e8e8"
+            }
+          },
+          {
+            "id": "pill-0-disc",
+            "type": "shape",
+            "z": 2,
+            "box": {
+              "x": 0,
+              "y": 0,
+              "w": 0.13,
+              "h": 1
+            },
+            "shape": {
+              "form": "ellipse"
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#ffffff"
+            },
+            "effects": [
+              {
+                "kind": "shadow",
+                "dx": 0,
+                "dy": 0.002,
+                "blur": 0.008,
+                "color": "#000000",
+                "opacity": 0.1
+              }
+            ]
+          },
+          {
+            "id": "pill-0-icon",
+            "type": "asset",
+            "z": 3,
+            "box": {
+              "x": 0.028,
+              "y": 0.17,
+              "w": 0.074,
+              "h": 0.66
+            },
+            "fit": "contain",
+            "bind": {
+              "kind": "prop",
+              "index": 0,
+              "part": "icon"
+            }
+          },
+          {
+            "id": "pill-0-label",
+            "type": "text",
+            "z": 4,
+            "box": {
+              "x": 0.2,
+              "y": 0,
+              "w": 0.78,
+              "h": 1
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 0,
+              "part": "label"
+            },
+            "style": {
+              "role": "body",
+              "size": 0.0195,
+              "weight": 400,
+              "color": "#333333",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "pill-1",
+        "type": "group",
+        "z": 50,
+        "box": {
+          "x": 0.038,
+          "y": 0.505,
+          "w": 0.468,
+          "h": 0.0426
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 1
+        },
+        "children": [
+          {
+            "id": "pill-1-plate",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0.129,
+              "y": 0,
+              "w": 0.871,
+              "h": 1
+            },
+            "shape": {
+              "form": "rect",
+              "radius": 0.5
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#e8e8e8"
+            }
+          },
+          {
+            "id": "pill-1-disc",
+            "type": "shape",
+            "z": 2,
+            "box": {
+              "x": 0,
+              "y": 0,
+              "w": 0.121,
+              "h": 1
+            },
+            "shape": {
+              "form": "ellipse"
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#ffffff"
+            },
+            "effects": [
+              {
+                "kind": "shadow",
+                "dx": 0,
+                "dy": 0.002,
+                "blur": 0.008,
+                "color": "#000000",
+                "opacity": 0.1
+              }
+            ]
+          },
+          {
+            "id": "pill-1-icon",
+            "type": "asset",
+            "z": 3,
+            "box": {
+              "x": 0.026,
+              "y": 0.17,
+              "w": 0.069,
+              "h": 0.66
+            },
+            "fit": "contain",
+            "bind": {
+              "kind": "prop",
+              "index": 1,
+              "part": "icon"
+            }
+          },
+          {
+            "id": "pill-1-label",
+            "type": "text",
+            "z": 4,
+            "box": {
+              "x": 0.187,
+              "y": 0,
+              "w": 0.79,
+              "h": 1
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 1,
+              "part": "label"
+            },
+            "style": {
+              "role": "body",
+              "size": 0.0195,
+              "weight": 400,
+              "color": "#333333",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "pill-2",
+        "type": "group",
+        "z": 60,
+        "box": {
+          "x": 0.038,
+          "y": 0.56,
+          "w": 0.445,
+          "h": 0.0426
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 2
+        },
+        "children": [
+          {
+            "id": "pill-2-plate",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0.135,
+              "y": 0,
+              "w": 0.865,
+              "h": 1
+            },
+            "shape": {
+              "form": "rect",
+              "radius": 0.5
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#e8e8e8"
+            }
+          },
+          {
+            "id": "pill-2-disc",
+            "type": "shape",
+            "z": 2,
+            "box": {
+              "x": 0,
+              "y": 0,
+              "w": 0.128,
+              "h": 1
+            },
+            "shape": {
+              "form": "ellipse"
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#ffffff"
+            },
+            "effects": [
+              {
+                "kind": "shadow",
+                "dx": 0,
+                "dy": 0.002,
+                "blur": 0.008,
+                "color": "#000000",
+                "opacity": 0.1
+              }
+            ]
+          },
+          {
+            "id": "pill-2-icon",
+            "type": "asset",
+            "z": 3,
+            "box": {
+              "x": 0.027,
+              "y": 0.17,
+              "w": 0.073,
+              "h": 0.66
+            },
+            "fit": "contain",
+            "bind": {
+              "kind": "prop",
+              "index": 2,
+              "part": "icon"
+            }
+          },
+          {
+            "id": "pill-2-label",
+            "type": "text",
+            "z": 4,
+            "box": {
+              "x": 0.196,
+              "y": 0,
+              "w": 0.78,
+              "h": 1
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 2,
+              "part": "label"
+            },
+            "style": {
+              "role": "body",
+              "size": 0.0195,
+              "weight": 400,
+              "color": "#333333",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "kicker",
+        "type": "text",
+        "z": 70,
+        "box": {
+          "x": 0.043,
+          "y": 0.775,
+          "w": 0.42,
+          "h": 0.03
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "kicker"
+        },
+        "style": {
+          "role": "body",
+          "size": 0.0207,
+          "weight": 400,
+          "color": "#3a3a3a",
+          "align": "left",
+          "valign": "middle",
+          "lineHeight": 1
+        }
+      },
+      {
+        "id": "sizes",
+        "type": "group",
+        "z": 80,
+        "box": {
+          "x": 0.038,
+          "y": 0.819,
+          "w": 0.358,
+          "h": 0.06
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "sizes"
+        },
+        "children": [
+          {
+            "id": "sizes-plate",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0,
+              "y": 0,
+              "w": 1,
+              "h": 1
+            },
+            "shape": {
+              "form": "rect",
+              "radius": 0.5
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#3d3d3d"
+            }
+          },
+          {
+            "id": "sizes-value",
+            "type": "text",
+            "z": 2,
+            "box": {
+              "x": 0.06,
+              "y": 0,
+              "w": 0.88,
+              "h": 1
+            },
+            "bind": {
+              "kind": "text",
+              "slot": "sizes"
+            },
+            "style": {
+              "role": "display",
+              "size": 0.031,
+              "weight": 700,
+              "color": "#ffffff",
+              "align": "center",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "content": {
+    "texts": {
+      "title": [
+        "Комфорт",
+        "и стиль"
+      ],
+      "body": [
+        "Не сковывают движения —"
+      ],
+      "subtitle": [
+        "комфорт в течение дня"
+      ],
+      "kicker": [
+        "Идеальны на рост"
+      ],
+      "sizes": [
+        "165-175 см"
+      ]
+    },
+    "props": [
+      {
+        "label": "На каждый день",
+        "icon": "hand-sparkle"
+      },
+      {
+        "label": "Для активного ритма",
+        "icon": "runner"
+      },
+      {
+        "label": "Для работы и учёбы",
+        "icon": "graduation-book"
+      }
+    ],
+    "swatches": []
+  },
+  "notes": [
+    "Фон карточки и фон снимка на образце сливаются в один светло-серый тон: слева видно не подложку макета, а продолжение студийного фона фотографии. Записано как кадр на весь холст с `fit: cover` и точкой интереса справа плюс близкий по цвету фон холста — если кадр придёт с другой пропорцией, шов по левому краю может стать заметен.",
+    "Белая плашка с фразой из двух строк: первая строка обычным начертанием, вторая полужирным. Это две отдельные строки, а не одна фраза, поэтому прогоны (`TextRun`) не годятся — разнесено на два привязанных слоя, `body` (обычная) и `subtitle` (полужирная). Оба привязаны, так что K-3 снимает их независимо, статического хвоста не остаётся; но сама плашка задана без привязки и держится, пока жив хоть один из двух слоёв.",
+    "Капсулы (плашки-пилюли и тёмная ростовка) — прямоугольники со скруглением в половину меньшей стороны; в языке `radius` у `shape` — одна безразмерная доля, точная база отсчёта не оговорена, поэтому значение 0.5 использовано в смысле «полная капсула». Если сборщик считает радиус долей ширины, скругление выйдет чрезмерным.",
+    "Иконок в базе нет ни одной: `hand-sparkle` (кисть руки с искрами — «на каждый день»), `runner` (бегущая фигура), `graduation-book` (раскрытая книга с академической шапочкой). Имена заявлены на пополнение базы; при отсутствии ассета кружок-подложка остаётся, а иконка снимается K-3.",
+    "Кружок-подложка иконки задан как `ellipse` с боксом по высоте строки: он останется круглым только при близких пропорциях холста; на существенно иной пропорции превратится в овал — точной привязки «квадрат в долях холста» язык не выражает.",
+    "Логотипа и бренд-блока на образце нет, слоя с привязкой `logo` в макете тоже нет.",
+    "Мягкие полупрозрачные тени под белыми элементами на образце очень слабые; значения `opacity` подобраны на глаз."
+  ]
+}

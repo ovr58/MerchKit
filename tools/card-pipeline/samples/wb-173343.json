@@ -1,0 +1,629 @@
+{
+  "source": "bench/samples/wb-starter/женщинам/Блузки и рубашки/Снимок экрана 2026-08-31 173343.jpg",
+  "layout": {
+    "id": "blouse-plus-size-cream",
+    "title": "Блузки и рубашки: кремовая шапка с крупным заголовком, фото на всю нижнюю часть, колонка круглых иконок-преимуществ слева",
+    "canvas": {
+      "aspectW": 628,
+      "aspectH": 951,
+      "background": {
+        "kind": "solid",
+        "color": "#f7f2ea"
+      }
+    },
+    "layers": [
+      {
+        "id": "frame",
+        "type": "frame",
+        "z": 0,
+        "box": {
+          "x": 0,
+          "y": 0.205,
+          "w": 1,
+          "h": 0.795
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.6,
+          "y": 0.45
+        },
+        "bind": {
+          "kind": "frame"
+        }
+      },
+      {
+        "id": "kicker",
+        "type": "text",
+        "z": 10,
+        "box": {
+          "x": 0.08,
+          "y": 0.016,
+          "w": 0.84,
+          "h": 0.035
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "kicker"
+        },
+        "style": {
+          "role": "heading",
+          "size": 0.026,
+          "weight": 700,
+          "color": "#2f3126",
+          "align": "center",
+          "valign": "middle",
+          "lineHeight": 1,
+          "tracking": 0.42,
+          "transform": "upper"
+        }
+      },
+      {
+        "id": "title",
+        "type": "text",
+        "z": 11,
+        "box": {
+          "x": 0.03,
+          "y": 0.052,
+          "w": 0.94,
+          "h": 0.098
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "title"
+        },
+        "style": {
+          "role": "display",
+          "size": 0.098,
+          "weight": 900,
+          "color": "#7c9e21",
+          "align": "center",
+          "valign": "middle",
+          "lineHeight": 1,
+          "tracking": 0.01,
+          "transform": "upper"
+        }
+      },
+      {
+        "id": "subtitle-plate",
+        "type": "shape",
+        "z": 12,
+        "box": {
+          "x": 0.119,
+          "y": 0.157,
+          "w": 0.762,
+          "h": 0.05
+        },
+        "shape": {
+          "form": "rect",
+          "radius": 0.02
+        },
+        "fill": {
+          "kind": "solid",
+          "color": "#ffffff",
+          "opacity": 0.97
+        },
+        "effects": [
+          {
+            "kind": "shadow",
+            "dx": 0,
+            "dy": 0.002,
+            "blur": 0.008,
+            "color": "#5a5340",
+            "opacity": 0.16
+          }
+        ]
+      },
+      {
+        "id": "subtitle",
+        "type": "text",
+        "z": 13,
+        "box": {
+          "x": 0.13,
+          "y": 0.157,
+          "w": 0.74,
+          "h": 0.05
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "subtitle"
+        },
+        "style": {
+          "role": "heading",
+          "size": 0.0195,
+          "weight": 700,
+          "color": "#2f3126",
+          "align": "center",
+          "valign": "middle",
+          "lineHeight": 1,
+          "tracking": 0.04,
+          "transform": "upper"
+        }
+      },
+      {
+        "id": "feature-0",
+        "type": "group",
+        "z": 20,
+        "box": {
+          "x": 0.062,
+          "y": 0.253,
+          "w": 0.19,
+          "h": 0.145
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 0
+        },
+        "children": [
+          {
+            "id": "feature-0-disc",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0.135,
+              "y": 0.034,
+              "w": 0.711,
+              "h": 0.614
+            },
+            "shape": {
+              "form": "ellipse"
+            },
+            "fill": {
+              "kind": "radial",
+              "center": {
+                "x": 0.5,
+                "y": 0.42
+              },
+              "radius": 0.55,
+              "stops": [
+                {
+                  "at": 0,
+                  "color": "#ffffff"
+                },
+                {
+                  "at": 1,
+                  "color": "#f5f2ec"
+                }
+              ]
+            },
+            "effects": [
+              {
+                "kind": "shadow",
+                "dx": 0,
+                "dy": 0.003,
+                "blur": 0.01,
+                "color": "#5a5340",
+                "opacity": 0.18
+              }
+            ]
+          },
+          {
+            "id": "feature-0-icon",
+            "type": "asset",
+            "z": 2,
+            "box": {
+              "x": 0.279,
+              "y": 0.172,
+              "w": 0.421,
+              "h": 0.324
+            },
+            "fit": "contain",
+            "bind": {
+              "kind": "prop",
+              "index": 0,
+              "part": "icon"
+            }
+          },
+          {
+            "id": "feature-0-label",
+            "type": "text",
+            "z": 3,
+            "box": {
+              "x": 0,
+              "y": 0.683,
+              "w": 1,
+              "h": 0.31
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 0,
+              "part": "label"
+            },
+            "style": {
+              "role": "body",
+              "size": 0.0155,
+              "weight": 600,
+              "color": "#33352c",
+              "align": "center",
+              "valign": "top",
+              "lineHeight": 1.25
+            }
+          }
+        ]
+      },
+      {
+        "id": "divider-0",
+        "type": "shape",
+        "z": 21,
+        "box": {
+          "x": 0.077,
+          "y": 0.409,
+          "w": 0.16,
+          "h": 0.002
+        },
+        "shape": {
+          "form": "line",
+          "thickness": 0.0016
+        },
+        "fill": {
+          "kind": "solid",
+          "color": "#a89c86",
+          "opacity": 0.7
+        }
+      },
+      {
+        "id": "feature-1",
+        "type": "group",
+        "z": 22,
+        "box": {
+          "x": 0.062,
+          "y": 0.421,
+          "w": 0.19,
+          "h": 0.145
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 1
+        },
+        "children": [
+          {
+            "id": "feature-1-disc",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0.135,
+              "y": 0.034,
+              "w": 0.711,
+              "h": 0.614
+            },
+            "shape": {
+              "form": "ellipse"
+            },
+            "fill": {
+              "kind": "radial",
+              "center": {
+                "x": 0.5,
+                "y": 0.42
+              },
+              "radius": 0.55,
+              "stops": [
+                {
+                  "at": 0,
+                  "color": "#ffffff"
+                },
+                {
+                  "at": 1,
+                  "color": "#f5f2ec"
+                }
+              ]
+            },
+            "effects": [
+              {
+                "kind": "shadow",
+                "dx": 0,
+                "dy": 0.003,
+                "blur": 0.01,
+                "color": "#5a5340",
+                "opacity": 0.18
+              }
+            ]
+          },
+          {
+            "id": "feature-1-icon",
+            "type": "asset",
+            "z": 2,
+            "box": {
+              "x": 0.3,
+              "y": 0.186,
+              "w": 0.38,
+              "h": 0.303
+            },
+            "fit": "contain",
+            "bind": {
+              "kind": "prop",
+              "index": 1,
+              "part": "icon"
+            }
+          },
+          {
+            "id": "feature-1-label",
+            "type": "text",
+            "z": 3,
+            "box": {
+              "x": 0,
+              "y": 0.669,
+              "w": 1,
+              "h": 0.33
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 1,
+              "part": "label"
+            },
+            "style": {
+              "role": "body",
+              "size": 0.0155,
+              "weight": 600,
+              "color": "#33352c",
+              "align": "center",
+              "valign": "top",
+              "lineHeight": 1.25
+            }
+          }
+        ]
+      },
+      {
+        "id": "divider-1",
+        "type": "shape",
+        "z": 23,
+        "box": {
+          "x": 0.077,
+          "y": 0.578,
+          "w": 0.16,
+          "h": 0.002
+        },
+        "shape": {
+          "form": "line",
+          "thickness": 0.0016
+        },
+        "fill": {
+          "kind": "solid",
+          "color": "#a89c86",
+          "opacity": 0.7
+        }
+      },
+      {
+        "id": "feature-2",
+        "type": "group",
+        "z": 24,
+        "box": {
+          "x": 0.062,
+          "y": 0.589,
+          "w": 0.19,
+          "h": 0.151
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 2
+        },
+        "children": [
+          {
+            "id": "feature-2-disc",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0.135,
+              "y": 0.033,
+              "w": 0.711,
+              "h": 0.589
+            },
+            "shape": {
+              "form": "ellipse"
+            },
+            "fill": {
+              "kind": "radial",
+              "center": {
+                "x": 0.5,
+                "y": 0.42
+              },
+              "radius": 0.55,
+              "stops": [
+                {
+                  "at": 0,
+                  "color": "#ffffff"
+                },
+                {
+                  "at": 1,
+                  "color": "#f5f2ec"
+                }
+              ]
+            },
+            "effects": [
+              {
+                "kind": "shadow",
+                "dx": 0,
+                "dy": 0.003,
+                "blur": 0.01,
+                "color": "#5a5340",
+                "opacity": 0.18
+              }
+            ]
+          },
+          {
+            "id": "feature-2-icon",
+            "type": "asset",
+            "z": 2,
+            "box": {
+              "x": 0.26,
+              "y": 0.185,
+              "w": 0.46,
+              "h": 0.285
+            },
+            "fit": "contain",
+            "bind": {
+              "kind": "prop",
+              "index": 2,
+              "part": "icon"
+            }
+          },
+          {
+            "id": "feature-2-label",
+            "type": "text",
+            "z": 3,
+            "box": {
+              "x": 0,
+              "y": 0.655,
+              "w": 1,
+              "h": 0.344
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 2,
+              "part": "label"
+            },
+            "style": {
+              "role": "body",
+              "size": 0.0155,
+              "weight": 600,
+              "color": "#33352c",
+              "align": "center",
+              "valign": "top",
+              "lineHeight": 1.25
+            }
+          }
+        ]
+      },
+      {
+        "id": "sizes",
+        "type": "group",
+        "z": 30,
+        "box": {
+          "x": 0.035,
+          "y": 0.752,
+          "w": 0.2,
+          "h": 0.094
+        },
+        "children": [
+          {
+            "id": "sizes-plate",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0,
+              "y": 0,
+              "w": 1,
+              "h": 1
+            },
+            "shape": {
+              "form": "rect",
+              "radius": 0.12
+            },
+            "fill": {
+              "kind": "radial",
+              "center": {
+                "x": 0.5,
+                "y": 0.45
+              },
+              "radius": 0.6,
+              "stops": [
+                {
+                  "at": 0,
+                  "color": "#ffffff"
+                },
+                {
+                  "at": 1,
+                  "color": "#f3efe7"
+                }
+              ]
+            },
+            "effects": [
+              {
+                "kind": "shadow",
+                "dx": 0,
+                "dy": 0.003,
+                "blur": 0.01,
+                "color": "#5a5340",
+                "opacity": 0.2
+              }
+            ]
+          },
+          {
+            "id": "sizes-text",
+            "type": "text",
+            "z": 2,
+            "box": {
+              "x": 0.05,
+              "y": 0.08,
+              "w": 0.9,
+              "h": 0.84
+            },
+            "bind": {
+              "kind": "text",
+              "slot": "sizes"
+            },
+            "lines": [
+              [
+                {
+                  "text": "РАЗМЕРЫ",
+                  "weight": 800,
+                  "size": 0.0145,
+                  "color": "#7c9e21"
+                }
+              ],
+              [
+                {
+                  "weight": 900,
+                  "size": 0.038,
+                  "color": "#2b2d26"
+                }
+              ]
+            ],
+            "style": {
+              "role": "display",
+              "size": 0.038,
+              "weight": 900,
+              "color": "#2b2d26",
+              "align": "center",
+              "valign": "middle",
+              "lineHeight": 1.15,
+              "tracking": 0.03,
+              "transform": "upper"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "content": {
+    "texts": {
+      "kicker": [
+        "Женская"
+      ],
+      "title": [
+        "Рубашка"
+      ],
+      "subtitle": [
+        "Плюс-сайз с длинным рукавом"
+      ],
+      "sizes": [
+        "48-62"
+      ]
+    },
+    "props": [
+      {
+        "label": "Свободный\nкрой",
+        "icon": "shirt"
+      },
+      {
+        "label": "Лёгкая\nи дышащая\nткань",
+        "icon": "leaf"
+      },
+      {
+        "label": "Стильный\nдизайн",
+        "icon": "hanger"
+      }
+    ],
+    "swatches": []
+  },
+  "notes": [
+    "Разделители между блоками преимуществ в оригинале — пунктирные линии из точек. Словарь `ShapeForm` знает только сплошную `line`, поэтому они приближены сплошной волосяной линией с пониженной непрозрачностью; пунктир языком не выражается.",
+    "Разделители не привязаны ни к какой характеристике: если по K-3 снимется соседний модуль, линия останется. Привязки для «разделителя между модулями» язык не предусматривает — при сборке это придётся терпеть или чистить руками.",
+    "Плашка размеров записана одним текстовым слоем с прогонами: статическая строка «РАЗМЕРЫ» и прогон без `text` под значение слота `sizes`. Так K-3 уносит подпись вместе со значением, а не оставляет её висеть.",
+    "Белые кружки-подложки и плашка размеров залиты радиальным градиентом: в оригинале они чуть светлее в центре и гаснут к краям, ровным белым это выглядело бы наклейкой.",
+    "Верхняя кремовая зона — фон холста, а не отдельный слой: фото вендора начинается примерно с 20% высоты и идёт до нижнего края в `cover`.",
+    "Иконок `shirt`, `leaf`, `hanger` в базе нет — имена заведены как заявка на пополнение. Все три нарисованы одной тонкой линией в оливково-зелёном (#8fae2a); цвет иконки макетом не задаётся, он должен прийти с самим ассетом.",
+    "Логотипа бренда на образце нет — слоя `logo` в макете тоже нет.",
+    "Надпись «LOE» справа в интерьере и печатный принт на ткани — часть кадра вендора, отдельными слоями не разбираются.",
+    "Широкая разрядка в слове «ЖЕНСКАЯ» передана `tracking` ≈ 0.42 от кегля — значение подобрано на глаз по растру.",
+    "Гарнитуры опознаны только ролями: `display` для заголовка и числа размеров, `heading` для надзаголовка и подзаголовка, `body` для подписей к иконкам."
+  ]
+}

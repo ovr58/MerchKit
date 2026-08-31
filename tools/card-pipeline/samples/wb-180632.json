@@ -1,0 +1,607 @@
+{
+  "source": "bench/samples/wb-starter/Электроника/Смартфоны и телефоны/Смартфоны/Снимок экрана 2026-08-31 180632.jpg",
+  "layout": {
+    "id": "smartphone-i17-pro-max",
+    "title": "Смартфон: вертикальный заголовок в белой колонке слева, фото-сцена в скруглённом кадре, чёрная плашка памяти справа и блок гарантии внизу",
+    "canvas": {
+      "aspectW": 633,
+      "aspectH": 861,
+      "background": {
+        "kind": "solid",
+        "color": "#050505"
+      }
+    },
+    "layers": [
+      {
+        "id": "frame",
+        "type": "frame",
+        "z": 0,
+        "box": {
+          "x": 0.185,
+          "y": 0.012,
+          "w": 0.803,
+          "h": 0.976
+        },
+        "radius": 0.09,
+        "fit": "cover",
+        "focus": {
+          "x": 0.55,
+          "y": 0.45
+        },
+        "bind": {
+          "kind": "frame"
+        }
+      },
+      {
+        "id": "side-panel",
+        "type": "shape",
+        "z": 10,
+        "box": {
+          "x": 0.008,
+          "y": 0.012,
+          "w": 0.165,
+          "h": 0.976
+        },
+        "shape": {
+          "form": "rect",
+          "radius": 0.22
+        },
+        "fill": {
+          "kind": "solid",
+          "color": "#f4f4f2"
+        }
+      },
+      {
+        "id": "title-vertical",
+        "type": "text",
+        "z": 20,
+        "box": {
+          "x": -0.49,
+          "y": 0.45,
+          "w": 1.16,
+          "h": 0.08
+        },
+        "rotate": -90,
+        "bind": {
+          "kind": "text",
+          "slot": "title"
+        },
+        "style": {
+          "role": "display",
+          "size": 0.077,
+          "weight": 800,
+          "color": "#131313",
+          "align": "center",
+          "valign": "middle",
+          "lineHeight": 1
+        }
+      },
+      {
+        "id": "pager-caret",
+        "type": "text",
+        "z": 22,
+        "box": {
+          "x": 0.018,
+          "y": 0.848,
+          "w": 0.06,
+          "h": 0.028
+        },
+        "lines": [
+          ">"
+        ],
+        "style": {
+          "role": "label",
+          "size": 0.016,
+          "weight": 500,
+          "color": "#9a9a9a",
+          "align": "left",
+          "valign": "middle",
+          "lineHeight": 1
+        }
+      },
+      {
+        "id": "pager-current",
+        "type": "text",
+        "z": 22,
+        "box": {
+          "x": 0.018,
+          "y": 0.878,
+          "w": 0.09,
+          "h": 0.04
+        },
+        "lines": [
+          "01"
+        ],
+        "style": {
+          "role": "label",
+          "size": 0.026,
+          "weight": 600,
+          "color": "#141414",
+          "align": "left",
+          "valign": "middle",
+          "lineHeight": 1
+        }
+      },
+      {
+        "id": "pager-total",
+        "type": "text",
+        "z": 22,
+        "box": {
+          "x": 0.02,
+          "y": 0.918,
+          "w": 0.09,
+          "h": 0.03
+        },
+        "lines": [
+          "02"
+        ],
+        "style": {
+          "role": "label",
+          "size": 0.016,
+          "weight": 500,
+          "color": "#9d9d9d",
+          "align": "left",
+          "valign": "middle",
+          "lineHeight": 1
+        }
+      },
+      {
+        "id": "kicker-ornament",
+        "type": "shape",
+        "z": 30,
+        "box": {
+          "x": 0.283,
+          "y": 0.081,
+          "w": 0.021,
+          "h": 0.016
+        },
+        "shape": {
+          "form": "rect",
+          "radius": 0.12
+        },
+        "fill": {
+          "kind": "solid",
+          "color": "#bd9a5c"
+        }
+      },
+      {
+        "id": "kicker",
+        "type": "text",
+        "z": 30,
+        "box": {
+          "x": 0.315,
+          "y": 0.072,
+          "w": 0.33,
+          "h": 0.036
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "kicker"
+        },
+        "style": {
+          "role": "heading",
+          "size": 0.023,
+          "weight": 600,
+          "color": "#242424",
+          "align": "left",
+          "valign": "middle",
+          "lineHeight": 1
+        }
+      },
+      {
+        "id": "divider-line",
+        "type": "shape",
+        "z": 31,
+        "box": {
+          "x": 0.305,
+          "y": 0.139,
+          "w": 0.29,
+          "h": 0.004
+        },
+        "shape": {
+          "form": "line",
+          "thickness": 0.0014
+        },
+        "fill": {
+          "kind": "solid",
+          "color": "#bda87f",
+          "opacity": 0.9
+        }
+      },
+      {
+        "id": "divider-end-left",
+        "type": "shape",
+        "z": 32,
+        "box": {
+          "x": 0.281,
+          "y": 0.134,
+          "w": 0.018,
+          "h": 0.014
+        },
+        "shape": {
+          "form": "rect",
+          "radius": 0.1
+        },
+        "fill": {
+          "kind": "solid",
+          "color": "#bd9a5c"
+        }
+      },
+      {
+        "id": "divider-end-right",
+        "type": "shape",
+        "z": 32,
+        "box": {
+          "x": 0.6,
+          "y": 0.134,
+          "w": 0.018,
+          "h": 0.014
+        },
+        "shape": {
+          "form": "rect",
+          "radius": 0.1
+        },
+        "fill": {
+          "kind": "solid",
+          "color": "#bd9a5c"
+        }
+      },
+      {
+        "id": "divider-knob",
+        "type": "shape",
+        "z": 33,
+        "box": {
+          "x": 0.434,
+          "y": 0.129,
+          "w": 0.028,
+          "h": 0.021
+        },
+        "shape": {
+          "form": "ellipse"
+        },
+        "fill": {
+          "kind": "solid",
+          "color": "#ffffff"
+        },
+        "effects": [
+          {
+            "kind": "stroke",
+            "color": "#b08d4f",
+            "thickness": 0.0022,
+            "opacity": 0.95
+          }
+        ]
+      },
+      {
+        "id": "dual-sim",
+        "type": "text",
+        "z": 34,
+        "box": {
+          "x": 0.245,
+          "y": 0.155,
+          "w": 0.45,
+          "h": 0.055
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 0,
+          "part": "value"
+        },
+        "lines": [
+          [
+            {
+              "text": "Dual ",
+              "weight": 300,
+              "color": "#242424"
+            },
+            {
+              "weight": 800,
+              "color": "#111111"
+            }
+          ]
+        ],
+        "style": {
+          "role": "display",
+          "size": 0.041,
+          "weight": 300,
+          "color": "#1f1f1f",
+          "align": "center",
+          "valign": "middle",
+          "lineHeight": 1
+        }
+      },
+      {
+        "id": "memory",
+        "type": "group",
+        "z": 50,
+        "box": {
+          "x": 0.727,
+          "y": 0.393,
+          "w": 0.262,
+          "h": 0.124
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 1
+        },
+        "children": [
+          {
+            "id": "memory-plate",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0,
+              "y": 0,
+              "w": 1,
+              "h": 1
+            },
+            "shape": {
+              "form": "rect",
+              "radius": 0.14
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#0a0a0c"
+            },
+            "effects": [
+              {
+                "kind": "shadow",
+                "dx": 0,
+                "dy": 0.004,
+                "blur": 0.012,
+                "color": "#000000",
+                "opacity": 0.35
+              }
+            ]
+          },
+          {
+            "id": "memory-label",
+            "type": "text",
+            "z": 2,
+            "box": {
+              "x": 0.06,
+              "y": 0.07,
+              "w": 0.88,
+              "h": 0.2
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 1,
+              "part": "label"
+            },
+            "style": {
+              "role": "label",
+              "size": 0.017,
+              "weight": 500,
+              "color": "#f2f2f2",
+              "align": "center",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          },
+          {
+            "id": "memory-value",
+            "type": "text",
+            "z": 3,
+            "box": {
+              "x": 0.05,
+              "y": 0.26,
+              "w": 0.9,
+              "h": 0.68
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 1,
+              "part": "value"
+            },
+            "lines": [
+              [
+                {
+                  "weight": 800
+                }
+              ],
+              [
+                {
+                  "text": "гб",
+                  "weight": 500,
+                  "size": 0.019
+                }
+              ]
+            ],
+            "style": {
+              "role": "display",
+              "size": 0.05,
+              "weight": 800,
+              "color": "#ffffff",
+              "align": "center",
+              "valign": "top",
+              "lineHeight": 1.05
+            }
+          }
+        ]
+      },
+      {
+        "id": "warranty",
+        "type": "group",
+        "z": 60,
+        "box": {
+          "x": 0.38,
+          "y": 0.6,
+          "w": 0.36,
+          "h": 0.35
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 2
+        },
+        "children": [
+          {
+            "id": "warranty-arrow-shaft",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0.463,
+              "y": 0.03,
+              "w": 0.008,
+              "h": 0.4
+            },
+            "shape": {
+              "form": "line",
+              "thickness": 0.0016
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#cfcfcf",
+              "opacity": 0.85
+            }
+          },
+          {
+            "id": "warranty-arrow-head-left",
+            "type": "shape",
+            "z": 2,
+            "box": {
+              "x": 0.428,
+              "y": 0.375,
+              "w": 0.05,
+              "h": 0.008
+            },
+            "rotate": -40,
+            "shape": {
+              "form": "line",
+              "thickness": 0.0016
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#cfcfcf",
+              "opacity": 0.85
+            }
+          },
+          {
+            "id": "warranty-arrow-head-right",
+            "type": "shape",
+            "z": 3,
+            "box": {
+              "x": 0.457,
+              "y": 0.375,
+              "w": 0.05,
+              "h": 0.008
+            },
+            "rotate": 40,
+            "shape": {
+              "form": "line",
+              "thickness": 0.0016
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#cfcfcf",
+              "opacity": 0.85
+            }
+          },
+          {
+            "id": "warranty-value",
+            "type": "text",
+            "z": 4,
+            "box": {
+              "x": 0.08,
+              "y": 0.44,
+              "w": 0.86,
+              "h": 0.42
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 2,
+              "part": "value"
+            },
+            "lines": [
+              [
+                {
+                  "weight": 300,
+                  "color": "#e2e2e2"
+                },
+                {
+                  "text": " мес",
+                  "weight": 500,
+                  "size": 0.024,
+                  "color": "#e8e8e8"
+                }
+              ]
+            ],
+            "style": {
+              "role": "display",
+              "size": 0.138,
+              "weight": 300,
+              "color": "#e2e2e2",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          },
+          {
+            "id": "warranty-label",
+            "type": "text",
+            "z": 5,
+            "box": {
+              "x": 0,
+              "y": 0.85,
+              "w": 0.88,
+              "h": 0.13
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 2,
+              "part": "label"
+            },
+            "style": {
+              "role": "display",
+              "size": 0.029,
+              "weight": 800,
+              "color": "#f2f2f2",
+              "align": "center",
+              "valign": "middle",
+              "lineHeight": 1,
+              "tracking": 0.04
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "content": {
+    "texts": {
+      "title": [
+        "i17 Pro Max"
+      ],
+      "kicker": [
+        "Абсолютно новый"
+      ]
+    },
+    "props": [
+      {
+        "value": "SIM"
+      },
+      {
+        "label": "объем памяти",
+        "value": "16/1024"
+      },
+      {
+        "label": "гарантия",
+        "value": "12"
+      }
+    ],
+    "swatches": []
+  },
+  "notes": [
+    "Заголовок «i17 Pro Max» идёт вертикально, снизу вверх, в узкой белой колонке — записан текстовым слоем с `rotate: -90`; бокс задан до поворота, поэтому его ширина больше 1 (доли ширины холста), а центр совпадает с центром колонки.",
+    "«Dual SIM» набрано двумя начертаниями в одной строке. Фраза держится одним слоем через прогоны: светлое «Dual » записано в макете, жирный привязанный прогон получает значение характеристики (`props[0].value = \"SIM\"`). Так K-3 уносит фразу целиком, а не оставляет висеть половину.",
+    "«16/1024 гб» — тот же приём: жирный привязанный прогон плюс статическая единица «гб», вынесенная во вторую строку слоя.",
+    "«мес» на образце приподнято к середине цифр «12» и отбито вправо. Прогоном оно ставится по той же базовой линии, что и цифры, — это приближение; отдельным слоем делать не стал, иначе при отсутствии характеристики «мес» осталось бы висеть без числа.",
+    "Крупное «12» на образце залито вертикальным серебристым градиентом (светлее в середине, темнее к низу). Градиентная заливка текста языком не выражается — взят сплошной светло-серый.",
+    "Стрелка-указатель над «12» приближена: тонкая линия плюс два коротких отрезка с `rotate` ±40°. Настоящего наконечника (треугольника) в словаре форм нет.",
+    "Орнамент слева от «Абсолютно новый» и квадратики на концах разделителя — мелкая штриховка «чипа»; отрисованы как маленькие скруглённые прямоугольники золотого цвета. Если такой глиф заведут в базу, это заявка на иконку `chip-dots` (тогда слои станут `asset`, но им нужна привязка — сейчас привязки для декоративной иконки в языке нет).",
+    "У правого края фото-сцены есть вертикальная «гребёнка» из тонких волосяных линий (водяной знак-текстура). Повторяющаяся штриховка языком не описывается; считаю её частью кадра вендора и отдельным слоем не выношу.",
+    "Круглый ползунок на разделителе — эллипс с волосяной обводкой (`stroke`), ровно тот случай, ради которого обводка вернулась в словарь.",
+    "Логотипа бренда на образце нет, слоя `logo` в макете тоже нет. Свотчей нет.",
+    "Пагинация «> 01 / 02» внизу белой колонки — декоративные статические слои: это навигация галереи площадки, а не данные товара, привязок у них нет.",
+    "Скруглённые углы и у фото-сцены (`radius` кадра), и у белой колонки — без них расхождение с оригиналом самое заметное."
+  ]
+}

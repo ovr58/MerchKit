@@ -1,0 +1,610 @@
+{
+  "source": "bench/samples/wb-starter/Обувь/Мужская/Шлепанцы и аквасоки/Снимок экрана 2026-08-31 175059.jpg",
+  "layout": {
+    "id": "crocs-flipflops-features",
+    "title": "Шлепанцы: заголовок-бренд и плашка сверху, колонка иконок-свойств слева, фото по центру, три модуля сценариев внизу",
+    "canvas": {
+      "aspectW": 569,
+      "aspectH": 800,
+      "background": {
+        "kind": "solid",
+        "color": "#ffffff"
+      }
+    },
+    "layers": [
+      {
+        "id": "frame",
+        "type": "frame",
+        "z": 0,
+        "box": {
+          "x": 0.18,
+          "y": 0.245,
+          "w": 0.79,
+          "h": 0.56
+        },
+        "fit": "contain",
+        "focus": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "bind": {
+          "kind": "frame"
+        }
+      },
+      {
+        "id": "title",
+        "type": "text",
+        "z": 10,
+        "box": {
+          "x": 0.1,
+          "y": 0.028,
+          "w": 0.5,
+          "h": 0.066
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "title"
+        },
+        "style": {
+          "role": "display",
+          "size": 0.07,
+          "weight": 900,
+          "color": "#1a1a1a",
+          "align": "left",
+          "valign": "middle",
+          "lineHeight": 1,
+          "transform": "upper",
+          "tracking": -0.01
+        }
+      },
+      {
+        "id": "kicker-plate",
+        "type": "shape",
+        "z": 20,
+        "box": {
+          "x": 0.603,
+          "y": 0.029,
+          "w": 0.312,
+          "h": 0.055
+        },
+        "shape": {
+          "form": "rect",
+          "radius": 0.32
+        },
+        "fill": {
+          "kind": "solid",
+          "color": "#1a1a1a"
+        }
+      },
+      {
+        "id": "kicker",
+        "type": "text",
+        "z": 21,
+        "box": {
+          "x": 0.603,
+          "y": 0.029,
+          "w": 0.312,
+          "h": 0.055
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "kicker"
+        },
+        "style": {
+          "role": "heading",
+          "size": 0.031,
+          "weight": 800,
+          "color": "#ffffff",
+          "align": "center",
+          "valign": "middle",
+          "lineHeight": 1,
+          "transform": "upper"
+        }
+      },
+      {
+        "id": "feat-0",
+        "type": "group",
+        "z": 30,
+        "box": {
+          "x": 0.075,
+          "y": 0.15,
+          "w": 0.45,
+          "h": 0.052
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 0
+        },
+        "children": [
+          {
+            "id": "feat-0-icon",
+            "type": "asset",
+            "z": 1,
+            "box": {
+              "x": 0.02,
+              "y": 0.05,
+              "w": 0.15,
+              "h": 0.9
+            },
+            "fit": "contain",
+            "bind": {
+              "kind": "prop",
+              "index": 0,
+              "part": "icon"
+            }
+          },
+          {
+            "id": "feat-0-label",
+            "type": "text",
+            "z": 2,
+            "box": {
+              "x": 0.22,
+              "y": 0,
+              "w": 0.78,
+              "h": 1
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 0,
+              "part": "label"
+            },
+            "style": {
+              "role": "body",
+              "size": 0.027,
+              "weight": 500,
+              "color": "#1c1c1c",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1.2
+            }
+          }
+        ]
+      },
+      {
+        "id": "feat-1",
+        "type": "group",
+        "z": 31,
+        "box": {
+          "x": 0.075,
+          "y": 0.232,
+          "w": 0.5,
+          "h": 0.055
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 1
+        },
+        "children": [
+          {
+            "id": "feat-1-icon",
+            "type": "asset",
+            "z": 1,
+            "box": {
+              "x": 0.018,
+              "y": 0.05,
+              "w": 0.135,
+              "h": 0.9
+            },
+            "fit": "contain",
+            "bind": {
+              "kind": "prop",
+              "index": 1,
+              "part": "icon"
+            }
+          },
+          {
+            "id": "feat-1-label",
+            "type": "text",
+            "z": 2,
+            "box": {
+              "x": 0.2,
+              "y": 0,
+              "w": 0.8,
+              "h": 1
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 1,
+              "part": "label"
+            },
+            "style": {
+              "role": "body",
+              "size": 0.027,
+              "weight": 500,
+              "color": "#1c1c1c",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1.2
+            }
+          }
+        ]
+      },
+      {
+        "id": "feat-2",
+        "type": "group",
+        "z": 32,
+        "box": {
+          "x": 0.075,
+          "y": 0.32,
+          "w": 0.45,
+          "h": 0.058
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 2
+        },
+        "children": [
+          {
+            "id": "feat-2-icon",
+            "type": "asset",
+            "z": 1,
+            "box": {
+              "x": 0.018,
+              "y": 0.02,
+              "w": 0.15,
+              "h": 0.96
+            },
+            "fit": "contain",
+            "bind": {
+              "kind": "prop",
+              "index": 2,
+              "part": "icon"
+            }
+          },
+          {
+            "id": "feat-2-label",
+            "type": "text",
+            "z": 2,
+            "box": {
+              "x": 0.22,
+              "y": 0.1,
+              "w": 0.78,
+              "h": 0.9
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 2,
+              "part": "label"
+            },
+            "style": {
+              "role": "body",
+              "size": 0.027,
+              "weight": 500,
+              "color": "#1c1c1c",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1.2
+            }
+          }
+        ]
+      },
+      {
+        "id": "feat-3",
+        "type": "group",
+        "z": 33,
+        "box": {
+          "x": 0.075,
+          "y": 0.408,
+          "w": 0.45,
+          "h": 0.088
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 3
+        },
+        "children": [
+          {
+            "id": "feat-3-icon",
+            "type": "asset",
+            "z": 1,
+            "box": {
+              "x": 0.018,
+              "y": 0.02,
+              "w": 0.15,
+              "h": 0.62
+            },
+            "fit": "contain",
+            "bind": {
+              "kind": "prop",
+              "index": 3,
+              "part": "icon"
+            }
+          },
+          {
+            "id": "feat-3-label",
+            "type": "text",
+            "z": 2,
+            "box": {
+              "x": 0.22,
+              "y": 0.02,
+              "w": 0.78,
+              "h": 0.98
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 3,
+              "part": "label"
+            },
+            "style": {
+              "role": "body",
+              "size": 0.026,
+              "weight": 500,
+              "color": "#1c1c1c",
+              "align": "left",
+              "valign": "top",
+              "lineHeight": 1.25
+            }
+          }
+        ]
+      },
+      {
+        "id": "divider-1",
+        "type": "shape",
+        "z": 40,
+        "box": {
+          "x": 0.337,
+          "y": 0.806,
+          "w": 0.0008,
+          "h": 0.138
+        },
+        "shape": {
+          "form": "line",
+          "thickness": 0.0015
+        },
+        "fill": {
+          "kind": "solid",
+          "color": "#1c1c1c",
+          "opacity": 0.35
+        }
+      },
+      {
+        "id": "divider-2",
+        "type": "shape",
+        "z": 41,
+        "box": {
+          "x": 0.654,
+          "y": 0.806,
+          "w": 0.0008,
+          "h": 0.138
+        },
+        "shape": {
+          "form": "line",
+          "thickness": 0.0015
+        },
+        "fill": {
+          "kind": "solid",
+          "color": "#1c1c1c",
+          "opacity": 0.35
+        }
+      },
+      {
+        "id": "use-0",
+        "type": "group",
+        "z": 50,
+        "box": {
+          "x": 0.05,
+          "y": 0.798,
+          "w": 0.275,
+          "h": 0.152
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 4
+        },
+        "children": [
+          {
+            "id": "use-0-icon",
+            "type": "asset",
+            "z": 1,
+            "box": {
+              "x": 0.28,
+              "y": 0,
+              "w": 0.44,
+              "h": 0.42
+            },
+            "fit": "contain",
+            "bind": {
+              "kind": "prop",
+              "index": 4,
+              "part": "icon"
+            }
+          },
+          {
+            "id": "use-0-label",
+            "type": "text",
+            "z": 2,
+            "box": {
+              "x": 0,
+              "y": 0.56,
+              "w": 1,
+              "h": 0.44
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 4,
+              "part": "label"
+            },
+            "style": {
+              "role": "body",
+              "size": 0.024,
+              "weight": 500,
+              "color": "#1c1c1c",
+              "align": "center",
+              "valign": "top",
+              "lineHeight": 1.25
+            }
+          }
+        ]
+      },
+      {
+        "id": "use-1",
+        "type": "group",
+        "z": 51,
+        "box": {
+          "x": 0.345,
+          "y": 0.798,
+          "w": 0.3,
+          "h": 0.152
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 5
+        },
+        "children": [
+          {
+            "id": "use-1-icon",
+            "type": "asset",
+            "z": 1,
+            "box": {
+              "x": 0.26,
+              "y": 0.02,
+              "w": 0.48,
+              "h": 0.4
+            },
+            "fit": "contain",
+            "bind": {
+              "kind": "prop",
+              "index": 5,
+              "part": "icon"
+            }
+          },
+          {
+            "id": "use-1-label",
+            "type": "text",
+            "z": 2,
+            "box": {
+              "x": 0,
+              "y": 0.56,
+              "w": 1,
+              "h": 0.44
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 5,
+              "part": "label"
+            },
+            "style": {
+              "role": "body",
+              "size": 0.024,
+              "weight": 500,
+              "color": "#1c1c1c",
+              "align": "center",
+              "valign": "top",
+              "lineHeight": 1.25
+            }
+          }
+        ]
+      },
+      {
+        "id": "use-2",
+        "type": "group",
+        "z": 52,
+        "box": {
+          "x": 0.665,
+          "y": 0.798,
+          "w": 0.285,
+          "h": 0.152
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 6
+        },
+        "children": [
+          {
+            "id": "use-2-icon",
+            "type": "asset",
+            "z": 1,
+            "box": {
+              "x": 0.28,
+              "y": 0,
+              "w": 0.44,
+              "h": 0.42
+            },
+            "fit": "contain",
+            "bind": {
+              "kind": "prop",
+              "index": 6,
+              "part": "icon"
+            }
+          },
+          {
+            "id": "use-2-label",
+            "type": "text",
+            "z": 2,
+            "box": {
+              "x": 0,
+              "y": 0.56,
+              "w": 1,
+              "h": 0.44
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 6,
+              "part": "label"
+            },
+            "style": {
+              "role": "body",
+              "size": 0.024,
+              "weight": 500,
+              "color": "#1c1c1c",
+              "align": "center",
+              "valign": "top",
+              "lineHeight": 1.25
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "content": {
+    "texts": {
+      "title": [
+        "CROCS"
+      ],
+      "kicker": [
+        "100% ЭВА"
+      ]
+    },
+    "props": [
+      {
+        "label": "Лёгкие",
+        "icon": "feather"
+      },
+      {
+        "label": "Водонепроницаемые",
+        "icon": "sole-waterdrop"
+      },
+      {
+        "label": "Дышащие",
+        "icon": "sole-airflow"
+      },
+      {
+        "label": "Комфортные /\nАнти-\nскользящие",
+        "icon": "sole-sparkle"
+      },
+      {
+        "label": "Для дома\nи улицы",
+        "icon": "house"
+      },
+      {
+        "label": "Идеально для\nпляжа и бассейна",
+        "icon": "beach-umbrella"
+      },
+      {
+        "label": "Легко\nчистятся",
+        "icon": "footprints"
+      }
+    ],
+    "swatches": []
+  },
+  "notes": [
+    "Слово CROCS в шапке — это набранный текст, а не логотип-ассет: начертание близко к тяжёлому гротеску, поэтому оно разобрано как слот `title` с ролью `display`. Если бренд появится в базе логотипов, слой можно заменить на `asset` с привязкой `logo` без изменения геометрии.",
+    "Свойства разложены в семь `prop`: четыре в левой колонке (иконка + подпись) и три внизу (иконка сверху, подпись по центру под ней). Разное оформление колонок языком выражается, но общего «списка свойств» в языке нет — порядок и позиции заданы вручную, поэтому при другом числе характеристик макет придётся пересобрать арт-директором.",
+    "Перенос строк в подписях («Комфортные / Анти- скользящие», «Для дома и улицы») — часть значения характеристики, записан переводами строк в контенте; сборщик переносы не подбирает.",
+    "Две тонкие вертикальные разделительные линии внизу заданы `shape` формы `line` с почти нулевой шириной бокса — прямого понятия «вертикальная линия» в языке нет, поворот здесь не нужен, но толщина приближена (в оригинале это волосяная линия ~1 px).",
+    "Фотография товара — один кадр вендора, положен `frame` с `fit: contain` внутри центрального бокса: фон образца белый и совпадает с фоном холста, поэтому вырез (`cutout`) не требуется — текст за товар не уходит.",
+    "Иконок в базе, скорее всего, нет ни одной; заявка на пополнение: `feather`, `sole-waterdrop`, `sole-airflow`, `sole-sparkle`, `house`, `beach-umbrella`, `footprints`. Все — чёрные линейные пиктограммы одной толщины штриха.",
+    "Тиснёные надписи CROCS на ремешке и подошве принадлежат самому снимку, макетом не воспроизводятся и воспроизводиться не должны.",
+    "Мягкая тень под шлепанцами на образце — часть кадра вендора, а не эффект слоя; эффект `shadow` для кадра не задан, чтобы не удваивать её."
+  ]
+}

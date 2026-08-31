@@ -1,0 +1,708 @@
+{
+  "source": "bench/samples/wb-starter/Обувь/Мужская/Рабочая обувь/Снимок экрана 2026-08-31 175307.jpg",
+  "layout": {
+    "id": "work-sneakers-siz-gost",
+    "title": "Рабочая обувь: жёлтая плашка-надзаголовок и крупный титул сверху, модули-плашки слева, бейдж сертификации с фотовставкой справа",
+    "canvas": {
+      "aspectW": 631,
+      "aspectH": 842,
+      "background": {
+        "kind": "solid",
+        "color": "#d8d8d6"
+      }
+    },
+    "layers": [
+      {
+        "id": "frame",
+        "type": "frame",
+        "z": 0,
+        "box": {
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.5,
+          "y": 0.6
+        },
+        "bind": {
+          "kind": "frame",
+          "index": 0
+        }
+      },
+      {
+        "id": "watermark",
+        "type": "text",
+        "z": 5,
+        "box": {
+          "x": -0.263,
+          "y": 0.228,
+          "w": 0.55,
+          "h": 0.03
+        },
+        "rotate": -90,
+        "opacity": 0.55,
+        "lines": [
+          "Интеллектуальная собственность ИП Хазиев А. В. Все права защищены."
+        ],
+        "style": {
+          "role": "label",
+          "size": 0.011,
+          "weight": 400,
+          "color": "#ffffff",
+          "align": "left",
+          "valign": "middle",
+          "lineHeight": 1
+        }
+      },
+      {
+        "id": "kicker",
+        "type": "group",
+        "z": 20,
+        "box": {
+          "x": 0.253,
+          "y": 0.021,
+          "w": 0.492,
+          "h": 0.069
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "kicker"
+        },
+        "children": [
+          {
+            "id": "kicker-plate",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0,
+              "y": 0,
+              "w": 1,
+              "h": 1
+            },
+            "shape": {
+              "form": "rect",
+              "radius": 0.06
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#f5c518"
+            },
+            "effects": [
+              {
+                "kind": "shadow",
+                "dx": 0,
+                "dy": 0.004,
+                "blur": 0.012,
+                "color": "#000000",
+                "opacity": 0.35
+              }
+            ]
+          },
+          {
+            "id": "kicker-text",
+            "type": "text",
+            "z": 2,
+            "box": {
+              "x": 0.03,
+              "y": 0.06,
+              "w": 0.94,
+              "h": 0.88
+            },
+            "bind": {
+              "kind": "text",
+              "slot": "kicker"
+            },
+            "style": {
+              "role": "display",
+              "size": 0.042,
+              "weight": 900,
+              "color": "#141414",
+              "align": "center",
+              "valign": "middle",
+              "lineHeight": 1,
+              "transform": "upper",
+              "tracking": 0.01
+            }
+          }
+        ]
+      },
+      {
+        "id": "title",
+        "type": "text",
+        "z": 30,
+        "box": {
+          "x": 0.08,
+          "y": 0.088,
+          "w": 0.84,
+          "h": 0.098
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "title"
+        },
+        "effects": [
+          {
+            "kind": "shadow",
+            "dx": 0.003,
+            "dy": 0.004,
+            "blur": 0.01,
+            "color": "#000000",
+            "opacity": 0.45
+          },
+          {
+            "kind": "stroke",
+            "color": "#1a1a1a",
+            "thickness": 0.0016,
+            "opacity": 0.6
+          }
+        ],
+        "style": {
+          "role": "display",
+          "size": 0.084,
+          "weight": 900,
+          "color": "#ffffff",
+          "align": "center",
+          "valign": "middle",
+          "lineHeight": 1,
+          "transform": "upper"
+        }
+      },
+      {
+        "id": "gost",
+        "type": "group",
+        "z": 40,
+        "box": {
+          "x": 0.55,
+          "y": 0.215,
+          "w": 0.4,
+          "h": 0.15
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 2
+        },
+        "children": [
+          {
+            "id": "gost-plate",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0.032,
+              "y": 0.19,
+              "w": 0.833,
+              "h": 0.754
+            },
+            "shape": {
+              "form": "rect",
+              "radius": 0.05
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#f5c518"
+            },
+            "effects": [
+              {
+                "kind": "shadow",
+                "dx": 0,
+                "dy": 0.004,
+                "blur": 0.012,
+                "color": "#000000",
+                "opacity": 0.3
+              }
+            ]
+          },
+          {
+            "id": "gost-label",
+            "type": "text",
+            "z": 2,
+            "box": {
+              "x": 0.06,
+              "y": 0.24,
+              "w": 0.46,
+              "h": 0.36
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 2,
+              "part": "label"
+            },
+            "style": {
+              "role": "display",
+              "size": 0.04,
+              "weight": 900,
+              "color": "#141414",
+              "align": "center",
+              "valign": "middle",
+              "lineHeight": 1,
+              "transform": "upper"
+            }
+          },
+          {
+            "id": "gost-value",
+            "type": "text",
+            "z": 3,
+            "box": {
+              "x": 0.05,
+              "y": 0.6,
+              "w": 0.48,
+              "h": 0.26
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 2,
+              "part": "value"
+            },
+            "lines": [
+              [
+                {
+                  "text": "по",
+                  "weight": 500,
+                  "size": 0.021
+                },
+                {
+                  "weight": 900,
+                  "size": 0.031
+                }
+              ]
+            ],
+            "style": {
+              "role": "display",
+              "size": 0.031,
+              "weight": 900,
+              "color": "#141414",
+              "align": "center",
+              "valign": "middle",
+              "lineHeight": 1,
+              "transform": "upper"
+            }
+          },
+          {
+            "id": "gost-cert",
+            "type": "text",
+            "z": 4,
+            "box": {
+              "x": 0.03,
+              "y": 0.9,
+              "w": 0.57,
+              "h": 0.1
+            },
+            "lines": [
+              "Сертификат ТР ТС 019/2011"
+            ],
+            "style": {
+              "role": "label",
+              "size": 0.0095,
+              "weight": 700,
+              "color": "#1a1a1a",
+              "align": "center",
+              "valign": "middle",
+              "lineHeight": 1,
+              "transform": "upper",
+              "tracking": 0.02
+            }
+          },
+          {
+            "id": "gost-photo",
+            "type": "asset",
+            "z": 5,
+            "box": {
+              "x": 0.575,
+              "y": 0.01,
+              "w": 0.37,
+              "h": 1
+            },
+            "fit": "cover",
+            "radius": 0.14,
+            "bind": {
+              "kind": "frame",
+              "index": 1
+            },
+            "effects": [
+              {
+                "kind": "stroke",
+                "color": "#ffffff",
+                "thickness": 0.0022,
+                "opacity": 0.9
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "pill-0",
+        "type": "group",
+        "z": 50,
+        "box": {
+          "x": 0.06,
+          "y": 0.424,
+          "w": 0.39,
+          "h": 0.066
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 0
+        },
+        "children": [
+          {
+            "id": "pill-0-plate",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0,
+              "y": 0,
+              "w": 1,
+              "h": 1
+            },
+            "shape": {
+              "form": "rect",
+              "radius": 0.08
+            },
+            "fill": {
+              "kind": "radial",
+              "center": {
+                "x": 0.5,
+                "y": 0.5
+              },
+              "radius": 0.62,
+              "stops": [
+                {
+                  "at": 0,
+                  "color": "#ffffff",
+                  "opacity": 0.97
+                },
+                {
+                  "at": 1,
+                  "color": "#eeeeea",
+                  "opacity": 0.92
+                }
+              ]
+            },
+            "effects": [
+              {
+                "kind": "shadow",
+                "dx": 0,
+                "dy": 0.003,
+                "blur": 0.01,
+                "color": "#000000",
+                "opacity": 0.25
+              }
+            ]
+          },
+          {
+            "id": "pill-0-icon",
+            "type": "asset",
+            "z": 2,
+            "box": {
+              "x": 0.03,
+              "y": 0.04,
+              "w": 0.24,
+              "h": 0.92
+            },
+            "fit": "contain",
+            "bind": {
+              "kind": "prop",
+              "index": 0,
+              "part": "icon"
+            }
+          },
+          {
+            "id": "pill-0-label",
+            "type": "text",
+            "z": 3,
+            "box": {
+              "x": 0.29,
+              "y": 0.06,
+              "w": 0.68,
+              "h": 0.88
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 0,
+              "part": "label"
+            },
+            "style": {
+              "role": "heading",
+              "size": 0.019,
+              "weight": 700,
+              "color": "#141414",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1.15
+            }
+          }
+        ]
+      },
+      {
+        "id": "pill-1",
+        "type": "group",
+        "z": 60,
+        "box": {
+          "x": 0.06,
+          "y": 0.503,
+          "w": 0.39,
+          "h": 0.066
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 1
+        },
+        "children": [
+          {
+            "id": "pill-1-plate",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0,
+              "y": 0,
+              "w": 1,
+              "h": 1
+            },
+            "shape": {
+              "form": "rect",
+              "radius": 0.08
+            },
+            "fill": {
+              "kind": "radial",
+              "center": {
+                "x": 0.5,
+                "y": 0.5
+              },
+              "radius": 0.62,
+              "stops": [
+                {
+                  "at": 0,
+                  "color": "#ffffff",
+                  "opacity": 0.97
+                },
+                {
+                  "at": 1,
+                  "color": "#eeeeea",
+                  "opacity": 0.92
+                }
+              ]
+            },
+            "effects": [
+              {
+                "kind": "shadow",
+                "dx": 0,
+                "dy": 0.003,
+                "blur": 0.01,
+                "color": "#000000",
+                "opacity": 0.25
+              }
+            ]
+          },
+          {
+            "id": "pill-1-icon",
+            "type": "asset",
+            "z": 2,
+            "box": {
+              "x": 0.03,
+              "y": 0.06,
+              "w": 0.24,
+              "h": 0.88
+            },
+            "fit": "contain",
+            "bind": {
+              "kind": "prop",
+              "index": 1,
+              "part": "icon"
+            }
+          },
+          {
+            "id": "pill-1-label",
+            "type": "text",
+            "z": 3,
+            "box": {
+              "x": 0.29,
+              "y": 0.06,
+              "w": 0.68,
+              "h": 0.88
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 1,
+              "part": "label"
+            },
+            "style": {
+              "role": "heading",
+              "size": 0.019,
+              "weight": 700,
+              "color": "#141414",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1.15
+            }
+          }
+        ]
+      },
+      {
+        "id": "sizes",
+        "type": "group",
+        "z": 70,
+        "box": {
+          "x": 0.732,
+          "y": 0.786,
+          "w": 0.238,
+          "h": 0.079
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "sizes"
+        },
+        "children": [
+          {
+            "id": "sizes-plate",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0,
+              "y": 0,
+              "w": 1,
+              "h": 1
+            },
+            "shape": {
+              "form": "rect",
+              "radius": 0.09
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#f5c518"
+            },
+            "effects": [
+              {
+                "kind": "shadow",
+                "dx": 0,
+                "dy": 0.003,
+                "blur": 0.01,
+                "color": "#000000",
+                "opacity": 0.3
+              }
+            ]
+          },
+          {
+            "id": "sizes-text",
+            "type": "text",
+            "z": 2,
+            "box": {
+              "x": 0.06,
+              "y": 0.08,
+              "w": 0.88,
+              "h": 0.84
+            },
+            "bind": {
+              "kind": "text",
+              "slot": "sizes"
+            },
+            "lines": [
+              [
+                {
+                  "text": "Размеры",
+                  "size": 0.018,
+                  "weight": 700
+                }
+              ],
+              [
+                {
+                  "size": 0.034,
+                  "weight": 900
+                }
+              ]
+            ],
+            "style": {
+              "role": "display",
+              "size": 0.034,
+              "weight": 900,
+              "color": "#141414",
+              "align": "center",
+              "valign": "middle",
+              "lineHeight": 1.1
+            }
+          }
+        ]
+      },
+      {
+        "id": "subtitle",
+        "type": "text",
+        "z": 80,
+        "box": {
+          "x": 0.13,
+          "y": 0.885,
+          "w": 0.74,
+          "h": 0.085
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "subtitle"
+        },
+        "effects": [
+          {
+            "kind": "shadow",
+            "dx": 0.002,
+            "dy": 0.004,
+            "blur": 0.012,
+            "color": "#000000",
+            "opacity": 0.4
+          }
+        ],
+        "style": {
+          "role": "display",
+          "size": 0.039,
+          "weight": 900,
+          "color": "#ffffff",
+          "align": "center",
+          "valign": "middle",
+          "lineHeight": 1.05,
+          "transform": "upper"
+        }
+      }
+    ]
+  },
+  "content": {
+    "texts": {
+      "kicker": [
+        "Рабочие"
+      ],
+      "title": [
+        "Кроссовки"
+      ],
+      "subtitle": [
+        "Облегченная",
+        "модель"
+      ],
+      "sizes": [
+        "40-47"
+      ]
+    },
+    "props": [
+      {
+        "label": "Антипрокольная\nподошва",
+        "icon": "sole-puncture-resistant"
+      },
+      {
+        "label": "Ударопрочный\nподносок",
+        "icon": "toe-cap-impact"
+      },
+      {
+        "label": "СИЗ",
+        "value": "ГОСТ"
+      }
+    ],
+    "swatches": []
+  },
+  "notes": [
+    "Вертикальная надпись по левому краю («Интеллектуальная собственность ИП…») — водяной знак продавца, положен слоем text с rotate: -90; бокс сознательно выходит за левый край холста (x < 0), потому что после поворота вокруг центра он ложится узкой полосой у обреза.",
+    "«по ГОСТ» набрано двумя начертаниями в одной строке — записано прогонами: статический прогон «по» плюс прогон без text под привязанное значение prop[2].value. Так фраза остаётся одним слоем и уходит целиком по правилу K-3.",
+    "Плашка «Размеры 40-47» тоже собрана прогонами: первая строка — статическое слово «Размеры», вторая — гнездо под привязку слота sizes.",
+    "Фотовставка с рабочим в каске — второй кадр карточки, адресована bind {kind:'frame', index:1} со скруглением radius и волосяной белой обводкой. Она лежит внутри группы бейджа сертификации, поэтому при отсутствии prop[2] снимется вместе с бейджем; отдельного условия «фото есть, а текста нет» язык не выражает.",
+    "Белые плашки характеристик светлее в середине и гаснут к краям — записано radial-заливкой; ровным solid они выглядели бы наклейками.",
+    "У заголовка «КРОССОВКИ» на образце тонкая тёмная обводка вокруг белых литер плюс мягкая тень; обводка приближена эффектом stroke на текстовом слое — если сборщик не умеет обводить глифы, останется только тень, и читаемость на светлом небе просядет.",
+    "Двухстрочная подпись «ОБЛЕГЧЕННАЯ / МОДЕЛЬ» на образце набрана с чуть разным кеглем строк (вторая крупнее). Здесь она привязана к слоту subtitle одним стилем — приближение: разный кегль по строкам одного привязанного многострочного текста язык не выражает.",
+    "Иконок sole-puncture-resistant (подошва в разрезе с гвоздём) и toe-cap-impact (защитный подносок) в базе нет — это заявка на пополнение.",
+    "Логотип бренда в образце отсутствует, слой logo не заводился. Мелкая нашивка HLAY на пятке кроссовка — часть кадра вендора, а не наш ассет.",
+    "Перо у нижнего края и текстура бетона/стройплощадки — содержимое кадра вендора; макетом не описываются."
+  ]
+}

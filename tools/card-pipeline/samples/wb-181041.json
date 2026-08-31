@@ -1,0 +1,613 @@
+{
+  "source": "bench/samples/wb-starter/Здоровье/Оздоровление/Снимок экрана 2026-08-31 181041.jpg",
+  "layout": {
+    "id": "acupressure-mat-callouts",
+    "title": "Оздоровление: двухцветный заголовок сверху слева, вставка-деталь и выноски с зелёными плюсами поверх фото",
+    "canvas": {
+      "aspectW": 638,
+      "aspectH": 850,
+      "background": {
+        "kind": "solid",
+        "color": "#f1ece6"
+      }
+    },
+    "layers": [
+      {
+        "id": "frame",
+        "type": "frame",
+        "z": 0,
+        "box": {
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.58,
+          "y": 0.5
+        },
+        "bind": {
+          "kind": "frame"
+        }
+      },
+      {
+        "id": "title",
+        "type": "text",
+        "z": 10,
+        "box": {
+          "x": 0.055,
+          "y": 0.03,
+          "w": 0.55,
+          "h": 0.078
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "title"
+        },
+        "style": {
+          "role": "display",
+          "size": 0.068,
+          "weight": 500,
+          "color": "#33cf7d",
+          "align": "left",
+          "valign": "top",
+          "lineHeight": 1
+        }
+      },
+      {
+        "id": "subtitle",
+        "type": "text",
+        "z": 11,
+        "box": {
+          "x": 0.058,
+          "y": 0.106,
+          "w": 0.55,
+          "h": 0.07
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "subtitle"
+        },
+        "style": {
+          "role": "display",
+          "size": 0.062,
+          "weight": 500,
+          "color": "#1c1c1c",
+          "align": "left",
+          "valign": "top",
+          "lineHeight": 1
+        }
+      },
+      {
+        "id": "sizes",
+        "type": "text",
+        "z": 12,
+        "box": {
+          "x": 0.056,
+          "y": 0.172,
+          "w": 0.23,
+          "h": 0.055
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "sizes"
+        },
+        "style": {
+          "role": "display",
+          "size": 0.05,
+          "weight": 400,
+          "color": "#33cf7d",
+          "align": "left",
+          "valign": "top",
+          "lineHeight": 1
+        }
+      },
+      {
+        "id": "sizes-caption",
+        "type": "text",
+        "z": 12,
+        "box": {
+          "x": 0.295,
+          "y": 0.177,
+          "w": 0.16,
+          "h": 0.055
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "body"
+        },
+        "style": {
+          "role": "body",
+          "size": 0.0175,
+          "weight": 500,
+          "color": "#1f1f1f",
+          "align": "left",
+          "valign": "top",
+          "lineHeight": 1.3
+        }
+      },
+      {
+        "id": "sizes-arrow",
+        "type": "shape",
+        "z": 12,
+        "box": {
+          "x": 0.447,
+          "y": 0.19,
+          "w": 0.08,
+          "h": 0.004
+        },
+        "shape": {
+          "form": "line",
+          "thickness": 0.0015
+        },
+        "fill": {
+          "kind": "solid",
+          "color": "#1f1f1f"
+        }
+      },
+      {
+        "id": "needle-card",
+        "type": "group",
+        "z": 30,
+        "box": {
+          "x": 0.039,
+          "y": 0.268,
+          "w": 0.494,
+          "h": 0.085
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 0
+        },
+        "children": [
+          {
+            "id": "needle-card-plate",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0,
+              "y": 0,
+              "w": 1,
+              "h": 1
+            },
+            "shape": {
+              "form": "rect",
+              "radius": 0.02
+            },
+            "fill": {
+              "kind": "radial",
+              "center": {
+                "x": 0.45,
+                "y": 0.45
+              },
+              "radius": 0.62,
+              "stops": [
+                {
+                  "at": 0,
+                  "color": "#ffffff",
+                  "opacity": 0.97
+                },
+                {
+                  "at": 1,
+                  "color": "#e4e2df",
+                  "opacity": 0.95
+                }
+              ]
+            }
+          },
+          {
+            "id": "needle-card-badge",
+            "type": "shape",
+            "z": 2,
+            "box": {
+              "x": 0.022,
+              "y": 0.083,
+              "w": 0.051,
+              "h": 0.222
+            },
+            "shape": {
+              "form": "rect",
+              "radius": 0.004
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#2ed06a"
+            }
+          },
+          {
+            "id": "needle-card-plus",
+            "type": "text",
+            "z": 3,
+            "box": {
+              "x": 0.022,
+              "y": 0.083,
+              "w": 0.051,
+              "h": 0.222
+            },
+            "lines": [
+              "+"
+            ],
+            "style": {
+              "role": "label",
+              "size": 0.014,
+              "weight": 700,
+              "color": "#ffffff",
+              "align": "center",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          },
+          {
+            "id": "needle-card-label",
+            "type": "text",
+            "z": 4,
+            "box": {
+              "x": 0.041,
+              "y": 0.3,
+              "w": 0.4,
+              "h": 0.26
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 0,
+              "part": "label"
+            },
+            "style": {
+              "role": "heading",
+              "size": 0.023,
+              "weight": 800,
+              "color": "#1c1c1c",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1,
+              "transform": "upper"
+            }
+          },
+          {
+            "id": "needle-card-value",
+            "type": "text",
+            "z": 4,
+            "box": {
+              "x": 0.041,
+              "y": 0.57,
+              "w": 0.52,
+              "h": 0.39
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 0,
+              "part": "value"
+            },
+            "style": {
+              "role": "body",
+              "size": 0.0165,
+              "weight": 500,
+              "color": "#2b2b2b",
+              "align": "left",
+              "valign": "top",
+              "lineHeight": 1.25
+            }
+          },
+          {
+            "id": "needle-card-photo",
+            "type": "frame",
+            "z": 5,
+            "box": {
+              "x": 0.644,
+              "y": 0.02,
+              "w": 0.349,
+              "h": 0.96
+            },
+            "fit": "cover",
+            "focus": {
+              "x": 0.5,
+              "y": 0.5
+            },
+            "radius": 0.02,
+            "bind": {
+              "kind": "frame",
+              "index": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "callout-1",
+        "type": "group",
+        "z": 40,
+        "box": {
+          "x": 0.588,
+          "y": 0.259,
+          "w": 0.235,
+          "h": 0.045
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 1
+        },
+        "children": [
+          {
+            "id": "callout-1-badge",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0.02,
+              "y": 0.16,
+              "w": 0.1,
+              "h": 0.39
+            },
+            "shape": {
+              "form": "rect",
+              "radius": 0.006
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#2ed06a"
+            }
+          },
+          {
+            "id": "callout-1-plus",
+            "type": "text",
+            "z": 2,
+            "box": {
+              "x": 0.02,
+              "y": 0.16,
+              "w": 0.1,
+              "h": 0.39
+            },
+            "lines": [
+              "+"
+            ],
+            "style": {
+              "role": "label",
+              "size": 0.014,
+              "weight": 700,
+              "color": "#ffffff",
+              "align": "center",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          },
+          {
+            "id": "callout-1-label",
+            "type": "text",
+            "z": 3,
+            "box": {
+              "x": 0.167,
+              "y": 0,
+              "w": 0.82,
+              "h": 1
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 1,
+              "part": "label"
+            },
+            "style": {
+              "role": "body",
+              "size": 0.0175,
+              "weight": 500,
+              "color": "#1f1f1f",
+              "align": "left",
+              "valign": "top",
+              "lineHeight": 1.3
+            }
+          }
+        ]
+      },
+      {
+        "id": "callout-2",
+        "type": "group",
+        "z": 41,
+        "box": {
+          "x": 0.502,
+          "y": 0.555,
+          "w": 0.235,
+          "h": 0.047
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 2
+        },
+        "children": [
+          {
+            "id": "callout-2-badge",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0.013,
+              "y": 0.15,
+              "w": 0.1,
+              "h": 0.375
+            },
+            "shape": {
+              "form": "rect",
+              "radius": 0.006
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#2ed06a"
+            }
+          },
+          {
+            "id": "callout-2-plus",
+            "type": "text",
+            "z": 2,
+            "box": {
+              "x": 0.013,
+              "y": 0.15,
+              "w": 0.1,
+              "h": 0.375
+            },
+            "lines": [
+              "+"
+            ],
+            "style": {
+              "role": "label",
+              "size": 0.014,
+              "weight": 700,
+              "color": "#ffffff",
+              "align": "center",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          },
+          {
+            "id": "callout-2-label",
+            "type": "text",
+            "z": 3,
+            "box": {
+              "x": 0.167,
+              "y": 0,
+              "w": 0.82,
+              "h": 1
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 2,
+              "part": "label"
+            },
+            "style": {
+              "role": "body",
+              "size": 0.0175,
+              "weight": 500,
+              "color": "#1f1f1f",
+              "align": "left",
+              "valign": "top",
+              "lineHeight": 1.3
+            }
+          }
+        ]
+      },
+      {
+        "id": "callout-3",
+        "type": "group",
+        "z": 42,
+        "box": {
+          "x": 0.072,
+          "y": 0.649,
+          "w": 0.235,
+          "h": 0.049
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 3
+        },
+        "children": [
+          {
+            "id": "callout-3-badge",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0.013,
+              "y": 0.143,
+              "w": 0.1,
+              "h": 0.357
+            },
+            "shape": {
+              "form": "rect",
+              "radius": 0.006
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#2ed06a"
+            }
+          },
+          {
+            "id": "callout-3-plus",
+            "type": "text",
+            "z": 2,
+            "box": {
+              "x": 0.013,
+              "y": 0.143,
+              "w": 0.1,
+              "h": 0.357
+            },
+            "lines": [
+              "+"
+            ],
+            "style": {
+              "role": "label",
+              "size": 0.014,
+              "weight": 700,
+              "color": "#ffffff",
+              "align": "center",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          },
+          {
+            "id": "callout-3-label",
+            "type": "text",
+            "z": 3,
+            "box": {
+              "x": 0.16,
+              "y": 0,
+              "w": 0.83,
+              "h": 1
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 3,
+              "part": "label"
+            },
+            "style": {
+              "role": "body",
+              "size": 0.0175,
+              "weight": 500,
+              "color": "#1f1f1f",
+              "align": "left",
+              "valign": "top",
+              "lineHeight": 1.3
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "content": {
+    "texts": {
+      "title": [
+        "Массажный"
+      ],
+      "subtitle": [
+        "апликатор"
+      ],
+      "sizes": [
+        "45х65"
+      ],
+      "body": [
+        "размер",
+        "поверхности"
+      ]
+    },
+    "props": [
+      {
+        "label": "Иглы",
+        "value": "высокого\nвоздействия"
+      },
+      {
+        "label": "устраняет боль\nв спине"
+      },
+      {
+        "label": "избавляет\nот усталости"
+      },
+      {
+        "label": "снимает\nнапряжение"
+      }
+    ],
+    "swatches": []
+  },
+  "notes": [
+    "Заголовок набран двумя цветами по строкам («Массажный» — мятный, «апликатор» — тёмный), поэтому разложен на два слоя: title и subtitle. Прогоны здесь не помогли бы — цвет меняется целыми строками, а строки идут из разных гнёзд.",
+    "Указатель у подписи «размер поверхности» — тонкая линия со стрелочным наконечником. Язык знает только `line` без наконечников: линия записана shape-слоем, наконечник потерян. Заявка в базу иконок: `arrow-right-thin` (asset-слой вместо линии), либо расширение `ShapeForm` формой со наконечником.",
+    "Вставка-деталь с крупным планом игл — второй снимок карточки, адресована `frame` с `index: 1`; в базе ассетов её нет, это кадр вендора. Если второго кадра не будет, K-3 снимет только фотослой, а плашка с «ИГЛЫ» останется — так и задумано, она привязана к prop 0.",
+    "Подложка вставки не ровно белая: середина светлее, к краям гаснет — записана `radial`-заливкой, повторяющей форму плашки. Мягкой тени под плашкой на образце не видно, эффекты не добавлены.",
+    "Зелёные квадратики со знаком «+» у выносок — декоративные shape + текст «+» прямо в макете (в базе такой иконки нет). Альтернативой была бы иконка `plus-square-green`, но тогда цвет плашки задавался бы картинкой, а не макетом.",
+    "Логотипа бренда на образце нет — слоя `logo` в макете тоже нет.",
+    "Переносы внутри выносок («устраняет боль / в спине») отданы содержимому через `\\n`, потому что число и длина характеристик переменные; на образце это ровно два ряда.",
+    "Гарнитура заголовка — геометрический гротеск с очень широкой «М»; восстановлена ролью `display` с обычным начертанием (weight 500), точное соответствие не гарантируется.",
+    "Растение в горшке слева и общая сцена с коврик+валик — часть кадра вендора, отдельными слоями не описаны."
+  ]
+}

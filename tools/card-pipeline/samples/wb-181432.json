@@ -1,0 +1,490 @@
+{
+  "source": "bench/samples/wb-starter/Ювелирные изделия/Колье, цепи, шнурки/Снимок экрана 2026-08-31 181432.jpg",
+  "layout": {
+    "id": "chain-gold-375-singapore",
+    "title": "Ювелирная цепочка: белый заголовок и капсула-бейдж сверху, выноски к товару на чёрном фоне, эмблема качества внизу",
+    "canvas": {
+      "aspectW": 631,
+      "aspectH": 845,
+      "background": {
+        "kind": "radial",
+        "center": {
+          "x": 0.5,
+          "y": 0.45
+        },
+        "radius": 0.8,
+        "stops": [
+          {
+            "at": 0,
+            "color": "#1c1c1c"
+          },
+          {
+            "at": 1,
+            "color": "#000000"
+          }
+        ]
+      }
+    },
+    "layers": [
+      {
+        "id": "frame",
+        "type": "frame",
+        "z": 0,
+        "box": {
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.55,
+          "y": 0.55
+        },
+        "bind": {
+          "kind": "frame"
+        }
+      },
+      {
+        "id": "clasp-detail",
+        "type": "frame",
+        "z": 10,
+        "box": {
+          "x": 0.66,
+          "y": 0.645,
+          "w": 0.34,
+          "h": 0.14
+        },
+        "fit": "contain",
+        "focus": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "bind": {
+          "kind": "frame",
+          "index": 1
+        }
+      },
+      {
+        "id": "title",
+        "type": "text",
+        "z": 20,
+        "box": {
+          "x": 0.09,
+          "y": 0.05,
+          "w": 0.82,
+          "h": 0.108
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "title"
+        },
+        "style": {
+          "role": "display",
+          "size": 0.093,
+          "weight": 900,
+          "color": "#ffffff",
+          "align": "center",
+          "valign": "middle",
+          "lineHeight": 1,
+          "transform": "upper",
+          "tracking": -0.01
+        }
+      },
+      {
+        "id": "rule-left",
+        "type": "shape",
+        "z": 20,
+        "box": {
+          "x": 0.185,
+          "y": 0.218,
+          "w": 0.092,
+          "h": 0.003
+        },
+        "shape": {
+          "form": "line",
+          "thickness": 0.0024
+        },
+        "fill": {
+          "kind": "solid",
+          "color": "#ffffff",
+          "opacity": 0.8
+        }
+      },
+      {
+        "id": "rule-right",
+        "type": "shape",
+        "z": 20,
+        "box": {
+          "x": 0.725,
+          "y": 0.218,
+          "w": 0.092,
+          "h": 0.003
+        },
+        "shape": {
+          "form": "line",
+          "thickness": 0.0024
+        },
+        "fill": {
+          "kind": "solid",
+          "color": "#ffffff",
+          "opacity": 0.8
+        }
+      },
+      {
+        "id": "badge",
+        "type": "group",
+        "z": 30,
+        "box": {
+          "x": 0.283,
+          "y": 0.178,
+          "w": 0.437,
+          "h": 0.082
+        },
+        "children": [
+          {
+            "id": "badge-plate",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0,
+              "y": 0,
+              "w": 1,
+              "h": 1
+            },
+            "shape": {
+              "form": "rect",
+              "radius": 0.026
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#0b0b0b",
+              "opacity": 0.55
+            },
+            "effects": [
+              {
+                "kind": "stroke",
+                "color": "#ffffff",
+                "thickness": 0.0022,
+                "opacity": 0.9
+              }
+            ]
+          },
+          {
+            "id": "badge-subtitle",
+            "type": "text",
+            "z": 2,
+            "box": {
+              "x": 0.05,
+              "y": 0.12,
+              "w": 0.9,
+              "h": 0.48
+            },
+            "bind": {
+              "kind": "text",
+              "slot": "subtitle"
+            },
+            "style": {
+              "role": "heading",
+              "size": 0.033,
+              "weight": 800,
+              "color": "#ffffff",
+              "align": "center",
+              "valign": "middle",
+              "lineHeight": 1,
+              "transform": "upper",
+              "tracking": 0.03
+            }
+          },
+          {
+            "id": "badge-kicker",
+            "type": "text",
+            "z": 3,
+            "box": {
+              "x": 0.05,
+              "y": 0.6,
+              "w": 0.9,
+              "h": 0.34
+            },
+            "bind": {
+              "kind": "text",
+              "slot": "kicker"
+            },
+            "style": {
+              "role": "body",
+              "size": 0.021,
+              "weight": 400,
+              "color": "#d8d8d8",
+              "align": "center",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "width",
+        "type": "group",
+        "z": 40,
+        "box": {
+          "x": 0.1,
+          "y": 0.487,
+          "w": 0.3,
+          "h": 0.108
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 0
+        },
+        "children": [
+          {
+            "id": "width-rule",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0.02,
+              "y": 0.03,
+              "w": 0.014,
+              "h": 0.94
+            },
+            "shape": {
+              "form": "line",
+              "thickness": 0.0035
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#ffffff",
+              "opacity": 0.9
+            }
+          },
+          {
+            "id": "width-label",
+            "type": "text",
+            "z": 2,
+            "box": {
+              "x": 0.13,
+              "y": 0.02,
+              "w": 0.85,
+              "h": 0.4
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 0,
+              "part": "label"
+            },
+            "style": {
+              "role": "body",
+              "size": 0.027,
+              "weight": 400,
+              "color": "#f0f0f0",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          },
+          {
+            "id": "width-value",
+            "type": "text",
+            "z": 3,
+            "box": {
+              "x": 0.13,
+              "y": 0.44,
+              "w": 0.85,
+              "h": 0.52
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 0,
+              "part": "value"
+            },
+            "style": {
+              "role": "heading",
+              "size": 0.038,
+              "weight": 800,
+              "color": "#ffffff",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "clasp-callout",
+        "type": "group",
+        "z": 50,
+        "box": {
+          "x": 0.7,
+          "y": 0.565,
+          "w": 0.3,
+          "h": 0.135
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 1
+        },
+        "children": [
+          {
+            "id": "clasp-label",
+            "type": "text",
+            "z": 1,
+            "box": {
+              "x": 0.03,
+              "y": 0,
+              "w": 0.75,
+              "h": 0.62
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 1,
+              "part": "label"
+            },
+            "style": {
+              "role": "body",
+              "size": 0.028,
+              "weight": 500,
+              "color": "#ffffff",
+              "align": "left",
+              "valign": "top",
+              "lineHeight": 1.22
+            }
+          },
+          {
+            "id": "clasp-arrow",
+            "type": "asset",
+            "z": 2,
+            "box": {
+              "x": 0.55,
+              "y": 0.55,
+              "w": 0.32,
+              "h": 0.42
+            },
+            "fit": "contain",
+            "bind": {
+              "kind": "prop",
+              "index": 1,
+              "part": "icon"
+            }
+          }
+        ]
+      },
+      {
+        "id": "quality-mark",
+        "type": "group",
+        "z": 60,
+        "box": {
+          "x": 0.32,
+          "y": 0.762,
+          "w": 0.36,
+          "h": 0.16
+        },
+        "children": [
+          {
+            "id": "quality-digits",
+            "type": "text",
+            "z": 1,
+            "box": {
+              "x": 0,
+              "y": 0,
+              "w": 0.62,
+              "h": 0.66
+            },
+            "lines": [
+              "10"
+            ],
+            "style": {
+              "role": "display",
+              "size": 0.1,
+              "weight": 900,
+              "color": "#ffffff",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1,
+              "tracking": -0.02
+            }
+          },
+          {
+            "id": "quality-ring",
+            "type": "shape",
+            "z": 2,
+            "box": {
+              "x": 0.53,
+              "y": 0.03,
+              "w": 0.44,
+              "h": 0.6
+            },
+            "shape": {
+              "form": "ellipse"
+            },
+            "effects": [
+              {
+                "kind": "stroke",
+                "color": "#ffffff",
+                "thickness": 0.0075,
+                "opacity": 1
+              }
+            ]
+          },
+          {
+            "id": "quality-caption",
+            "type": "text",
+            "z": 3,
+            "box": {
+              "x": 0,
+              "y": 0.73,
+              "w": 1,
+              "h": 0.25
+            },
+            "lines": [
+              "Лет качества"
+            ],
+            "style": {
+              "role": "label",
+              "size": 0.028,
+              "weight": 700,
+              "color": "#ffffff",
+              "align": "center",
+              "valign": "middle",
+              "lineHeight": 1,
+              "transform": "upper",
+              "tracking": 0.04
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "content": {
+    "texts": {
+      "title": [
+        "Цепочка"
+      ],
+      "subtitle": [
+        "Золото 375°"
+      ],
+      "kicker": [
+        "сингапур"
+      ]
+    },
+    "props": [
+      {
+        "label": "ширина",
+        "value": "1.2 мм"
+      },
+      {
+        "label": "удобный\nзамок",
+        "icon": "arrow-curved-down-right"
+      }
+    ],
+    "swatches": []
+  },
+  "notes": [
+    "Заголовок «ЦЕПОЧКА» на образце залит горизонтальным градиентом: белый слева, серо-стальной у буквы «А». Язык даёт тексту только сплошной `color`, градиентная заливка текста не выражается — записан сплошной белый. Ближайшее приближение через прогоны (`TextRun` с разными `color`) даст ступеньку по буквам, а не плавный переход, поэтому не применялось.",
+    "Фон не идеально чёрный: к центру он чуть светлее, по углам гаснет. Записан радиальным градиентом канваса — это приближение фотографической подсветки студийного фона.",
+    "Эмблема «100 лет качества» разобрана как текст «10» плюс кольцо-эллипс с обводкой вместо третьей цифры: на образце последний ноль — именно кольцо, чуть налезающее на предыдущую цифру. Точное перекрытие глифа и кольца воспроизводится приблизительно, так как метрики шрифта роли `display` заранее не известны.",
+    "Иконки `arrow-curved-down-right` (дугообразная стрелка-выноска к замку) в базе нет — это заявка на пополнение. Кривая стрелка средствами `shape` (`line`/`ellipse`) не строится: дуг и кривых Безье в словаре форм нет.",
+    "Замок вынесен отдельным слоем `frame` с `index: 1` в предположении, что деталь приходит вторым кадром вендора. На самом образце и тонкая цепочка сверху, и крупная цепь, и замок — части одной композиции; если вендор отдаёт один кадр, слой снимается правилом K-3 и композиция держится на кадре index 0.",
+    "«ЗОЛОТО 375°» и «сингапур» уложены в слоты `subtitle` и `kicker`: смысловая пара «проба + плетение», а не надзаголовок. Слота под характеристику товара в наборе `TEXT_SLOTS` нет, а привязкой `prop` их делать нельзя — они всегда присутствуют и живут внутри капсулы, которая без них не нужна.",
+    "Тонкая волосяная обводка капсулы-бейджа на образце слегка полупрозрачная и чуть ярче по верхней грани; записана равномерным `stroke` с opacity 0.9 — направленность обводки языком не выражается."
+  ]
+}

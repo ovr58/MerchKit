@@ -1,0 +1,570 @@
+{
+  "source": "bench/samples/wb-starter/женщинам/Брюки/Снимок экрана 2026-08-31 173545.jpg",
+  "layout": {
+    "id": "pants-women-black",
+    "title": "Женские брюки: заголовок в левом верхнем углу за моделью, правая колонка со слоганом, размерами и образцами цвета, детальный кадр в нижнем правом углу",
+    "canvas": {
+      "aspectW": 631,
+      "aspectH": 842,
+      "background": {
+        "kind": "solid",
+        "color": "#eeeeee"
+      }
+    },
+    "layers": [
+      {
+        "id": "frame-main",
+        "type": "frame",
+        "z": 0,
+        "box": {
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.5,
+          "y": 0.42
+        },
+        "bind": {
+          "kind": "frame"
+        }
+      },
+      {
+        "id": "tile-left-top",
+        "type": "shape",
+        "z": 10,
+        "box": {
+          "x": 0,
+          "y": 0,
+          "w": 0.325,
+          "h": 0.343
+        },
+        "shape": {
+          "form": "rect"
+        },
+        "fill": {
+          "kind": "solid",
+          "color": "#f4f4f4",
+          "opacity": 0.22
+        }
+      },
+      {
+        "id": "tile-left-bottom",
+        "type": "shape",
+        "z": 11,
+        "box": {
+          "x": 0,
+          "y": 0.658,
+          "w": 0.325,
+          "h": 0.342
+        },
+        "shape": {
+          "form": "rect"
+        },
+        "fill": {
+          "kind": "solid",
+          "color": "#fafafa",
+          "opacity": 0.55
+        }
+      },
+      {
+        "id": "kicker",
+        "type": "text",
+        "z": 20,
+        "box": {
+          "x": 0.028,
+          "y": 0.052,
+          "w": 0.3,
+          "h": 0.042
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "kicker"
+        },
+        "style": {
+          "role": "heading",
+          "size": 0.031,
+          "weight": 500,
+          "color": "#ffffff",
+          "align": "left",
+          "valign": "top",
+          "lineHeight": 1,
+          "tracking": 0.06,
+          "transform": "upper"
+        }
+      },
+      {
+        "id": "title",
+        "type": "text",
+        "z": 21,
+        "box": {
+          "x": 0.02,
+          "y": 0.098,
+          "w": 0.44,
+          "h": 0.072
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "title"
+        },
+        "style": {
+          "role": "display",
+          "size": 0.072,
+          "weight": 800,
+          "color": "#ffffff",
+          "align": "left",
+          "valign": "top",
+          "lineHeight": 1,
+          "transform": "upper"
+        }
+      },
+      {
+        "id": "model-cutout",
+        "type": "cutout",
+        "z": 30,
+        "box": {
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.5,
+          "y": 0.42
+        },
+        "bind": {
+          "kind": "cutout"
+        }
+      },
+      {
+        "id": "panel-right",
+        "type": "shape",
+        "z": 40,
+        "box": {
+          "x": 0.673,
+          "y": 0.342,
+          "w": 0.327,
+          "h": 0.323
+        },
+        "shape": {
+          "form": "rect"
+        },
+        "fill": {
+          "kind": "linear",
+          "from": {
+            "x": 0.5,
+            "y": 0
+          },
+          "to": {
+            "x": 0.5,
+            "y": 1
+          },
+          "stops": [
+            {
+              "at": 0,
+              "color": "#dcdcdc",
+              "opacity": 0.9
+            },
+            {
+              "at": 1,
+              "color": "#b8b8b8",
+              "opacity": 0.9
+            }
+          ]
+        }
+      },
+      {
+        "id": "slogan",
+        "type": "text",
+        "z": 50,
+        "box": {
+          "x": 0.702,
+          "y": 0.383,
+          "w": 0.285,
+          "h": 0.098
+        },
+        "lines": [
+          [
+            {
+              "text": "СТИЛЬ",
+              "weight": 800,
+              "size": 0.027
+            }
+          ],
+          [
+            {
+              "text": "НЕ РОЖДАЕТСЯ",
+              "weight": 400,
+              "size": 0.018
+            }
+          ],
+          [
+            {
+              "text": "ОН СОЗДАЁТСЯ",
+              "weight": 800,
+              "size": 0.024
+            }
+          ]
+        ],
+        "style": {
+          "role": "heading",
+          "size": 0.024,
+          "weight": 700,
+          "color": "#ffffff",
+          "align": "left",
+          "valign": "top",
+          "lineHeight": 1.25,
+          "transform": "upper"
+        }
+      },
+      {
+        "id": "sizes",
+        "type": "text",
+        "z": 51,
+        "box": {
+          "x": 0.702,
+          "y": 0.508,
+          "w": 0.27,
+          "h": 0.088
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "sizes"
+        },
+        "lines": [
+          [
+            {
+              "text": "размер",
+              "weight": 400,
+              "size": 0.018
+            }
+          ],
+          [
+            {
+              "weight": 800,
+              "size": 0.052
+            }
+          ]
+        ],
+        "style": {
+          "role": "display",
+          "size": 0.052,
+          "weight": 800,
+          "color": "#ffffff",
+          "align": "left",
+          "valign": "top",
+          "lineHeight": 1.2
+        }
+      },
+      {
+        "id": "swatch-0",
+        "type": "asset",
+        "z": 60,
+        "box": {
+          "x": 0.702,
+          "y": 0.614,
+          "w": 0.056,
+          "h": 0.041
+        },
+        "fit": "cover",
+        "bind": {
+          "kind": "swatch",
+          "index": 0
+        }
+      },
+      {
+        "id": "swatch-0-check",
+        "type": "text",
+        "z": 63,
+        "box": {
+          "x": 0.702,
+          "y": 0.614,
+          "w": 0.056,
+          "h": 0.041
+        },
+        "lines": [
+          "✓"
+        ],
+        "style": {
+          "role": "label",
+          "size": 0.034,
+          "weight": 800,
+          "color": "#1faa4a",
+          "align": "center",
+          "valign": "middle",
+          "lineHeight": 1
+        }
+      },
+      {
+        "id": "swatch-1",
+        "type": "asset",
+        "z": 61,
+        "box": {
+          "x": 0.763,
+          "y": 0.614,
+          "w": 0.056,
+          "h": 0.041
+        },
+        "fit": "cover",
+        "bind": {
+          "kind": "swatch",
+          "index": 1
+        }
+      },
+      {
+        "id": "swatch-2",
+        "type": "asset",
+        "z": 62,
+        "box": {
+          "x": 0.824,
+          "y": 0.614,
+          "w": 0.056,
+          "h": 0.041
+        },
+        "fit": "cover",
+        "bind": {
+          "kind": "swatch",
+          "index": 2
+        }
+      },
+      {
+        "id": "frame-detail",
+        "type": "frame",
+        "z": 70,
+        "box": {
+          "x": 0.673,
+          "y": 0.665,
+          "w": 0.327,
+          "h": 0.335
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "bind": {
+          "kind": "frame",
+          "index": 1
+        }
+      },
+      {
+        "id": "prop-0",
+        "type": "group",
+        "z": 80,
+        "box": {
+          "x": 0.071,
+          "y": 0.708,
+          "w": 0.18,
+          "h": 0.056
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 0
+        },
+        "children": [
+          {
+            "id": "prop-0-rule",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0,
+              "y": 0,
+              "w": 0.055,
+              "h": 1
+            },
+            "shape": {
+              "form": "rect"
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#1c1c1c"
+            }
+          },
+          {
+            "id": "prop-0-value",
+            "type": "text",
+            "z": 2,
+            "box": {
+              "x": 0.17,
+              "y": 0,
+              "w": 0.83,
+              "h": 0.5
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 0,
+              "part": "value"
+            },
+            "style": {
+              "role": "heading",
+              "size": 0.024,
+              "weight": 800,
+              "color": "#141414",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          },
+          {
+            "id": "prop-0-label",
+            "type": "text",
+            "z": 3,
+            "box": {
+              "x": 0.17,
+              "y": 0.52,
+              "w": 0.83,
+              "h": 0.48
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 0,
+              "part": "label"
+            },
+            "style": {
+              "role": "body",
+              "size": 0.018,
+              "weight": 400,
+              "color": "#2b2b2b",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "prop-1",
+        "type": "group",
+        "z": 81,
+        "box": {
+          "x": 0.071,
+          "y": 0.801,
+          "w": 0.2,
+          "h": 0.056
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 1
+        },
+        "children": [
+          {
+            "id": "prop-1-rule",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0,
+              "y": 0,
+              "w": 0.05,
+              "h": 1
+            },
+            "shape": {
+              "form": "rect"
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#1c1c1c"
+            }
+          },
+          {
+            "id": "prop-1-value",
+            "type": "text",
+            "z": 2,
+            "box": {
+              "x": 0.155,
+              "y": 0,
+              "w": 0.845,
+              "h": 0.5
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 1,
+              "part": "value"
+            },
+            "style": {
+              "role": "heading",
+              "size": 0.024,
+              "weight": 800,
+              "color": "#141414",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          },
+          {
+            "id": "prop-1-label",
+            "type": "text",
+            "z": 3,
+            "box": {
+              "x": 0.155,
+              "y": 0.52,
+              "w": 0.845,
+              "h": 0.48
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 1,
+              "part": "label"
+            },
+            "style": {
+              "role": "body",
+              "size": 0.018,
+              "weight": 400,
+              "color": "#2b2b2b",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "content": {
+    "texts": {
+      "kicker": [
+        "Женские"
+      ],
+      "title": [
+        "Брюки"
+      ],
+      "sizes": [
+        "44-58"
+      ]
+    },
+    "props": [
+      {
+        "value": "80%",
+        "label": "хлопок"
+      },
+      {
+        "value": "20%",
+        "label": "полиэстер"
+      }
+    ],
+    "swatches": [
+      {
+        "color": "#121212"
+      },
+      {
+        "color": "#e6e6e6"
+      },
+      {
+        "color": "#4a3325"
+      }
+    ]
+  },
+  "notes": [
+    "Логотипа бренда на образце нет — слой `logo` в макет не заведён.",
+    "Слоган «СТИЛЬ / НЕ РОЖДАЕТСЯ / ОН СОЗДАЁТСЯ» — статический текст оформления, а не характеристика товара: у него нет привязки и он набран одним слоем через прогоны трёх начертаний/кеглей, чтобы фраза не разъезжалась при сборке.",
+    "«размер» и «44-58» держатся одним слоем с привязкой к слоту `sizes`: первая строка — статический прогон-подпись, вторая — прогон без `text`, куда подставляется значение. Так K-3 снимает подпись вместе с пропавшими размерами.",
+    "Последняя буква «И» в слове «БРЮКИ» на образце перекрыта волосами модели — поэтому заголовок лежит под слоем `cutout` (K-2). Если вырез не получен, K-3 снимет только cutout, а заголовок останется поверх кадра: расхождение косметическое.",
+    "Зелёная галочка на выбранном образце цвета записана текстовым слоем с глифом «✓»: в словаре привязок нет роли «отметка выбранного варианта», а формами `shape` галочку не нарисовать. Если в базе появится иконка `check-mark`, слой стоит перевести в `asset`.",
+    "Образцы цвета — плоские квадраты; заданы как цвета (`swatches` с `color`), а не картинки. Оттенки серого и коричневого сняты с растра приблизительно.",
+    "Плиточная разбивка фона (чуть более светлые прямоугольники в левом верхнем и левом нижнем углах, светлая колонка справа) приближена полупрозрачными `shape`: на образце это тональные вставки поверх студийного фона, точных границ у части плиток не видно.",
+    "Нижний правый кадр — детальный снимок брюк со спины, адресован привязкой `frame` с `index: 1`. Тонких разделительных линий шириной в пиксель между плитками макет не описывает отдельными слоями: они получаются стыком плиток и кадра.",
+    "Гарнитура образца (плотный гротеск) не восстанавливается по растру — заданы роли `display`/`heading`/`body` и вес."
+  ]
+}
