@@ -1,0 +1,702 @@
+<title>Картотека конвейера</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=PT+Sans+Narrow:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<style>
+  :root {
+    --bg: #f3f5f7;
+    --surface: #ffffff;
+    --surface-2: #e8ecef;
+    --ink: #15181b;
+    --ink-2: #4e575f;
+    --ink-3: #79848c;
+    --line: #d9dfe3;
+    --line-2: #c3ccd2;
+    --accent: #cf4b1c;
+    --accent-soft: #fbeee7;
+    --accent-line: #f0c3ae;
+    --have: #15803d;
+    --have-soft: #edf6f0;
+    --have-line: #bfe0cc;
+
+    --font-display: "PT Sans Narrow", "Oswald", "Arial Narrow", sans-serif;
+    --font-body: "Golos Text", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Mono", monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1214;
+      --surface: #161a1d;
+      --surface-2: #1e2429;
+      --ink: #eff2f4;
+      --ink-2: #a6b1b8;
+      --ink-3: #7b858c;
+      --line: #293137;
+      --line-2: #3a444b;
+      --accent: #ff7a45;
+      --accent-soft: #2a1710;
+      --accent-line: #5c3323;
+      --have: #56d98a;
+      --have-soft: #10251a;
+      --have-line: #24503a;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0f1214;
+    --surface: #161a1d;
+    --surface-2: #1e2429;
+    --ink: #eff2f4;
+    --ink-2: #a6b1b8;
+    --ink-3: #7b858c;
+    --line: #293137;
+    --line-2: #3a444b;
+    --accent: #ff7a45;
+    --accent-soft: #2a1710;
+    --accent-line: #5c3323;
+    --have: #56d98a;
+    --have-soft: #10251a;
+    --have-line: #24503a;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px 88px; }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: .68rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: clamp(2.2rem, 6vw, 3.4rem);
+    line-height: .98;
+    letter-spacing: .01em;
+    margin: 0;
+  }
+
+  h2 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 1.5rem;
+    letter-spacing: .025em;
+    margin: 0;
+  }
+
+  h3 { font-weight: 600; font-size: 1.02rem; margin: 0; }
+  p { margin: 0; max-width: 70ch; }
+  strong { font-weight: 600; }
+
+  header.masthead {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 64px 0 32px;
+  }
+  .standfirst { font-size: 1.08rem; color: var(--ink-2); max-width: 62ch; }
+
+  /* ---------- counters ---------- */
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 14px;
+    margin-top: 8px;
+  }
+  .tile {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .tile-label {
+    font-family: var(--font-mono);
+    font-size: .66rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .tile-value {
+    font-family: var(--font-display);
+    font-size: 2.1rem;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .tile-value .of { color: var(--ink-3); font-size: 1.2rem; }
+  .tile-note { font-size: .82rem; color: var(--ink-3); line-height: 1.4; }
+  .tile-bar {
+    height: 4px;
+    border-radius: 99px;
+    background: var(--surface-2);
+    overflow: hidden;
+  }
+  .tile-bar span { display: block; height: 100%; background: var(--have); width: 0%; }
+
+  section { padding-top: 56px; display: flex; flex-direction: column; gap: 18px; }
+  .section-head { display: flex; flex-direction: column; gap: 8px; }
+
+  /* ---------- folders ---------- */
+  .folders { display: flex; flex-direction: column; gap: 18px; }
+  .folder { display: flex; flex-direction: column; }
+  .folder-tab {
+    align-self: flex-start;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-bottom: none;
+    border-radius: 9px 9px 0 0;
+    padding: 9px 18px;
+    margin-bottom: -1px;
+    position: relative;
+    z-index: 1;
+  }
+  .folder-name { font-weight: 600; font-size: .97rem; }
+  .folder-count {
+    font-family: var(--font-mono);
+    font-size: .72rem;
+    color: var(--ink-3);
+    font-variant-numeric: tabular-nums;
+  }
+  .folder-body {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 0 10px 10px 10px;
+    padding: 14px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+  @media (max-width: 720px) {
+    .folder-body { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  .slot {
+    border-radius: 8px;
+    padding: 13px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    min-height: 96px;
+  }
+  .slot-empty {
+    border: 1px dashed var(--line-2);
+    background: transparent;
+  }
+  .slot-filled {
+    border: 1px solid var(--have-line);
+    background: var(--have-soft);
+  }
+  .slot-market {
+    font-family: var(--font-mono);
+    font-size: .68rem;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+  }
+  .slot-state { font-size: .84rem; color: var(--ink-3); }
+  .slot-filled .slot-state { color: var(--have); font-weight: 500; }
+  .slot-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; }
+  .badge {
+    font-family: var(--font-mono);
+    font-size: .63rem;
+    letter-spacing: .06em;
+    padding: 3px 7px;
+    border-radius: 5px;
+    background: var(--surface-2);
+    color: var(--ink-2);
+    white-space: nowrap;
+  }
+  .badge-mark { background: var(--accent-soft); color: var(--accent); }
+
+  /* ---------- unsorted shelf ---------- */
+  .shelf {
+    background: var(--surface);
+    border: 1px solid var(--accent-line);
+    border-radius: 10px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .shelf-files { display: flex; flex-wrap: wrap; gap: 10px; }
+  .file-chip {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    padding: 9px 13px;
+    background: var(--bg);
+  }
+  .file-name { font-family: var(--font-mono); font-size: .76rem; }
+  .file-meta { font-size: .74rem; color: var(--ink-3); }
+
+  /* ---------- empty base tables ---------- */
+  .base {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .base-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .base-count { font-family: var(--font-mono); font-size: .74rem; color: var(--ink-3); }
+  .base-cols {
+    display: grid;
+    gap: 1px;
+    background: var(--line);
+  }
+  .base-row {
+    display: grid;
+    gap: 1px;
+    background: var(--line);
+  }
+  .cell {
+    background: var(--surface);
+    padding: 11px 20px;
+    font-size: .87rem;
+  }
+  .cell-head {
+    font-family: var(--font-mono);
+    font-size: .66rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    background: var(--bg);
+  }
+  .cell-empty { color: var(--ink-3); font-style: italic; }
+  .base-empty {
+    padding: 22px 20px;
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .icons-grid { grid-template-columns: 1.1fr 1.6fr 1fr .9fr; }
+  .fonts-grid { grid-template-columns: 1.2fr 1.2fr 1.2fr .9fr; }
+  @media (max-width: 760px) {
+    .icons-grid, .fonts-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* ---------- legend ---------- */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 22px;
+    padding: 14px 18px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--surface);
+  }
+  .legend-item { display: flex; align-items: center; gap: 9px; font-size: .85rem; color: var(--ink-2); }
+  .swatch { width: 22px; height: 14px; border-radius: 4px; flex: none; }
+  .swatch-empty { border: 1px dashed var(--line-2); }
+  .swatch-filled { border: 1px solid var(--have-line); background: var(--have-soft); }
+  .swatch-mark { border: 1px solid var(--accent-line); background: var(--accent-soft); }
+
+  /* ---------- figure ---------- */
+  figure { margin: 0; display: flex; flex-direction: column; gap: 12px; color: var(--ink-2); }
+  .fig-frame {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 20px;
+    overflow-x: auto;
+  }
+  figure svg { width: 100%; height: auto; display: block; min-width: 560px; }
+  figure svg text { font-family: var(--font-body); fill: var(--ink); }
+  figcaption { font-size: .87rem; color: var(--ink-3); max-width: 64ch; }
+  .d-box { fill: var(--surface-2); stroke: var(--line-2); stroke-width: 1.25; }
+  .d-flow { fill: none; stroke: var(--line-2); stroke-width: 1.5; }
+  .d-mk { fill: var(--line-2); }
+  .d-lbl { font-size: 12px; }
+  .d-sm { font-size: 11px; fill: var(--ink-3); }
+
+  .note {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .note-label {
+    font-family: var(--font-mono);
+    font-size: .66rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  footer {
+    padding-top: 48px;
+    margin-top: 48px;
+    border-top: 1px solid var(--line);
+    font-size: .86rem;
+    color: var(--ink-3);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+<div class="wrap">
+
+<header class="masthead">
+  <span class="eyebrow">Веха M7 · состояние на 31 августа 2026</span>
+  <h1>Картотека конвейера</h1>
+  <p class="standfirst">Что лежит в трёх базах, из которых собирается карточка: образцы, иконки, шрифты. Пустые слоты видны так же ясно, как заполненные — это рабочий инструмент пополнения, а не витрина достижений.</p>
+
+  <div class="tiles">
+    <div class="tile">
+      <span class="tile-label">Образцы разобраны</span>
+      <span class="tile-value">0<span class="of"> / 21</span></span>
+      <div class="tile-bar"><span style="width: 0%"></span></div>
+      <span class="tile-note">По одному на пару «категория × площадка»</span>
+    </div>
+    <div class="tile">
+      <span class="tile-label">Ждут разбора</span>
+      <span class="tile-value">3</span>
+      <span class="tile-note">Лежат в проекте с 29 августа, по ячейкам не разнесены</span>
+    </div>
+    <div class="tile">
+      <span class="tile-label">Иконок в базе</span>
+      <span class="tile-value">0</span>
+      <span class="tile-note">Заявки рождаются при разборе — разбор ещё не запускался</span>
+    </div>
+    <div class="tile">
+      <span class="tile-label">Шрифтов в базе</span>
+      <span class="tile-value">0</span>
+      <span class="tile-note">Там же и по тому же правилу</span>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="section-head">
+    <span class="eyebrow">Как наполняется</span>
+    <h2>Круг пополнения</h2>
+  </div>
+  <p>Это вторая линия работы, отдельная от пользовательской. Она крутится без клиентов, и от числа её оборотов зависит, насколько разнообразными получатся карточки.</p>
+
+  <figure>
+    <div class="fig-frame">
+      <svg viewBox="0 0 880 168" role="img" aria-label="Круг пополнения из шести шагов: загрузил образец, разобрал, завёл заявки на иконки и шрифты, проверил на повторы, заполнил, пользуешься — и снова с каждым новым образцом">
+        <defs>
+          <marker id="mk-lib" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <polygon class="d-mk" points="0,0 10,5 0,10"></polygon>
+          </marker>
+        </defs>
+
+        <rect class="d-box" x="18" y="26" width="120" height="48" rx="6"></rect>
+        <text class="d-lbl" x="78" y="47" text-anchor="middle">Загрузил</text>
+        <text class="d-lbl" x="78" y="63" text-anchor="middle">образец</text>
+        <line class="d-flow" x1="138" y1="50" x2="158" y2="50" marker-end="url(#mk-lib)"></line>
+
+        <rect class="d-box" x="163" y="26" width="120" height="48" rx="6"></rect>
+        <text class="d-lbl" x="223" y="47" text-anchor="middle">Разобрал</text>
+        <text class="d-lbl" x="223" y="63" text-anchor="middle">в макет</text>
+        <line class="d-flow" x1="283" y1="50" x2="303" y2="50" marker-end="url(#mk-lib)"></line>
+
+        <rect class="d-box" x="308" y="26" width="120" height="48" rx="6"></rect>
+        <text class="d-lbl" x="368" y="47" text-anchor="middle">Завёл заявки</text>
+        <text class="d-lbl" x="368" y="63" text-anchor="middle">на ассеты</text>
+        <line class="d-flow" x1="428" y1="50" x2="448" y2="50" marker-end="url(#mk-lib)"></line>
+
+        <rect class="d-box" x="453" y="26" width="120" height="48" rx="6"></rect>
+        <text class="d-lbl" x="513" y="47" text-anchor="middle">Проверил</text>
+        <text class="d-lbl" x="513" y="63" text-anchor="middle">на повторы</text>
+        <line class="d-flow" x1="573" y1="50" x2="593" y2="50" marker-end="url(#mk-lib)"></line>
+
+        <rect class="d-box" x="598" y="26" width="120" height="48" rx="6"></rect>
+        <text class="d-lbl" x="658" y="47" text-anchor="middle">Заполнил</text>
+        <text class="d-lbl" x="658" y="63" text-anchor="middle">содержимое</text>
+        <line class="d-flow" x1="718" y1="50" x2="738" y2="50" marker-end="url(#mk-lib)"></line>
+
+        <rect class="d-box" x="743" y="26" width="120" height="48" rx="6"></rect>
+        <text class="d-lbl" x="803" y="47" text-anchor="middle">Доступно</text>
+        <text class="d-lbl" x="803" y="63" text-anchor="middle">всем макетам</text>
+
+        <path class="d-flow" d="M 803 74 L 803 122 L 78 122 L 78 78" marker-end="url(#mk-lib)"></path>
+        <text class="d-sm" x="440" y="142" text-anchor="middle">и снова — с каждым новым образцом; база растёт, макеты богатеют</text>
+      </svg>
+    </div>
+    <figcaption>Заявка на иконку или шрифт не придумывается заранее — она рождается из образца, который эту иконку использует. Поэтому список ассетов всегда ровно такой, какой нужен реальным макетам.</figcaption>
+  </figure>
+</section>
+
+<section>
+  <div class="section-head">
+    <span class="eyebrow">База 1 из 3</span>
+    <h2>Образцы — 7 категорий × 3 площадки</h2>
+  </div>
+  <p>Двадцать одна ячейка. Отбор за владельцем продукта: по одному образцу на ячейку, чтобы прогнать конвейер по всему полю задач, не создавая работы, которую придётся выбросить при смене формата макета.</p>
+
+  <div class="legend">
+    <span class="legend-item"><span class="swatch swatch-empty"></span>слот свободен</span>
+    <span class="legend-item"><span class="swatch swatch-filled"></span>образец разобран</span>
+    <span class="legend-item"><span class="swatch swatch-mark"></span>особые требования площадки</span>
+  </div>
+
+  <div class="folders">
+
+    <div class="folder">
+      <div class="folder-tab"><span class="folder-name">Одежда и обувь</span><span class="folder-count">0 / 3</span></div>
+      <div class="folder-body">
+        <div class="slot slot-empty">
+          <span class="slot-market">Ozon</span>
+          <span class="slot-state">слот свободен</span>
+          <span class="slot-badges"><span class="badge">3 : 4</span><span class="badge badge-mark">серый фон</span></span>
+        </div>
+        <div class="slot slot-empty">
+          <span class="slot-market">Wildberries</span>
+          <span class="slot-state">слот свободен</span>
+          <span class="slot-badges"><span class="badge">3 : 4</span><span class="badge">белый фон</span></span>
+        </div>
+        <div class="slot slot-empty">
+          <span class="slot-market">Яндекс Маркет</span>
+          <span class="slot-state">слот свободен</span>
+          <span class="slot-badges"><span class="badge">3 : 4</span><span class="badge">белый фон</span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="folder">
+      <div class="folder-tab"><span class="folder-name">Аксессуары</span><span class="folder-count">0 / 3</span></div>
+      <div class="folder-body">
+        <div class="slot slot-empty">
+          <span class="slot-market">Ozon</span>
+          <span class="slot-state">слот свободен</span>
+          <span class="slot-badges"><span class="badge">3 : 4</span><span class="badge badge-mark">серый фон</span></span>
+        </div>
+        <div class="slot slot-empty">
+          <span class="slot-market">Wildberries</span>
+          <span class="slot-state">слот свободен</span>
+          <span class="slot-badges"><span class="badge">3 : 4</span><span class="badge">белый фон</span></span>
+        </div>
+        <div class="slot slot-empty">
+          <span class="slot-market">Яндекс Маркет</span>
+          <span class="slot-state">слот свободен</span>
+          <span class="slot-badges"><span class="badge">3 : 4</span><span class="badge">белый фон</span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="folder">
+      <div class="folder-tab"><span class="folder-name">Еда и напитки</span><span class="folder-count">0 / 3</span></div>
+      <div class="folder-body">
+        <div class="slot slot-empty">
+          <span class="slot-market">Ozon</span>
+          <span class="slot-state">слот свободен</span>
+          <span class="slot-badges"><span class="badge badge-mark">квадрат 1 : 1</span><span class="badge">Ozon Fresh</span></span>
+        </div>
+        <div class="slot slot-empty">
+          <span class="slot-market">Wildberries</span>
+          <span class="slot-state">слот свободен</span>
+          <span class="slot-badges"><span class="badge">3 : 4</span><span class="badge">белый фон</span></span>
+        </div>
+        <div class="slot slot-empty">
+          <span class="slot-market">Яндекс Маркет</span>
+          <span class="slot-state">слот свободен</span>
+          <span class="slot-badges"><span class="badge">3 : 4</span><span class="badge">белый фон</span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="folder">
+      <div class="folder-tab"><span class="folder-name">Косметика и уход</span><span class="folder-count">0 / 3</span></div>
+      <div class="folder-body">
+        <div class="slot slot-empty">
+          <span class="slot-market">Ozon</span>
+          <span class="slot-state">слот свободен</span>
+          <span class="slot-badges"><span class="badge">3 : 4</span><span class="badge">белый фон</span></span>
+        </div>
+        <div class="slot slot-empty">
+          <span class="slot-market">Wildberries</span>
+          <span class="slot-state">слот свободен</span>
+          <span class="slot-badges"><span class="badge">3 : 4</span><span class="badge">белый фон</span></span>
+        </div>
+        <div class="slot slot-empty">
+          <span class="slot-market">Яндекс Маркет</span>
+          <span class="slot-state">слот свободен</span>
+          <span class="slot-badges"><span class="badge">3 : 4</span><span class="badge">белый фон</span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="folder">
+      <div class="folder-tab"><span class="folder-name">Гаджеты и техника</span><span class="folder-count">0 / 3</span></div>
+      <div class="folder-body">
+        <div class="slot slot-empty">
+          <span class="slot-market">Ozon</span>
+          <span class="slot-state">слот свободен</span>
+          <span class="slot-badges"><span class="badge">3 : 4</span><span class="badge">белый фон</span></span>
+        </div>
+        <div class="slot slot-empty">
+          <span class="slot-market">Wildberries</span>
+          <span class="slot-state">слот свободен</span>
+          <span class="slot-badges"><span class="badge">3 : 4</span><span class="badge">белый фон</span></span>
+        </div>
+        <div class="slot slot-empty">
+          <span class="slot-market">Яндекс Маркет</span>
+          <span class="slot-state">слот свободен</span>
+          <span class="slot-badges"><span class="badge">3 : 4</span><span class="badge">белый фон</span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="folder">
+      <div class="folder-tab"><span class="folder-name">Дом и мебель</span><span class="folder-count">0 / 3</span></div>
+      <div class="folder-body">
+        <div class="slot slot-empty">
+          <span class="slot-market">Ozon</span>
+          <span class="slot-state">слот свободен</span>
+          <span class="slot-badges"><span class="badge">3 : 4</span><span class="badge">белый фон</span></span>
+        </div>
+        <div class="slot slot-empty">
+          <span class="slot-market">Wildberries</span>
+          <span class="slot-state">слот свободен</span>
+          <span class="slot-badges"><span class="badge">3 : 4</span><span class="badge">белый фон</span></span>
+        </div>
+        <div class="slot slot-empty">
+          <span class="slot-market">Яндекс Маркет</span>
+          <span class="slot-state">слот свободен</span>
+          <span class="slot-badges"><span class="badge">3 : 4</span><span class="badge">белый фон</span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="folder">
+      <div class="folder-tab"><span class="folder-name">Прочее</span><span class="folder-count">0 / 3</span></div>
+      <div class="folder-body">
+        <div class="slot slot-empty">
+          <span class="slot-market">Ozon</span>
+          <span class="slot-state">слот свободен</span>
+          <span class="slot-badges"><span class="badge">3 : 4</span><span class="badge">без сценариев</span></span>
+        </div>
+        <div class="slot slot-empty">
+          <span class="slot-market">Wildberries</span>
+          <span class="slot-state">слот свободен</span>
+          <span class="slot-badges"><span class="badge">3 : 4</span><span class="badge">без сценариев</span></span>
+        </div>
+        <div class="slot slot-empty">
+          <span class="slot-market">Яндекс Маркет</span>
+          <span class="slot-state">слот свободен</span>
+          <span class="slot-badges"><span class="badge">3 : 4</span><span class="badge">без сценариев</span></span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="shelf">
+    <h3>Полка неразобранного — 3 файла</h3>
+    <p>Лежат в проекте с 29 августа как референсы вида карточки. По ячейкам не разнесены: все три из одной категории, площадка у них не указана. Первый круг конвейера начнётся с них — они же служат проверкой того, что разбор вообще работает.</p>
+    <div class="shelf-files">
+      <span class="file-chip"><span class="file-name">пример карточки верхней одежды.png</span><span class="file-meta">Одежда и обувь · площадка не указана</span></span>
+      <span class="file-chip"><span class="file-name">пример карточки женской одежды.png</span><span class="file-meta">Одежда и обувь · площадка не указана</span></span>
+      <span class="file-chip"><span class="file-name">пример карточки одежды.png</span><span class="file-meta">Одежда и обувь · площадка не указана</span></span>
+    </div>
+  </div>
+
+  <div class="note">
+    <span class="note-label">Почему площадка — метка, а не полка</span>
+    <p>Требования площадок различаются размером и фоном, а не композицией: у всех трёх кадр 3 : 4, особых случаев ровно два — квадрат Ozon Fresh и серый фон Ozon для одежды и аксессуаров. Поэтому площадка хранится <strong>меткой на образце</strong>. Пока в ячейке один образец, разницы нет; но если разбор покажет, что верстают на площадках систематически по-разному, площадка станет полноценной полкой без пересборки базы.</p>
+  </div>
+</section>
+
+<section>
+  <div class="section-head">
+    <span class="eyebrow">База 2 из 3</span>
+    <h2>Иконки</h2>
+  </div>
+  <p>Заранее список не назначается. Разбор образца видит в нём значок термометра — заводит заявку «нужна иконка температуры». Заявки проверяются на повторы, содержимое заполняется отдельной процедурой.</p>
+
+  <div class="base">
+    <div class="base-head">
+      <h3>Записей в базе</h3>
+      <span class="base-count">0 · заявок 0</span>
+    </div>
+    <div class="base-row icons-grid">
+      <span class="cell cell-head">Имя</span>
+      <span class="cell cell-head">Описание</span>
+      <span class="cell cell-head">Содержимое</span>
+      <span class="cell cell-head">Статус</span>
+    </div>
+    <div class="base-empty">
+      <p><strong>Пусто, и это ожидаемо.</strong> Первая заявка появится на первом же разобранном образце — в карточке с курткой видны три кандидата: термометр, плюс в кружке, значок водоотталкивающей пропитки.</p>
+      <p>Строка заполняется в два приёма: разбор создаёт имя, описание и статус «заявка», а человек позже вкладывает сам рисунок и переводит статус в «готово». До этого момента макет просто рисует модуль без значка — текст остаётся на месте, композиция не ломается.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-head">
+    <span class="eyebrow">База 3 из 3</span>
+    <h2>Шрифты</h2>
+  </div>
+  <p>Гарнитура из чужой карточки по картинке достоверно не опознаётся, а если бы и опозналась — скорее всего оказалась бы платной. Поэтому разбор называет не шрифт, а <strong>роль</strong>: «плотный узкий гротеск для заголовка». Роль подбирается из свободно лицензированных семейств.</p>
+
+  <div class="base">
+    <div class="base-head">
+      <h3>Записей в базе</h3>
+      <span class="base-count">0 · заявок 0</span>
+    </div>
+    <div class="base-row fonts-grid">
+      <span class="cell cell-head">Роль</span>
+      <span class="cell cell-head">Гарнитура</span>
+      <span class="cell cell-head">Лицензия</span>
+      <span class="cell cell-head">Статус</span>
+    </div>
+    <div class="base-empty">
+      <p><strong>Пусто по той же причине.</strong> Сколько разных характеров встретится в образцах — столько гарнитур и понадобится: набор не назначается числом заранее, а вырастает под то, что реально используется.</p>
+      <p>Лицензия хранится вместе со шрифтом отдельным полем — не как формальность, а потому что коммерческое использование карточек делает это условием, а не пожеланием.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="section-head">
+    <span class="eyebrow">Что дальше</span>
+    <h2>Первый оборот</h2>
+  </div>
+  <p>Прежде чем набирать двадцать один образец, конвейер должен доказать, что он работает. Проверка простая и бесплатная: разобрать три файла с полки неразобранного, собрать по своему же разбору картинку и положить рядом с оригиналом. Не похоже — разбор описывает не то, что видит, и никакая база этого не исправит.</p>
+  <p>Только после этого отбор двадцати одного образца становится вложением, а не риском.</p>
+</section>
+
+<footer>
+  <p>Состояние баз на 31 августа 2026. Цифры — фактические: три файла в проекте, ноль разобранных образцов, пустые базы иконок и шрифтов.</p>
+  <p>Требования площадок к кадру и фону — из справочника проекта, собранного по открытым правилам Ozon, Wildberries и Яндекс Маркета.</p>
+</footer>
+
+</div>
