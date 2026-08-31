@@ -14,7 +14,7 @@
  * разбора-примера: разъехаться с реализацией им нечем.
  *
  * Запуск (ключ берётся из `.env` штатным флагом Node 22):
- *   npm run cards:parse -- submit [слаг]   — отправить батч (без слага — весь набор)
+ *   npm run cards:parse -- submit [слаг…]  — отправить батч (без слагов — весь набор)
  *   npm run cards:parse -- status          — узнать, готов ли
  *   npm run cards:parse -- fetch           — забрать, проверить валидатором, разложить
  */
@@ -122,13 +122,16 @@ async function instructions(): Promise<string> {
   ].join('\n')
 }
 
-async function submit(only: string | undefined): Promise<void> {
+async function submit(only: string[]): Promise<void> {
   const all = await collect()
-  const samples = only === undefined ? all : all.filter((sample) => sample.slug === only)
+  const samples = only.length === 0 ? all : all.filter((sample) => only.includes(sample.slug))
 
   if (samples.length === 0) {
-    throw new Error(only === undefined ? `в ${SET} нет образцов` : `образца ${only} нет в наборе`)
+    throw new Error(only.length === 0 ? `в ${SET} нет образцов` : `таких образцов нет: ${only.join(', ')}`)
   }
+
+  const missing = only.filter((slug) => !all.some((sample) => sample.slug === slug))
+  if (missing.length > 0) throw new Error(`в наборе нет образцов: ${missing.join(', ')}`)
 
   const system = await instructions()
   const api = client()
@@ -252,11 +255,11 @@ async function fetchResults(): Promise<void> {
   if (saved > 0) console.log('\nдальше — гейт: npm run cards:roundtrip')
 }
 
-const [command, argument] = process.argv.slice(2)
+const [command, ...args] = process.argv.slice(2)
 
 switch (command) {
   case 'submit':
-    await submit(argument)
+    await submit(args)
     break
   case 'status':
     await status()
@@ -265,6 +268,6 @@ switch (command) {
     await fetchResults()
     break
   default:
-    console.log('команды: submit [слаг] · status · fetch')
+    console.log('команды: submit [слаг…] · status · fetch')
     process.exitCode = 1
 }
