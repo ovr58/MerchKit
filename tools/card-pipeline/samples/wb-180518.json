@@ -1,0 +1,496 @@
+{
+  "source": "bench/samples/wb-starter/Электроника/ТВ, Аудио, Фото, Видео техника/Аудиотехника/Снимок экрана 2026-08-31 180518.jpg",
+  "layout": {
+    "id": "yandex-station-lite-2",
+    "title": "Аудиотехника: заголовок слева сверху, три модуля-плашки вокруг фото колонки на светлом фоне",
+    "canvas": {
+      "aspectW": 637,
+      "aspectH": 845,
+      "background": {
+        "kind": "radial",
+        "center": {
+          "x": 0.5,
+          "y": 0.44
+        },
+        "radius": 0.78,
+        "stops": [
+          {
+            "at": 0,
+            "color": "#f4f4f4"
+          },
+          {
+            "at": 0.65,
+            "color": "#ececec"
+          },
+          {
+            "at": 1,
+            "color": "#d9d9d9"
+          }
+        ]
+      }
+    },
+    "layers": [
+      {
+        "id": "power",
+        "type": "group",
+        "z": 10,
+        "box": {
+          "x": 0.122,
+          "y": 0.269,
+          "w": 0.266,
+          "h": 0.181
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 1
+        },
+        "children": [
+          {
+            "id": "power-plate",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0,
+              "y": 0,
+              "w": 1,
+              "h": 1
+            },
+            "shape": {
+              "form": "rect",
+              "radius": 0.07
+            },
+            "fill": {
+              "kind": "linear",
+              "from": {
+                "x": 0.15,
+                "y": 0
+              },
+              "to": {
+                "x": 0.85,
+                "y": 1
+              },
+              "stops": [
+                {
+                  "at": 0,
+                  "color": "#d84ad2"
+                },
+                {
+                  "at": 1,
+                  "color": "#8a5cf5"
+                }
+              ]
+            }
+          },
+          {
+            "id": "power-icon",
+            "type": "asset",
+            "z": 2,
+            "box": {
+              "x": 0.7,
+              "y": 0.21,
+              "w": 0.19,
+              "h": 0.2
+            },
+            "fit": "contain",
+            "bind": {
+              "kind": "prop",
+              "index": 1,
+              "part": "icon"
+            }
+          },
+          {
+            "id": "power-value",
+            "type": "text",
+            "z": 3,
+            "box": {
+              "x": 0.1,
+              "y": 0.08,
+              "w": 0.86,
+              "h": 0.44
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 1,
+              "part": "value"
+            },
+            "lines": [
+              [
+                {},
+                {
+                  "text": "Вт",
+                  "size": 0.05,
+                  "weight": 700
+                }
+              ]
+            ],
+            "style": {
+              "role": "display",
+              "size": 0.102,
+              "weight": 800,
+              "color": "#ffffff",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          },
+          {
+            "id": "power-label",
+            "type": "text",
+            "z": 4,
+            "box": {
+              "x": 0.11,
+              "y": 0.55,
+              "w": 0.8,
+              "h": 0.34
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 1,
+              "part": "label"
+            },
+            "style": {
+              "role": "body",
+              "size": 0.021,
+              "weight": 600,
+              "color": "#ffffff",
+              "align": "left",
+              "valign": "top",
+              "lineHeight": 1.15
+            }
+          }
+        ]
+      },
+      {
+        "id": "frame",
+        "type": "frame",
+        "z": 20,
+        "box": {
+          "x": 0.1,
+          "y": 0.4,
+          "w": 0.8,
+          "h": 0.55
+        },
+        "fit": "contain",
+        "focus": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "bind": {
+          "kind": "frame"
+        }
+      },
+      {
+        "id": "title",
+        "type": "text",
+        "z": 30,
+        "box": {
+          "x": 0.075,
+          "y": 0.068,
+          "w": 0.5,
+          "h": 0.075
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "title"
+        },
+        "style": {
+          "role": "display",
+          "size": 0.064,
+          "weight": 800,
+          "color": "#1a1a1a",
+          "align": "left",
+          "valign": "middle",
+          "lineHeight": 1
+        }
+      },
+      {
+        "id": "subtitle",
+        "type": "text",
+        "z": 30,
+        "box": {
+          "x": 0.075,
+          "y": 0.156,
+          "w": 0.5,
+          "h": 0.042
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "subtitle"
+        },
+        "style": {
+          "role": "heading",
+          "size": 0.037,
+          "weight": 500,
+          "color": "#1a1a1a",
+          "align": "left",
+          "valign": "middle",
+          "lineHeight": 1
+        }
+      },
+      {
+        "id": "alice",
+        "type": "group",
+        "z": 40,
+        "box": {
+          "x": 0.6,
+          "y": 0.073,
+          "w": 0.342,
+          "h": 0.079
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 0
+        },
+        "children": [
+          {
+            "id": "alice-plate",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0,
+              "y": 0,
+              "w": 1,
+              "h": 1
+            },
+            "shape": {
+              "form": "rect",
+              "radius": 0.2
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#ffffff"
+            },
+            "effects": [
+              {
+                "kind": "shadow",
+                "dx": 0,
+                "dy": 0.003,
+                "blur": 0.01,
+                "color": "#000000",
+                "opacity": 0.12
+              }
+            ]
+          },
+          {
+            "id": "alice-icon",
+            "type": "asset",
+            "z": 2,
+            "box": {
+              "x": 0.08,
+              "y": 0.15,
+              "w": 0.2,
+              "h": 0.68
+            },
+            "fit": "contain",
+            "bind": {
+              "kind": "prop",
+              "index": 0,
+              "part": "icon"
+            }
+          },
+          {
+            "id": "alice-label",
+            "type": "text",
+            "z": 3,
+            "box": {
+              "x": 0.335,
+              "y": 0.09,
+              "w": 0.62,
+              "h": 0.42
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 0,
+              "part": "label"
+            },
+            "style": {
+              "role": "body",
+              "size": 0.026,
+              "weight": 600,
+              "color": "#1a1a1a",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          },
+          {
+            "id": "alice-value",
+            "type": "text",
+            "z": 4,
+            "box": {
+              "x": 0.335,
+              "y": 0.5,
+              "w": 0.62,
+              "h": 0.42
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 0,
+              "part": "value"
+            },
+            "style": {
+              "role": "heading",
+              "size": 0.027,
+              "weight": 800,
+              "color": "#1a1a1a",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "led",
+        "type": "group",
+        "z": 50,
+        "box": {
+          "x": 0.518,
+          "y": 0.251,
+          "w": 0.466,
+          "h": 0.09
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 2
+        },
+        "children": [
+          {
+            "id": "led-plate",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0,
+              "y": 0,
+              "w": 1,
+              "h": 1
+            },
+            "shape": {
+              "form": "rect",
+              "radius": 0.5
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#121212"
+            },
+            "effects": [
+              {
+                "kind": "shadow",
+                "dx": 0,
+                "dy": 0.004,
+                "blur": 0.012,
+                "color": "#000000",
+                "opacity": 0.2
+              }
+            ]
+          },
+          {
+            "id": "led-icon",
+            "type": "asset",
+            "z": 2,
+            "box": {
+              "x": 0.055,
+              "y": 0.12,
+              "w": 0.19,
+              "h": 0.76
+            },
+            "fit": "contain",
+            "bind": {
+              "kind": "prop",
+              "index": 2,
+              "part": "icon"
+            }
+          },
+          {
+            "id": "led-label",
+            "type": "text",
+            "z": 3,
+            "box": {
+              "x": 0.296,
+              "y": 0.08,
+              "w": 0.68,
+              "h": 0.44
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 2,
+              "part": "label"
+            },
+            "style": {
+              "role": "heading",
+              "size": 0.029,
+              "weight": 800,
+              "color": "#ffffff",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          },
+          {
+            "id": "led-value",
+            "type": "text",
+            "z": 4,
+            "box": {
+              "x": 0.296,
+              "y": 0.5,
+              "w": 0.68,
+              "h": 0.44
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 2,
+              "part": "value"
+            },
+            "style": {
+              "role": "body",
+              "size": 0.027,
+              "weight": 500,
+              "color": "#ffffff",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "content": {
+    "texts": {
+      "title": [
+        "Яндекс"
+      ],
+      "subtitle": [
+        "Станция Лайт 2"
+      ]
+    },
+    "props": [
+      {
+        "label": "Работает",
+        "value": "с Алисой",
+        "icon": "alice-logo"
+      },
+      {
+        "label": "мощный\nзвук",
+        "value": "6",
+        "icon": "sound-waves"
+      },
+      {
+        "label": "LED экран",
+        "value": "с эмоциями",
+        "icon": "smiley-face"
+      }
+    ],
+    "swatches": []
+  },
+  "notes": [
+    "Плашка мощности: «6 Вт» набрано двумя кеглями, поэтому строка собрана прогонами — привязанный прогон без `text` берёт значение характеристики («6»), единица «Вт» записана статикой в макете. Значит, при подстановке другого значения единица останется «Вт»; если понадобится «Вт/Гц/дБ», единицу надо вынести в само значение и отказаться от разницы кеглей.",
+    "Магента-плашка мощности лежит ЗА фотографией колонки (её нижний край скрыт корпусом), поэтому её z меньше z кадра. Скругление у плашки визуально видно только сверху — нижние углы срезаны товаром; в языке радиус общий на все углы, это приближение без видимой разницы.",
+    "Фон — не ровная заливка, а светлое пятно с падением к углам и мягкой тенью под колонкой на плоскости. Пятно передано `radial`, но собственная тень товара на плоскости — часть кадра вендора и в макете не описана: она обязана приехать с картинкой.",
+    "Иконка «Алисы» (сине-фиолетовый кружок с меткой) — брендовый ассет Яндекса, в базе его нет; слой снимется правилом K-3, плашка при этом останется с текстом. Заявка на пополнение базы: `alice-logo`.",
+    "Иконки `sound-waves` (значок звука в углу магента-плашки) и `smiley-face` (фиолетовый кружок со смайликом на чёрной плашке) в базе, скорее всего, отсутствуют — имена даны как заявка.",
+    "Цифры «12:35» на корпусе — часть снимка товара (LED-экран колонки), а не текстовый слой макета: их нельзя ни переверстать, ни привязать.",
+    "Начертания различены только весом: гарнитуры (заголовок — плотный гротеск, подписи — обычный) по растру не восстановимы, поэтому заданы роли `display`/`heading`/`body`.",
+    "Тени под белой и чёрной плашками очень мягкие и почти не читаются на светлом фоне — значения `shadow` подобраны на глаз."
+  ]
+}

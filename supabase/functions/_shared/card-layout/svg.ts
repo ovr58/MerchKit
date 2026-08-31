@@ -225,11 +225,17 @@ function shape(
     )
   }
 
-  // Линия идёт по середине бокса: разделитель задаётся боксом, а не парой точек.
-  const y = rect.y + rect.h / 2
+  // Линия идёт по середине бокса: разделитель задаётся боксом, а не парой точек. Куда она
+  // ляжет, решает сам бокс — высокий и узкий даёт вертикальную. Раньше линия была всегда
+  // горизонтальной, и вертикальный разделитель коллажа выродился бы в невидимую точку.
   const stroke = fill.replace('fill=', 'stroke=')
+  const vertical = rect.h > rect.w
+  const [x1, y1, x2, y2] = vertical
+    ? [rect.x + rect.w / 2, rect.y, rect.x + rect.w / 2, rect.y + rect.h]
+    : [rect.x, rect.y + rect.h / 2, rect.x + rect.w, rect.y + rect.h / 2]
+
   return (
-    `<line x1="${round(rect.x)}" y1="${round(y)}" x2="${round(rect.x + rect.w)}" y2="${round(y)}" ` +
+    `<line x1="${round(x1)}" y1="${round(y1)}" x2="${round(x2)}" y2="${round(y2)}" ` +
     `${stroke} stroke-width="${round(form.thickness * size.height)}" stroke-linecap="round"/>`
   )
 }

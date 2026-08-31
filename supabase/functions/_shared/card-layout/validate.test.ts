@@ -334,3 +334,40 @@ describe('Поворот, скругление и прогоны — с гран
     expect(validateLayout(layout([frame, dual]))).toEqual([])
   })
 })
+
+/**
+ * Полный проход A6 (2026-09-01) уронил один разбор из 31 на разделителях коллажа — и вскрыл
+ * расхождение внутри нашего же кода. Сборщик рисует `line` по середине бокса, а толщину
+ * берёт из `shape.thickness`: высота бокса горизонтальной линии ни на что не влияет. Валидатор
+ * при этом требовал её положительной, то есть отвергал макет, который сам же сборщик рисует.
+ */
+describe('Линия-разделитель живёт в плоском боксе', () => {
+  const divider = (box: { x: number; y: number; w: number; h: number }): Layer => ({
+    id: 'divider',
+    type: 'shape',
+    z: 5,
+    box,
+    shape: { form: 'line', thickness: 0.002 },
+    fill: { kind: 'solid', color: '#ffffff' },
+  })
+
+  it('горизонтальный разделитель нулевой высоты законен', () => {
+    expect(validateLayout(layout([frame, divider({ x: 0, y: 0.5, w: 1, h: 0 })]))).toEqual([])
+  })
+
+  it('вертикальный разделитель нулевой ширины законен', () => {
+    expect(validateLayout(layout([frame, divider({ x: 0.5, y: 0, w: 0, h: 0.6 })]))).toEqual([])
+  })
+
+  it('бокс, схлопнутый по обеим сторонам, по-прежнему брак', () => {
+    expect(validateLayout(layout([frame, divider({ x: 0.5, y: 0.5, w: 0, h: 0 })]))).toContain(
+      'divider: размер бокса 0 × 0 должен быть положительным',
+    )
+  })
+
+  it('плоский бокс у прочих слоёв остаётся браком', () => {
+    expect(validateLayout(layout([{ ...frame, box: { x: 0, y: 0, w: 1, h: 0 } }]))).toContain(
+      'frame: размер бокса 1 × 0 должен быть положительным',
+    )
+  })
+})

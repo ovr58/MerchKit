@@ -183,7 +183,13 @@ function checkByType(layer: Layer, path: string, problems: string[]): void {
 function checkBox(layer: Layer, path: string, problems: string[]): void {
   const { x, y, w, h } = layer.box
 
-  if (w <= 0 || h <= 0) {
+  // Линия-разделитель задаётся боксом, а толщину берёт из `shape.thickness` — плоский бокс у
+  // неё не вырождение, а нормальная запись: у горизонтальной линии высота ни на что не влияет.
+  // Схлопнутый по обеим сторонам бокс остаётся браком: рисовать нечего и там.
+  const flatLine =
+    layer.type === 'shape' && layer.shape.form === 'line' && w >= 0 && h >= 0 && (w > 0 || h > 0)
+
+  if (flatLine ? w < 0 || h < 0 : w <= 0 || h <= 0) {
     problems.push(`${path}: размер бокса ${w} × ${h} должен быть положительным`)
     return
   }

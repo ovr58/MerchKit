@@ -1,0 +1,825 @@
+{
+  "source": "bench/samples/wb-starter/Электроника/Ноутбуки, компьютеры и периферия/Защита и элементы питания/Источники бесперебойного питания/Снимок экрана 2026-08-31 180737.jpg",
+  "layout": {
+    "id": "ups-rucelf-upi750",
+    "title": "ИБП: тёмно-бирюзовый фон, текстовый блок сверху, фото прибора справа, белая полка-подвал с рекомендацией",
+    "canvas": {
+      "aspectW": 638,
+      "aspectH": 830,
+      "background": {
+        "kind": "radial",
+        "center": {
+          "x": 0.52,
+          "y": 0.4
+        },
+        "radius": 0.85,
+        "stops": [
+          {
+            "at": 0,
+            "color": "#11938c"
+          },
+          {
+            "at": 0.65,
+            "color": "#0c7d7c"
+          },
+          {
+            "at": 1,
+            "color": "#075055"
+          }
+        ]
+      }
+    },
+    "layers": [
+      {
+        "id": "logo",
+        "type": "asset",
+        "z": 10,
+        "box": {
+          "x": 0.042,
+          "y": 0.034,
+          "w": 0.26,
+          "h": 0.062
+        },
+        "fit": "contain",
+        "bind": {
+          "kind": "logo"
+        }
+      },
+      {
+        "id": "kicker",
+        "type": "text",
+        "z": 12,
+        "box": {
+          "x": 0.408,
+          "y": 0.036,
+          "w": 0.55,
+          "h": 0.032
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "kicker"
+        },
+        "style": {
+          "role": "label",
+          "size": 0.023,
+          "weight": 600,
+          "color": "#a8e05f",
+          "align": "left",
+          "valign": "middle",
+          "lineHeight": 1,
+          "tracking": 0.18,
+          "transform": "upper"
+        }
+      },
+      {
+        "id": "title",
+        "type": "text",
+        "z": 14,
+        "box": {
+          "x": 0.412,
+          "y": 0.104,
+          "w": 0.28,
+          "h": 0.11
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "title"
+        },
+        "style": {
+          "role": "display",
+          "size": 0.1,
+          "weight": 900,
+          "color": "#ffffff",
+          "align": "left",
+          "valign": "top",
+          "lineHeight": 1,
+          "transform": "upper"
+        }
+      },
+      {
+        "id": "body",
+        "type": "text",
+        "z": 14,
+        "box": {
+          "x": 0.687,
+          "y": 0.111,
+          "w": 0.29,
+          "h": 0.12
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "body"
+        },
+        "style": {
+          "role": "body",
+          "size": 0.021,
+          "weight": 500,
+          "color": "#ffffff",
+          "align": "left",
+          "valign": "top",
+          "lineHeight": 1.65,
+          "tracking": 0.02,
+          "transform": "upper"
+        }
+      },
+      {
+        "id": "subtitle-arrows",
+        "type": "text",
+        "z": 14,
+        "box": {
+          "x": 0.412,
+          "y": 0.251,
+          "w": 0.1,
+          "h": 0.032
+        },
+        "lines": [
+          ">>>"
+        ],
+        "style": {
+          "role": "accent",
+          "size": 0.026,
+          "weight": 800,
+          "color": "#a8e05f",
+          "align": "left",
+          "valign": "middle",
+          "lineHeight": 1,
+          "tracking": 0.05
+        }
+      },
+      {
+        "id": "subtitle",
+        "type": "text",
+        "z": 14,
+        "box": {
+          "x": 0.512,
+          "y": 0.238,
+          "w": 0.47,
+          "h": 0.058
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "subtitle"
+        },
+        "style": {
+          "role": "display",
+          "size": 0.045,
+          "weight": 800,
+          "color": "#ffffff",
+          "align": "left",
+          "valign": "middle",
+          "lineHeight": 1,
+          "transform": "upper"
+        }
+      },
+      {
+        "id": "warranty",
+        "type": "group",
+        "z": 20,
+        "box": {
+          "x": 0.018,
+          "y": 0.163,
+          "w": 0.25,
+          "h": 0.19
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 4
+        },
+        "children": [
+          {
+            "id": "warranty-shield",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0.04,
+              "y": 0,
+              "w": 0.92,
+              "h": 0.86
+            },
+            "shape": {
+              "form": "rect",
+              "radius": 0.18
+            },
+            "fill": {
+              "kind": "linear",
+              "from": {
+                "x": 0.1,
+                "y": 0
+              },
+              "to": {
+                "x": 0.9,
+                "y": 1
+              },
+              "stops": [
+                {
+                  "at": 0,
+                  "color": "#8cc63f"
+                },
+                {
+                  "at": 1,
+                  "color": "#4f9d1f"
+                }
+              ]
+            },
+            "effects": [
+              {
+                "kind": "shadow",
+                "dx": 0.002,
+                "dy": 0.004,
+                "blur": 0.01,
+                "color": "#00302f",
+                "opacity": 0.3
+              }
+            ]
+          },
+          {
+            "id": "warranty-number",
+            "type": "text",
+            "z": 2,
+            "box": {
+              "x": 0.08,
+              "y": 0.08,
+              "w": 0.56,
+              "h": 0.36
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 4,
+              "part": "value"
+            },
+            "style": {
+              "role": "display",
+              "size": 0.062,
+              "weight": 900,
+              "color": "#ffffff",
+              "align": "center",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          },
+          {
+            "id": "warranty-unit",
+            "type": "text",
+            "z": 3,
+            "box": {
+              "x": 0.42,
+              "y": 0.2,
+              "w": 0.5,
+              "h": 0.16
+            },
+            "rotate": -90,
+            "bind": {
+              "kind": "prop",
+              "index": 4,
+              "part": "label"
+            },
+            "style": {
+              "role": "label",
+              "size": 0.015,
+              "weight": 700,
+              "color": "#ffffff",
+              "align": "center",
+              "valign": "middle",
+              "lineHeight": 1,
+              "tracking": 0.04,
+              "transform": "upper"
+            }
+          },
+          {
+            "id": "warranty-ribbon",
+            "type": "shape",
+            "z": 4,
+            "box": {
+              "x": -0.02,
+              "y": 0.6,
+              "w": 1.04,
+              "h": 0.28
+            },
+            "rotate": -4,
+            "shape": {
+              "form": "rect",
+              "radius": 0.02
+            },
+            "fill": {
+              "kind": "linear",
+              "from": {
+                "x": 0,
+                "y": 0
+              },
+              "to": {
+                "x": 1,
+                "y": 1
+              },
+              "stops": [
+                {
+                  "at": 0,
+                  "color": "#e03127"
+                },
+                {
+                  "at": 1,
+                  "color": "#b3141c"
+                }
+              ]
+            },
+            "effects": [
+              {
+                "kind": "shadow",
+                "dx": 0,
+                "dy": 0.003,
+                "blur": 0.008,
+                "color": "#000000",
+                "opacity": 0.3
+              }
+            ]
+          },
+          {
+            "id": "warranty-ribbon-text",
+            "type": "text",
+            "z": 5,
+            "box": {
+              "x": -0.02,
+              "y": 0.6,
+              "w": 1.04,
+              "h": 0.28
+            },
+            "rotate": -4,
+            "lines": [
+              "Гарантия"
+            ],
+            "style": {
+              "role": "label",
+              "size": 0.021,
+              "weight": 800,
+              "color": "#ffffff",
+              "align": "center",
+              "valign": "middle",
+              "lineHeight": 1,
+              "tracking": 0.06,
+              "transform": "upper"
+            }
+          }
+        ]
+      },
+      {
+        "id": "product",
+        "type": "frame",
+        "z": 30,
+        "box": {
+          "x": 0.335,
+          "y": 0.33,
+          "w": 0.63,
+          "h": 0.475
+        },
+        "fit": "contain",
+        "focus": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "bind": {
+          "kind": "frame",
+          "index": 0
+        }
+      },
+      {
+        "id": "power",
+        "type": "group",
+        "z": 40,
+        "box": {
+          "x": 0.03,
+          "y": 0.425,
+          "w": 0.36,
+          "h": 0.2
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 0
+        },
+        "children": [
+          {
+            "id": "power-marker",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0,
+              "y": 0.03,
+              "w": 0.095,
+              "h": 0.17
+            },
+            "shape": {
+              "form": "rect",
+              "radius": 0.06
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#98cc27"
+            }
+          },
+          {
+            "id": "power-marker-glyph",
+            "type": "text",
+            "z": 2,
+            "box": {
+              "x": 0,
+              "y": 0.03,
+              "w": 0.095,
+              "h": 0.17
+            },
+            "lines": [
+              ">"
+            ],
+            "style": {
+              "role": "accent",
+              "size": 0.019,
+              "weight": 900,
+              "color": "#0a5f61",
+              "align": "center",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          },
+          {
+            "id": "power-label",
+            "type": "text",
+            "z": 3,
+            "box": {
+              "x": 0.145,
+              "y": 0.02,
+              "w": 0.85,
+              "h": 0.19
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 0,
+              "part": "label"
+            },
+            "style": {
+              "role": "heading",
+              "size": 0.027,
+              "weight": 600,
+              "color": "#ffffff",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1,
+              "tracking": 0.03,
+              "transform": "upper"
+            }
+          },
+          {
+            "id": "power-va",
+            "type": "text",
+            "z": 4,
+            "box": {
+              "x": 0,
+              "y": 0.26,
+              "w": 0.95,
+              "h": 0.32
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 0,
+              "part": "value"
+            },
+            "lines": [
+              [
+                {},
+                {
+                  "text": " ВА",
+                  "size": 0.042,
+                  "weight": 900
+                }
+              ]
+            ],
+            "style": {
+              "role": "display",
+              "size": 0.058,
+              "weight": 900,
+              "color": "#ffffff",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "watt",
+        "type": "group",
+        "z": 42,
+        "box": {
+          "x": 0.03,
+          "y": 0.552,
+          "w": 0.36,
+          "h": 0.07
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 1
+        },
+        "children": [
+          {
+            "id": "watt-value",
+            "type": "text",
+            "z": 1,
+            "box": {
+              "x": 0,
+              "y": 0,
+              "w": 0.95,
+              "h": 1
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 1,
+              "part": "value"
+            },
+            "lines": [
+              [
+                {},
+                {
+                  "text": " Вт",
+                  "size": 0.042,
+                  "weight": 900
+                }
+              ]
+            ],
+            "style": {
+              "role": "display",
+              "size": 0.058,
+              "weight": 900,
+              "color": "#ffffff",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "nobattery",
+        "type": "group",
+        "z": 44,
+        "box": {
+          "x": 0.03,
+          "y": 0.672,
+          "w": 0.36,
+          "h": 0.045
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 2
+        },
+        "children": [
+          {
+            "id": "nobattery-marker",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0,
+              "y": 0.14,
+              "w": 0.095,
+              "h": 0.72
+            },
+            "shape": {
+              "form": "rect",
+              "radius": 0.06
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#98cc27"
+            }
+          },
+          {
+            "id": "nobattery-marker-glyph",
+            "type": "text",
+            "z": 2,
+            "box": {
+              "x": 0,
+              "y": 0.14,
+              "w": 0.095,
+              "h": 0.72
+            },
+            "lines": [
+              ">"
+            ],
+            "style": {
+              "role": "accent",
+              "size": 0.019,
+              "weight": 900,
+              "color": "#0a5f61",
+              "align": "center",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          },
+          {
+            "id": "nobattery-label",
+            "type": "text",
+            "z": 3,
+            "box": {
+              "x": 0.145,
+              "y": 0,
+              "w": 0.85,
+              "h": 1
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 2,
+              "part": "label"
+            },
+            "style": {
+              "role": "display",
+              "size": 0.034,
+              "weight": 800,
+              "color": "#ffffff",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1,
+              "transform": "upper"
+            }
+          }
+        ]
+      },
+      {
+        "id": "shelf",
+        "type": "shape",
+        "z": 50,
+        "box": {
+          "x": 0,
+          "y": 0.784,
+          "w": 1,
+          "h": 0.216
+        },
+        "shape": {
+          "form": "rect"
+        },
+        "fill": {
+          "kind": "solid",
+          "color": "#ffffff"
+        }
+      },
+      {
+        "id": "usecase-photo",
+        "type": "frame",
+        "z": 52,
+        "box": {
+          "x": 0.085,
+          "y": 0.783,
+          "w": 0.28,
+          "h": 0.185
+        },
+        "fit": "contain",
+        "focus": {
+          "x": 0.5,
+          "y": 0.6
+        },
+        "bind": {
+          "kind": "frame",
+          "index": 1
+        }
+      },
+      {
+        "id": "recommend",
+        "type": "group",
+        "z": 54,
+        "box": {
+          "x": 0.38,
+          "y": 0.818,
+          "w": 0.6,
+          "h": 0.15
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 3
+        },
+        "children": [
+          {
+            "id": "recommend-plate",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0.015,
+              "y": 0,
+              "w": 0.55,
+              "h": 0.25
+            },
+            "shape": {
+              "form": "rect",
+              "radius": 0.02
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#e02b23"
+            }
+          },
+          {
+            "id": "recommend-plate-text",
+            "type": "text",
+            "z": 2,
+            "box": {
+              "x": 0.015,
+              "y": 0,
+              "w": 0.55,
+              "h": 0.25
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 3,
+              "part": "label"
+            },
+            "style": {
+              "role": "label",
+              "size": 0.017,
+              "weight": 800,
+              "color": "#ffffff",
+              "align": "center",
+              "valign": "middle",
+              "lineHeight": 1,
+              "tracking": 0.03,
+              "transform": "upper"
+            }
+          },
+          {
+            "id": "recommend-text",
+            "type": "text",
+            "z": 3,
+            "box": {
+              "x": 0,
+              "y": 0.35,
+              "w": 1,
+              "h": 0.6
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 3,
+              "part": "value"
+            },
+            "style": {
+              "role": "heading",
+              "size": 0.031,
+              "weight": 800,
+              "color": "#0d6a6a",
+              "align": "left",
+              "valign": "top",
+              "lineHeight": 1.15,
+              "transform": "upper"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "content": {
+    "frames": [
+      "ups-front",
+      "boiler-and-pump"
+    ],
+    "texts": {
+      "kicker": [
+        "Line-Interactive"
+      ],
+      "title": [
+        "ИБП"
+      ],
+      "subtitle": [
+        "UPI-750-12-E"
+      ],
+      "body": [
+        "Источник",
+        "бесперебойного",
+        "питания"
+      ]
+    },
+    "props": [
+      {
+        "label": "Мощность",
+        "value": "750"
+      },
+      {
+        "value": "480"
+      },
+      {
+        "label": "Без АКБ"
+      },
+      {
+        "label": "Рекомендовано",
+        "value": "Для газовых котлов и\nотопительных насосов"
+      },
+      {
+        "label": "месяцев",
+        "value": "12"
+      }
+    ],
+    "swatches": []
+  },
+  "notes": [
+    "Гарантийный знак в образце — щит (геральдическая форма с острым низом) с лентой поперёк. В словаре `ShapeForm` щита нет, поэтому подложка приближена прямоугольником со скруглением 0.18; форма — единственное заметное расхождение с оригиналом. Заявка на пополнение словаря формой `shield` либо на ассет-иконку `warranty-shield` в базе.",
+    "Лента «ГАРАНТИЯ» на образце имеет лёгкий наклон и «хвосты» с вырезом по краям. Наклон записан через `rotate: -4`, хвосты не выражаются — лента приближена прямоугольником, чуть выступающим за бокс группы (x от -0.02).",
+    "«МЕСЯЦЕВ» на щите набрано вертикально снизу вверх — записано `rotate: -90`. Точная геометрия повёрнутого бокса зависит от того, как сборщик учитывает пропорцию холста при повороте; при расхождении править только этот слой.",
+    "Единицы «ВА» и «Вт» на образце заметно мельче цифр, поэтому строки набраны прогонами: пустой прогон — гнездо под привязанное значение (`750`, `480`), второй прогон — статическая единица. Так K-3 уносит цифру вместе с единицей одним слоем.",
+    "Фон — не ровный цвет: бирюза светлее в центре и гаснет к углам, поэтому `radial` в `canvas.background`. Значения стопов подобраны на глаз по растру.",
+    "Зелёные маркеры-уголки перед «МОЩНОСТЬ» и «БЕЗ АКБ» и группа стрелок «>>>» перед артикулом собраны из `shape` + декоративного текста, потому что подходящих иконок в базе нет. Осмысленная заявка на базу: `chevron-right`.",
+    "Логотип RUCELF принадлежит продавцу и в базу не заводится: слой остаётся в макете, при отсутствии ассета снимается правилом K-3 — верхняя строка с «LINE-INTERACTIVE» композицию держит.",
+    "Нижнее фото (газовый котёл + циркуляционный насос) трактовано как второй кадр вендора (`frame` с `index: 1`), а не как две иконки: это фотография, а не пиктограмма. Если такого кадра нет, слой снимается, белая полка с плашкой «РЕКОМЕНДОВАНО» остаётся осмысленной.",
+    "Свечение LCD-дисплея и подписи на корпусе прибора («UPI-750-12-E», «ИСТОЧНИК БЕСПЕРЕБОЙНОГО ПИТАНИЯ») — часть кадра вендора, а не слои макета; повторно они не набираются.",
+    "Слот `sizes` не задействован: у товара нет размерной строки. Текст подвала уехал в характеристики (`prop` 3), потому что свободного текстового гнезда под фразу «для чего рекомендовано» в словаре `TEXT_SLOTS` нет; при частом повторе — заявка на слот `usecase`."
+  ]
+}

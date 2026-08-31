@@ -1,0 +1,661 @@
+{
+  "source": "bench/samples/wb-starter/женщинам/Блузки и рубашки/Снимок экрана 2026-08-31 173012.jpg",
+  "layout": {
+    "id": "blouse-freedom-left-column",
+    "title": "Блузка: кремовая колонка слева, засечный заголовок и три модуля «кружок + подпись + выноска» поверх фото",
+    "canvas": {
+      "aspectW": 631,
+      "aspectH": 842,
+      "background": {
+        "kind": "solid",
+        "color": "#f4efe9"
+      }
+    },
+    "layers": [
+      {
+        "id": "frame",
+        "type": "frame",
+        "z": 0,
+        "box": {
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.72,
+          "y": 0.45
+        },
+        "bind": {
+          "kind": "frame"
+        }
+      },
+      {
+        "id": "left-veil",
+        "type": "shape",
+        "z": 10,
+        "box": {
+          "x": 0,
+          "y": 0,
+          "w": 0.58,
+          "h": 1
+        },
+        "shape": {
+          "form": "rect"
+        },
+        "fill": {
+          "kind": "linear",
+          "from": {
+            "x": 0,
+            "y": 0.5
+          },
+          "to": {
+            "x": 1,
+            "y": 0.5
+          },
+          "stops": [
+            {
+              "at": 0,
+              "color": "#f5efe8",
+              "opacity": 0.94
+            },
+            {
+              "at": 0.65,
+              "color": "#f5efe8",
+              "opacity": 0.6
+            },
+            {
+              "at": 1,
+              "color": "#f5efe8",
+              "opacity": 0
+            }
+          ]
+        }
+      },
+      {
+        "id": "title",
+        "type": "text",
+        "z": 20,
+        "box": {
+          "x": 0.046,
+          "y": 0.136,
+          "w": 0.64,
+          "h": 0.068
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "title"
+        },
+        "style": {
+          "role": "display",
+          "size": 0.055,
+          "weight": 600,
+          "color": "#4a3629",
+          "align": "left",
+          "valign": "top",
+          "lineHeight": 1.05,
+          "tracking": 0.01,
+          "transform": "upper"
+        }
+      },
+      {
+        "id": "subtitle",
+        "type": "text",
+        "z": 20,
+        "box": {
+          "x": 0.048,
+          "y": 0.215,
+          "w": 0.52,
+          "h": 0.08
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "subtitle"
+        },
+        "style": {
+          "role": "heading",
+          "size": 0.0285,
+          "weight": 500,
+          "color": "#3d3d3d",
+          "align": "left",
+          "valign": "top",
+          "lineHeight": 1.35,
+          "tracking": 0.005,
+          "transform": "upper"
+        }
+      },
+      {
+        "id": "feature-0",
+        "type": "group",
+        "z": 30,
+        "box": {
+          "x": 0.04,
+          "y": 0.338,
+          "w": 0.51,
+          "h": 0.088
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 0
+        },
+        "children": [
+          {
+            "id": "feature-0-disc",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0.012,
+              "y": 0.054,
+              "w": 0.174,
+              "h": 0.757
+            },
+            "shape": {
+              "form": "ellipse"
+            },
+            "fill": {
+              "kind": "radial",
+              "center": {
+                "x": 0.5,
+                "y": 0.45
+              },
+              "radius": 0.55,
+              "stops": [
+                {
+                  "at": 0,
+                  "color": "#fbf6f0",
+                  "opacity": 0.98
+                },
+                {
+                  "at": 1,
+                  "color": "#efe3d6",
+                  "opacity": 0.95
+                }
+              ]
+            },
+            "effects": [
+              {
+                "kind": "stroke",
+                "color": "#dfcdbc",
+                "thickness": 0.0012,
+                "opacity": 0.9
+              }
+            ]
+          },
+          {
+            "id": "feature-0-icon",
+            "type": "asset",
+            "z": 2,
+            "box": {
+              "x": 0.053,
+              "y": 0.229,
+              "w": 0.093,
+              "h": 0.405
+            },
+            "fit": "contain",
+            "bind": {
+              "kind": "prop",
+              "index": 0,
+              "part": "icon"
+            }
+          },
+          {
+            "id": "feature-0-label",
+            "type": "text",
+            "z": 3,
+            "box": {
+              "x": 0.233,
+              "y": 0.13,
+              "w": 0.72,
+              "h": 0.36
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 0,
+              "part": "label"
+            },
+            "style": {
+              "role": "heading",
+              "size": 0.0238,
+              "weight": 700,
+              "color": "#2f2f2f",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          },
+          {
+            "id": "feature-0-value",
+            "type": "text",
+            "z": 4,
+            "box": {
+              "x": 0.233,
+              "y": 0.55,
+              "w": 0.72,
+              "h": 0.38
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 0,
+              "part": "value"
+            },
+            "style": {
+              "role": "body",
+              "size": 0.0225,
+              "weight": 400,
+              "color": "#3a3a3a",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          },
+          {
+            "id": "feature-0-leader",
+            "type": "shape",
+            "z": 5,
+            "box": {
+              "x": 0.652,
+              "y": 0.52,
+              "w": 0.218,
+              "h": 0.04
+            },
+            "shape": {
+              "form": "line",
+              "thickness": 0.0012
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#8a6b5c",
+              "opacity": 0.75
+            }
+          },
+          {
+            "id": "feature-0-dot",
+            "type": "shape",
+            "z": 6,
+            "box": {
+              "x": 0.873,
+              "y": 0.486,
+              "w": 0.025,
+              "h": 0.108
+            },
+            "shape": {
+              "form": "ellipse"
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#6b3f38"
+            }
+          }
+        ]
+      },
+      {
+        "id": "feature-1",
+        "type": "group",
+        "z": 40,
+        "box": {
+          "x": 0.04,
+          "y": 0.502,
+          "w": 0.51,
+          "h": 0.088
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 1
+        },
+        "children": [
+          {
+            "id": "feature-1-disc",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0.012,
+              "y": 0.054,
+              "w": 0.174,
+              "h": 0.757
+            },
+            "shape": {
+              "form": "ellipse"
+            },
+            "fill": {
+              "kind": "radial",
+              "center": {
+                "x": 0.5,
+                "y": 0.45
+              },
+              "radius": 0.55,
+              "stops": [
+                {
+                  "at": 0,
+                  "color": "#fbf6f0",
+                  "opacity": 0.98
+                },
+                {
+                  "at": 1,
+                  "color": "#efe3d6",
+                  "opacity": 0.95
+                }
+              ]
+            },
+            "effects": [
+              {
+                "kind": "stroke",
+                "color": "#dfcdbc",
+                "thickness": 0.0012,
+                "opacity": 0.9
+              }
+            ]
+          },
+          {
+            "id": "feature-1-icon",
+            "type": "asset",
+            "z": 2,
+            "box": {
+              "x": 0.053,
+              "y": 0.229,
+              "w": 0.093,
+              "h": 0.405
+            },
+            "fit": "contain",
+            "bind": {
+              "kind": "prop",
+              "index": 1,
+              "part": "icon"
+            }
+          },
+          {
+            "id": "feature-1-label",
+            "type": "text",
+            "z": 3,
+            "box": {
+              "x": 0.233,
+              "y": 0.17,
+              "w": 0.72,
+              "h": 0.34
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 1,
+              "part": "label"
+            },
+            "style": {
+              "role": "heading",
+              "size": 0.0238,
+              "weight": 700,
+              "color": "#2f2f2f",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          },
+          {
+            "id": "feature-1-value",
+            "type": "text",
+            "z": 4,
+            "box": {
+              "x": 0.233,
+              "y": 0.56,
+              "w": 0.72,
+              "h": 0.36
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 1,
+              "part": "value"
+            },
+            "style": {
+              "role": "body",
+              "size": 0.0225,
+              "weight": 400,
+              "color": "#3a3a3a",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          },
+          {
+            "id": "feature-1-leader",
+            "type": "shape",
+            "z": 5,
+            "box": {
+              "x": 0.668,
+              "y": 0.615,
+              "w": 0.186,
+              "h": 0.04
+            },
+            "shape": {
+              "form": "line",
+              "thickness": 0.0012
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#8a6b5c",
+              "opacity": 0.75
+            }
+          },
+          {
+            "id": "feature-1-dot",
+            "type": "shape",
+            "z": 6,
+            "box": {
+              "x": 0.866,
+              "y": 0.581,
+              "w": 0.025,
+              "h": 0.108
+            },
+            "shape": {
+              "form": "ellipse"
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#6b3f38"
+            }
+          }
+        ]
+      },
+      {
+        "id": "feature-2",
+        "type": "group",
+        "z": 50,
+        "box": {
+          "x": 0.04,
+          "y": 0.66,
+          "w": 0.51,
+          "h": 0.088
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 2
+        },
+        "children": [
+          {
+            "id": "feature-2-disc",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0.012,
+              "y": 0.054,
+              "w": 0.174,
+              "h": 0.757
+            },
+            "shape": {
+              "form": "ellipse"
+            },
+            "fill": {
+              "kind": "radial",
+              "center": {
+                "x": 0.5,
+                "y": 0.45
+              },
+              "radius": 0.55,
+              "stops": [
+                {
+                  "at": 0,
+                  "color": "#fbf6f0",
+                  "opacity": 0.98
+                },
+                {
+                  "at": 1,
+                  "color": "#efe3d6",
+                  "opacity": 0.95
+                }
+              ]
+            },
+            "effects": [
+              {
+                "kind": "stroke",
+                "color": "#dfcdbc",
+                "thickness": 0.0012,
+                "opacity": 0.9
+              }
+            ]
+          },
+          {
+            "id": "feature-2-icon",
+            "type": "asset",
+            "z": 2,
+            "box": {
+              "x": 0.053,
+              "y": 0.19,
+              "w": 0.093,
+              "h": 0.48
+            },
+            "fit": "contain",
+            "bind": {
+              "kind": "prop",
+              "index": 2,
+              "part": "icon"
+            }
+          },
+          {
+            "id": "feature-2-label",
+            "type": "text",
+            "z": 3,
+            "box": {
+              "x": 0.233,
+              "y": 0.14,
+              "w": 0.72,
+              "h": 0.34
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 2,
+              "part": "label"
+            },
+            "style": {
+              "role": "heading",
+              "size": 0.0238,
+              "weight": 700,
+              "color": "#2f2f2f",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          },
+          {
+            "id": "feature-2-value",
+            "type": "text",
+            "z": 4,
+            "box": {
+              "x": 0.233,
+              "y": 0.53,
+              "w": 0.72,
+              "h": 0.36
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 2,
+              "part": "value"
+            },
+            "style": {
+              "role": "body",
+              "size": 0.0225,
+              "weight": 400,
+              "color": "#3a3a3a",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          },
+          {
+            "id": "feature-2-leader",
+            "type": "shape",
+            "z": 5,
+            "box": {
+              "x": 0.736,
+              "y": 0.669,
+              "w": 0.118,
+              "h": 0.04
+            },
+            "shape": {
+              "form": "line",
+              "thickness": 0.0012
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#8a6b5c",
+              "opacity": 0.75
+            }
+          },
+          {
+            "id": "feature-2-dot",
+            "type": "shape",
+            "z": 6,
+            "box": {
+              "x": 0.866,
+              "y": 0.635,
+              "w": 0.025,
+              "h": 0.108
+            },
+            "shape": {
+              "form": "ellipse"
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#6b3f38"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "content": {
+    "texts": {
+      "title": [
+        "Свобода,"
+      ],
+      "subtitle": [
+        "Которая красиво",
+        "смотрится"
+      ]
+    },
+    "props": [
+      {
+        "label": "Не облегает",
+        "value": "фигуру",
+        "icon": "shirt-outline"
+      },
+      {
+        "label": "Мягко струится",
+        "value": "по силуэту",
+        "icon": "fabric-waves"
+      },
+      {
+        "label": "Комфортно",
+        "value": "сидит в движении",
+        "icon": "woman-walking"
+      }
+    ],
+    "swatches": []
+  },
+  "notes": [
+    "Заголовок набран засечной гарнитурой с заметным контрастом штриха, подписи — гуманистической без засечек. Гарнитуры по растру не восстанавливаются, поэтому записаны роли: `display` для «СВОБОДА,» и `heading`/`body` для модулей. Если база шрифтов отдаст на `display` гротеск, характер образца потеряется — это ограничение роли, а не макета.",
+    "Разделение каждой подписи на жирную первую строку и светлую вторую записано как `label` + `value` двумя слоями внутри группы, а не прогонами: это две строки с разной базовой линией, а не одна фраза двумя начертаниями.",
+    "Выноска (тонкая линия + тёмная точка на конце) декоративна, привязок не имеет, но лежит внутри группы характеристики — если характеристики нет, K-3 снимает группу целиком вместе с выноской. Точка на образце указывает на конкретное место товара; язык не выражает «привязку конца выноски к точке фото», её положение зафиксировано геометрически и при смене кадра может указывать не туда.",
+    "Кремовая колонка слева — не отдельная подложка образца, а светлая часть самой фотографии (белая стеновая панель), усиленная тонировкой. Приближено слоем `shape` с линейным градиентом кремового к прозрачному; на исходном снимке граница мягче и не строго вертикальна.",
+    "Кружки под иконками на образце залиты почти ровным светлым бежевым с еле заметным падением к краю — записано `radial`, значения падения приближённые.",
+    "Иконок в базе нет, заявки: `shirt-outline` (рубашка линией), `fabric-waves` (три волнистые линии), `woman-walking` (фигура в движении). Все три — тонкая линейная графика одной толщины, это часть стиля карточки; язык толщину штриха иконки не задаёт, она должна прийти из самих ассетов.",
+    "Логотипа, бренда, размеров и цен на образце нет — соответствующие слои в макет не заводились.",
+    "Запятая после «СВОБОДА,» — часть текста контента, а не украшение: заголовок и подзаголовок читаются одной фразой."
+  ]
+}

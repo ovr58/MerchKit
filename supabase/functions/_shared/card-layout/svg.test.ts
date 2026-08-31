@@ -275,3 +275,28 @@ describe('Скруглённые углы у кадра', () => {
     expect(svg).toContain('rx=')
   })
 })
+
+describe('Линия следует за формой своего бокса', () => {
+  const divider = (box: { x: number; y: number; w: number; h: number }): Layer => ({
+    id: 'divider',
+    type: 'shape',
+    z: 5,
+    box,
+    shape: { form: 'line', thickness: 0.004 },
+    fill: { kind: 'solid', color: '#ffffff' },
+  })
+
+  it('широкий бокс даёт горизонтальную линию', () => {
+    const svg = compose([divider({ x: 0, y: 0.5, w: 1, h: 0 })])
+
+    // Концы разъезжаются по x, y одинаков — линия лежит.
+    expect(svg).toMatch(/<line x1="0" y1="200" x2="300" y2="200"/)
+  })
+
+  it('высокий бокс даёт вертикальную линию, а не невидимую точку', () => {
+    const svg = compose([divider({ x: 0.5, y: 0.2, w: 0, h: 0.6 })])
+
+    // Концы разъезжаются по y, x одинаков — линия стоит.
+    expect(svg).toMatch(/<line x1="150" y1="80" x2="150" y2="320"/)
+  })
+})

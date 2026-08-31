@@ -203,6 +203,43 @@ async function status(): Promise<void> {
   if (found.processing_status === 'ended') console.log('дальше: npm run cards:parse -- fetch')
 }
 
+/**
+ * Проверка содержимого — граница с недоверенным выводом модели.
+ *
+ * `validateLayout` стережёт макет, но `content` он не смотрит: в продукте содержимое приходит
+ * из нашего же кода и по типам. Здесь оно приходит из ответа модели, и одного разбора хватило,
+ * чтобы это стало важно — прогоны были положены в `props[].label` вместо макета, и сборщик
+ * упал на `.split` посреди прогона по библиотеке. Отказ на границе лучше падения в середине.
+ */
+function problemsInContent(content: unknown): string[] {
+  const problems: string[] = []
+  const root = content as { texts?: unknown; props?: unknown; swatches?: unknown }
+
+  for (const [slot, lines] of Object.entries((root.texts ?? {}) as Record<string, unknown>)) {
+    if (!Array.isArray(lines)) {
+      problems.push(`texts.${slot} — не список строк`)
+      continue
+    }
+    if (lines.some((line) => typeof line !== 'string')) {
+      problems.push(`texts.${slot} содержит не строку`)
+    }
+  }
+
+  const props = Array.isArray(root.props) ? root.props : []
+  props.forEach((prop, index) => {
+    for (const part of ['label', 'value'] as const) {
+      const value = (prop as Record<string, unknown>)[part]
+      if (value !== undefined && typeof value !== 'string') {
+        problems.push(
+          `props[${index}].${part} — не строка (прогоны разного начертания живут в макете, не в содержимом)`,
+        )
+      }
+    }
+  })
+
+  return problems
+}
+
 async function fetchResults(): Promise<void> {
   const { batch, samples } = await state()
   const api = client()
@@ -246,6 +283,12 @@ async function fetchResults(): Promise<void> {
     const problems = validateLayout(parsed.layout)
     if (problems.length > 0) {
       failed.push(`${sample.slug}: макет не проходит валидатор — ${problems.join('; ')}`)
+      continue
+    }
+
+    const contentProblems = problemsInContent((parsed as { content?: unknown }).content)
+    if (contentProblems.length > 0) {
+      failed.push(`${sample.slug}: содержимое не той формы — ${contentProblems.join('; ')}`)
       continue
     }
 

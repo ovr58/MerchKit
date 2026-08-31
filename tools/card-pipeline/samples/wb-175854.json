@@ -1,0 +1,615 @@
+{
+  "source": "bench/samples/wb-starter/Красота/Аксессуары/Косметические принадлежности/Снимок экрана 2026-08-31 175854.jpg",
+  "layout": {
+    "id": "zinger-cuticle-scissors-sg046",
+    "title": "Косметические ножницы: тёмный фон, заголовок по центру, цветные плашки-выноски по бокам, тиловая волна снизу",
+    "canvas": {
+      "aspectW": 631,
+      "aspectH": 845,
+      "background": {
+        "kind": "solid",
+        "color": "#0d1117"
+      }
+    },
+    "layers": [
+      {
+        "id": "frame",
+        "type": "frame",
+        "z": 0,
+        "box": {
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.5,
+          "y": 0.58
+        },
+        "bind": {
+          "kind": "frame"
+        }
+      },
+      {
+        "id": "bottom-wave",
+        "type": "shape",
+        "z": 5,
+        "box": {
+          "x": -0.12,
+          "y": 0.93,
+          "w": 1.24,
+          "h": 0.17
+        },
+        "shape": {
+          "form": "ellipse"
+        },
+        "fill": {
+          "kind": "solid",
+          "color": "#0c7b88"
+        },
+        "effects": [
+          {
+            "kind": "stroke",
+            "color": "#33c6d4",
+            "thickness": 0.0018,
+            "opacity": 0.9
+          }
+        ]
+      },
+      {
+        "id": "kicker-plate",
+        "type": "shape",
+        "z": 10,
+        "box": {
+          "x": 0.401,
+          "y": 0.0095,
+          "w": 0.203,
+          "h": 0.0426
+        },
+        "shape": {
+          "form": "rect",
+          "radius": 0.18
+        },
+        "fill": {
+          "kind": "solid",
+          "color": "#0f8391"
+        }
+      },
+      {
+        "id": "kicker",
+        "type": "text",
+        "z": 11,
+        "box": {
+          "x": 0.401,
+          "y": 0.0095,
+          "w": 0.203,
+          "h": 0.0426
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "kicker"
+        },
+        "style": {
+          "role": "label",
+          "size": 0.021,
+          "weight": 700,
+          "color": "#ffffff",
+          "align": "center",
+          "valign": "middle",
+          "lineHeight": 1
+        }
+      },
+      {
+        "id": "title",
+        "type": "text",
+        "z": 20,
+        "box": {
+          "x": 0.098,
+          "y": 0.081,
+          "w": 0.806,
+          "h": 0.062
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "title"
+        },
+        "style": {
+          "role": "display",
+          "size": 0.055,
+          "weight": 900,
+          "color": "#ffffff",
+          "align": "center",
+          "valign": "middle",
+          "lineHeight": 1,
+          "transform": "upper"
+        }
+      },
+      {
+        "id": "subtitle",
+        "type": "text",
+        "z": 21,
+        "box": {
+          "x": 0.26,
+          "y": 0.154,
+          "w": 0.48,
+          "h": 0.033
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "subtitle"
+        },
+        "style": {
+          "role": "heading",
+          "size": 0.027,
+          "weight": 700,
+          "color": "#ffffff",
+          "align": "center",
+          "valign": "middle",
+          "lineHeight": 1,
+          "transform": "upper"
+        }
+      },
+      {
+        "id": "brand-plate",
+        "type": "shape",
+        "z": 30,
+        "box": {
+          "x": 0.238,
+          "y": 0.218,
+          "w": 0.285,
+          "h": 0.045
+        },
+        "shape": {
+          "form": "rect"
+        },
+        "fill": {
+          "kind": "solid",
+          "color": "#0f8391"
+        }
+      },
+      {
+        "id": "brand",
+        "type": "text",
+        "z": 31,
+        "box": {
+          "x": 0.245,
+          "y": 0.218,
+          "w": 0.27,
+          "h": 0.045
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "brand"
+        },
+        "style": {
+          "role": "heading",
+          "size": 0.022,
+          "weight": 700,
+          "color": "#ffffff",
+          "align": "center",
+          "valign": "middle",
+          "lineHeight": 1,
+          "transform": "upper"
+        }
+      },
+      {
+        "id": "model",
+        "type": "group",
+        "z": 32,
+        "box": {
+          "x": 0.504,
+          "y": 0.218,
+          "w": 0.509,
+          "h": 0.045
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 3
+        },
+        "children": [
+          {
+            "id": "model-plate",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0,
+              "y": 0,
+              "w": 1,
+              "h": 1
+            },
+            "shape": {
+              "form": "rect"
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#ec2a80"
+            }
+          },
+          {
+            "id": "model-label",
+            "type": "text",
+            "z": 2,
+            "box": {
+              "x": 0.04,
+              "y": 0,
+              "w": 0.9,
+              "h": 1
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 3,
+              "part": "label"
+            },
+            "style": {
+              "role": "heading",
+              "size": 0.022,
+              "weight": 700,
+              "color": "#ffffff",
+              "align": "center",
+              "valign": "middle",
+              "lineHeight": 1,
+              "transform": "upper"
+            }
+          }
+        ]
+      },
+      {
+        "id": "length",
+        "type": "group",
+        "z": 40,
+        "box": {
+          "x": 0,
+          "y": 0.491,
+          "w": 0.42,
+          "h": 0.097
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 0
+        },
+        "children": [
+          {
+            "id": "length-plate",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0,
+              "y": 0,
+              "w": 1,
+              "h": 1
+            },
+            "shape": {
+              "form": "rect",
+              "radius": 0.02
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#ec2a80"
+            }
+          },
+          {
+            "id": "length-label",
+            "type": "text",
+            "z": 2,
+            "box": {
+              "x": 0.143,
+              "y": 0,
+              "w": 0.452,
+              "h": 1
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 0,
+              "part": "label"
+            },
+            "style": {
+              "role": "body",
+              "size": 0.021,
+              "weight": 400,
+              "color": "#ffffff",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1.25
+            }
+          },
+          {
+            "id": "length-value",
+            "type": "text",
+            "z": 3,
+            "box": {
+              "x": 0.6,
+              "y": 0,
+              "w": 0.37,
+              "h": 1
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 0,
+              "part": "value"
+            },
+            "lines": [
+              [
+                {
+                  "weight": 900,
+                  "size": 0.045
+                },
+                {
+                  "text": " мм",
+                  "weight": 700,
+                  "size": 0.019
+                }
+              ]
+            ],
+            "style": {
+              "role": "display",
+              "size": 0.045,
+              "weight": 900,
+              "color": "#ffffff",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "logo-block",
+        "type": "group",
+        "z": 45,
+        "box": {
+          "x": 0,
+          "y": 0.598,
+          "w": 0.368,
+          "h": 0.077
+        },
+        "bind": {
+          "kind": "logo"
+        },
+        "children": [
+          {
+            "id": "logo-plate",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0,
+              "y": 0,
+              "w": 1,
+              "h": 1
+            },
+            "shape": {
+              "form": "rect"
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#0f8391"
+            }
+          },
+          {
+            "id": "logo",
+            "type": "asset",
+            "z": 2,
+            "box": {
+              "x": 0.12,
+              "y": 0.15,
+              "w": 0.72,
+              "h": 0.7
+            },
+            "fit": "contain",
+            "bind": {
+              "kind": "logo"
+            }
+          }
+        ]
+      },
+      {
+        "id": "callout-sharpening",
+        "type": "group",
+        "z": 50,
+        "box": {
+          "x": 0.37,
+          "y": 0.32,
+          "w": 0.37,
+          "h": 0.13
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 1
+        },
+        "children": [
+          {
+            "id": "callout-sharpening-text",
+            "type": "text",
+            "z": 1,
+            "box": {
+              "x": 0.316,
+              "y": 0.062,
+              "w": 0.676,
+              "h": 0.6
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 1,
+              "part": "label"
+            },
+            "style": {
+              "role": "body",
+              "size": 0.022,
+              "weight": 400,
+              "color": "#ffffff",
+              "align": "left",
+              "valign": "top",
+              "lineHeight": 1.3
+            }
+          },
+          {
+            "id": "callout-sharpening-leader-v",
+            "type": "shape",
+            "z": 2,
+            "box": {
+              "x": 0.311,
+              "y": 0.654,
+              "w": 0.004,
+              "h": 0.269
+            },
+            "shape": {
+              "form": "line",
+              "thickness": 0.0016
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#ffffff",
+              "opacity": 0.85
+            }
+          },
+          {
+            "id": "callout-sharpening-leader-h",
+            "type": "shape",
+            "z": 3,
+            "box": {
+              "x": 0,
+              "y": 0.921,
+              "w": 0.316,
+              "h": 0.005
+            },
+            "shape": {
+              "form": "line",
+              "thickness": 0.0016
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#ffffff",
+              "opacity": 0.85
+            }
+          }
+        ]
+      },
+      {
+        "id": "callout-sterilization",
+        "type": "group",
+        "z": 51,
+        "box": {
+          "x": 0.59,
+          "y": 0.515,
+          "w": 0.38,
+          "h": 0.15
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 2
+        },
+        "children": [
+          {
+            "id": "callout-sterilization-text",
+            "type": "text",
+            "z": 1,
+            "box": {
+              "x": 0.216,
+              "y": 0.047,
+              "w": 0.789,
+              "h": 0.52
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 2,
+              "part": "label"
+            },
+            "style": {
+              "role": "body",
+              "size": 0.022,
+              "weight": 400,
+              "color": "#ffffff",
+              "align": "left",
+              "valign": "top",
+              "lineHeight": 1.3
+            }
+          },
+          {
+            "id": "callout-sterilization-leader-v",
+            "type": "shape",
+            "z": 2,
+            "box": {
+              "x": 0.205,
+              "y": 0.567,
+              "w": 0.004,
+              "h": 0.367
+            },
+            "shape": {
+              "form": "line",
+              "thickness": 0.0016
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#ffffff",
+              "opacity": 0.85
+            }
+          },
+          {
+            "id": "callout-sterilization-leader-h",
+            "type": "shape",
+            "z": 3,
+            "box": {
+              "x": 0.013,
+              "y": 0.931,
+              "w": 0.192,
+              "h": 0.005
+            },
+            "shape": {
+              "form": "line",
+              "thickness": 0.0016
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#ffffff",
+              "opacity": 0.85
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "content": {
+    "texts": {
+      "kicker": [
+        "SG-046"
+      ],
+      "title": [
+        "ДЛЯ КУТИКУЛЫ"
+      ],
+      "subtitle": [
+        "ПРОФЕССИОНАЛЬНЫЕ"
+      ],
+      "brand": [
+        "ETALON PRO"
+      ]
+    },
+    "logo": "zinger-professional",
+    "props": [
+      {
+        "label": "Длина\nлезвий",
+        "value": "20"
+      },
+      {
+        "label": "Ручная\nзаточка"
+      },
+      {
+        "label": "Подходит для\nстерилизации"
+      },
+      {
+        "label": "Классическая модель"
+      }
+    ],
+    "swatches": []
+  },
+  "notes": [
+    "Плашки образца — не прямоугольники: у тиловой «ETALON PRO», розовой «КЛАССИЧЕСКАЯ МОДЕЛЬ» и левой «Длина лезвий 20 мм» правый край скошен (параллелограмм/трапеция), а у нижней тиловой волны край — дуга. Словарь `ShapeForm` знает только rect/ellipse/line, поэтому скос заменён прямым краем, а волна — эллипсом, выходящим за нижний обрез. Это единственное заметное расхождение с оригиналом; при пополнении словаря стоит завести форму со скошенным краем.",
+    "Розовая плашка модели и левая розовая плашка прижаты к обрезам кадра: у модели `w` уводит правый край за 1, левая начинается ровно в 0 — намеренный вылет, а не ошибка долей.",
+    "Линии-выноски в образце коленчатые (короткий вертикальный отрезок и горизонтальный к товару). `line` рисует один отрезок, поэтому каждая выноска собрана из двух `shape`-линий внутри группы; группа привязана к характеристике, так что при отсутствии текста K-3 уносит и линии — иначе в кадре остались бы висеть черты в пустоте.",
+    "Единица «мм» задана статическим прогоном в макете, а привязанный прогон получает только число («20»): в образце число и единица набраны разным кеглем, а привязка не делится на части. Если поставщик даст значение целиком («20 мм»), прогоны надо будет свести к одному.",
+    "Артикул «SG-046» положен в слот `kicker` — отдельного слота под артикул в языке нет.",
+    "Логотип ZINGER PROFESSIONAL в базе ассетов отсутствует (заявка на имя `zinger-professional`); он лежит в группе вместе со своей тиловой плашкой, поэтому при отсутствии файла уходит и плашка, а не остаётся пустой прямоугольник.",
+    "Гравировки на самом инструменте («INOX», «ZINGER ETALON PRO», «SERIES 046», «JAPAN STEEL», «@zatochka_zinger») принадлежат кадру вендора и как слои не разбираются.",
+    "Фон принят ровным очень тёмным (#0d1117); в растре возможна слабая неравномерность к краям, но она ниже порога, при котором понадобился бы `radial`.",
+    "Иконок в образце нет — выноски чисто текстовые, поэтому `part: 'icon'` не используется."
+  ]
+}
