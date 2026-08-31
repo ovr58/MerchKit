@@ -188,8 +188,21 @@ function checkEffect(effect: Effect, path: string, problems: string[]): void {
     return
   }
 
-  if (effect.kind === 'blur' && effect.radius <= 0) {
-    problems.push(`${path}: радиус размытия должен быть положительным`)
+  if (effect.kind === 'blur') {
+    if (effect.radius <= 0) {
+      problems.push(`${path}: радиус размытия должен быть положительным`)
+    }
+    return
+  }
+
+  if (!HEX.test(effect.color)) {
+    problems.push(`${path}: цвет обводки «${effect.color}» записан не как #rrggbb`)
+  }
+  if (effect.thickness <= 0) {
+    problems.push(`${path}: толщина обводки должна быть положительной`)
+  }
+  if (effect.opacity !== undefined && (effect.opacity < 0 || effect.opacity > 1)) {
+    problems.push(`${path}: прозрачность обводки ${effect.opacity} вне диапазона 0…1`)
   }
 }
 
@@ -199,6 +212,10 @@ function checkPaint(paint: Paint, path: string, problems: string[]): void {
       problems.push(`${path}: цвет «${paint.color}» записан не как #rrggbb`)
     }
     return
+  }
+
+  if (paint.kind === 'radial' && paint.radius <= 0) {
+    problems.push(`${path}: радиус градиента должен быть положительным`)
   }
 
   if (paint.stops.length < 2) {

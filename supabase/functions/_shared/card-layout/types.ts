@@ -68,8 +68,19 @@ export type TextTransform = (typeof TEXT_TRANSFORMS)[number]
 export const FIT_MODES = ['cover', 'contain'] as const
 export type FitMode = (typeof FIT_MODES)[number]
 
-/** Заливка. Градиент — не украшение: им задаётся тёмная подложка под текстовой колонкой,
- *  без которой белый заголовок на светлом фоне нечитаем. */
+/** Точка градиента. */
+export type PaintStop = { at: Fraction; color: string; opacity?: number }
+
+/**
+ * Заливка. Градиент — не украшение: им задаётся тёмная подложка под текстовой колонкой, без
+ * которой белый заголовок на светлом фоне нечитаем.
+ *
+ * **`radial` добавлен 2026-08-31 по итогам гейта A3.** На образце «платье» белая плашка
+ * размеров не залита ровным белым: она светлее в середине и гаснет к углам — фотографическое
+ * падение к краям. Линейным градиентом это не записывается, а без него плашка выглядит
+ * наклейкой. Ровно тот случай, ради которого гейт и стоит перед набором библиотеки: словарь
+ * расширяется по найденной нехватке, а не «на будущее».
+ */
 export type Paint =
   | { kind: 'solid'; color: string; opacity?: number }
   | {
@@ -77,7 +88,16 @@ export type Paint =
       /** Начало и конец градиента в долях бокса слоя. */
       from: Focus
       to: Focus
-      stops: { at: Fraction; color: string; opacity?: number }[]
+      stops: PaintStop[]
+    }
+  | {
+      kind: 'radial'
+      /** Центр в долях бокса слоя. */
+      center: Focus
+      /** Радиус долей бокса: 0.5 — до края по горизонтали. Пятно тянется вместе с боксом, а
+       *  не остаётся круглым, — падение к краям обязано повторять форму плашки. */
+      radius: Fraction
+      stops: PaintStop[]
     }
 
 export type ShapeForm =
@@ -85,14 +105,22 @@ export type ShapeForm =
   | { form: 'ellipse' }
   | { form: 'line'; thickness: Fraction }
 
-export const EFFECT_KINDS = ['shadow', 'blur'] as const
+export const EFFECT_KINDS = ['shadow', 'blur', 'stroke'] as const
 export type EffectKind = (typeof EFFECT_KINDS)[number]
 
-/** Смещения и радиусы эффектов — тоже в долях холста: эффект обязан масштабироваться вместе
- *  с макетом, иначе тень, выверенная на 1200 px, на 2400 px станет вдвое тоньше. */
+/**
+ * Смещения, радиусы и толщины эффектов — тоже в долях холста: эффект обязан масштабироваться
+ * вместе с макетом, иначе тень, выверенная на 1200 px, на 2400 px станет вдвое тоньше.
+ *
+ * **`stroke` вернулся 2026-08-31 по итогам гейта A3.** Он был убран из словаря как то, чего
+ * не требовал ни один разобранный образец, — и это оказалось ошибкой разбора, а не верным
+ * YAGNI: на образце «куртка» у плашек светлая волосяная обводка, и оранжевый кружок «+»
+ * посажен ровно на неё. Без обводки плашка теряет край и кружку не на чем стоять.
+ */
 export type Effect =
   | { kind: 'shadow'; dx: Fraction; dy: Fraction; blur: Fraction; color: string; opacity: number }
   | { kind: 'blur'; radius: Fraction }
+  | { kind: 'stroke'; color: string; thickness: Fraction; opacity?: number }
 
 /**
  * Чем слой наполняется. Нет привязки — слой декоративный, его содержимое записано прямо в

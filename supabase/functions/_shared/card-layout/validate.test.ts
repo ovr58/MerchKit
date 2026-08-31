@@ -84,6 +84,37 @@ describe('Валидатор макета: закрытые словари', () 
     )
   })
 
+  it('принимает радиальную заливку и ловит нулевой радиус', () => {
+    const lens = (radius: number): Layer => ({
+      id: 'lens',
+      type: 'shape',
+      z: 5,
+      box: { x: 0.1, y: 0.3, w: 0.2, h: 0.2 },
+      shape: { form: 'rect', radius: 0.03 },
+      fill: {
+        kind: 'radial',
+        center: { x: 0.42, y: 0.34 },
+        radius,
+        stops: [
+          { at: 0, color: '#fdfdfc' },
+          { at: 1, color: '#d3cfca' },
+        ],
+      },
+    })
+
+    expect(validateLayout(layout([frame, lens(0.78)]))).toEqual([])
+    expect(validateLayout(layout([frame, lens(0)])).join(' ')).toContain('радиус градиента')
+  })
+
+  it('ловит обводку нулевой толщины', () => {
+    const outlined: Layer = {
+      ...frame,
+      id: 'outlined',
+      effects: [{ kind: 'stroke', color: '#e6e2dc', thickness: 0 }],
+    }
+    expect(validateLayout(layout([frame, outlined])).join(' ')).toContain('толщина обводки')
+  })
+
   it('ловит текст без привязки и без строк', () => {
     const empty: Layer = { ...title, id: 'empty', bind: undefined }
     expect(validateLayout(layout([frame, empty])).join(' ')).toContain('нет строк')

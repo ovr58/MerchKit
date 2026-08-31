@@ -132,11 +132,11 @@ function drawByType(
       placed.color !== undefined
         ? `fill="${placed.color}"`
         : paintOf(layer.fill, layer.id, placed.box, size, defs)
-    return shape(layer.shape, rect, fill, size)
+    return shape(layer.shape, rect, attrs([fill, strokeOf(layer.effects, size, false)]), size)
   }
 
   if (layer.type === 'text') {
-    return text(placed.lines ?? [], layer.style, rect, size, fonts)
+    return text(placed.lines ?? [], layer.style, rect, size, fonts, strokeOf(layer.effects, size, true))
   }
 
   return ''
@@ -222,6 +222,7 @@ function text(
   rect: { x: number; y: number; w: number; h: number },
   size: { width: number; height: number },
   fonts: FontFamilies,
+  stroke: string,
 ): string {
   if (lines.length === 0) {
     return ''
@@ -250,6 +251,7 @@ function text(
     `fill="${style.color}"`,
     `text-anchor="${anchor}"`,
     style.tracking === undefined ? '' : `letter-spacing="${round(style.tracking * fontSize)}"`,
+    stroke,
   ])
 
   return lines
@@ -279,15 +281,7 @@ function paintOf(
     return `fill="${paint.color}"${opacity}`
   }
 
-  // Градиент задан в долях бокса, а объявляется в координатах холста: так одна и та же
-  // запись даёт один и тот же наклон независимо от того, где лежит слой.
   const gradientId = `g-${slug(id)}-${defs.length}`
-  const point = (p: Focus) => ({
-    x: (box.x + p.x * box.w) * size.width,
-    y: (box.y + p.y * box.h) * size.height,
-  })
-  const from = point(paint.from)
-  const to = point(paint.to)
   const stops = paint.stops
     .map(
       (stop) =>
@@ -296,6 +290,25 @@ function paintOf(
         `/>`,
     )
     .join('')
+
+  if (paint.kind === 'radial') {
+    // Единицы бокса, а не холста: пятно обязано растянуться вместе с плашкой, иначе на
+    // вытянутой карточке падение к краям останется круглым и прочтётся как пятно света.
+    defs.push(
+      `<radialGradient id="${gradientId}" cx="${round(paint.center.x)}" ` +
+        `cy="${round(paint.center.y)}" r="${round(paint.radius)}">${stops}</radialGradient>`,
+    )
+    return `fill="url(#${gradientId})"`
+  }
+
+  // Линейный градиент задан в долях бокса, а объявляется в координатах холста: так одна и та
+  // же запись даёт один и тот же наклон независимо от того, где лежит слой.
+  const point = (p: Focus) => ({
+    x: (box.x + p.x * box.w) * size.width,
+    y: (box.y + p.y * box.h) * size.height,
+  })
+  const from = point(paint.from)
+  const to = point(paint.to)
 
   defs.push(
     `<linearGradient id="${gradientId}" gradientUnits="userSpaceOnUse" ` +
@@ -312,7 +325,8 @@ function filterOf(
   size: { width: number; height: number },
   defs: string[],
 ): string {
-  const filters = effects ?? []
+  // Обводка — не фильтр, а атрибуты самой фигуры: см. `strokeOf`.
+  const filters = (effects ?? []).filter((effect) => effect.kind !== 'stroke')
   if (filters.length === 0) {
     return ''
   }
@@ -321,6 +335,9 @@ function filterOf(
   const unit = Math.min(size.width, size.height)
   const parts = filters
     .map((effect) => {
+      if (effect.kind === 'blur') {
+        return `<feGaussianBlur stdDeviation="${round(effect.radius * unit)}"/>`
+      }
       if (effect.kind === 'shadow') {
         return (
           `<feDropShadow dx="${round(effect.dx * unit)}" dy="${round(effect.dy * unit)}" ` +
@@ -328,7 +345,7 @@ function filterOf(
           `flood-color="${effect.color}" flood-opacity="${round(effect.opacity)}"/>`
         )
       }
-      return `<feGaussianBlur stdDeviation="${round(effect.radius * unit)}"/>`
+      return ''
     })
     .join('')
 
@@ -338,6 +355,31 @@ function filterOf(
   )
 
   return `filter="url(#${filterId})"`
+}
+
+/**
+ * Обводка фигуры или текста. Толщина — доля меньшей стороны холста, как и радиус скругления:
+ * волосяная линия на 1200 px обязана остаться волосяной и на 2400 px.
+ *
+ * `paint-order="stroke"` у текста обязателен: без него обводка съедает половину штриха глифа
+ * изнутри, и светлая линия по тёмному тексту превращает буквы в кашу.
+ */
+function strokeOf(
+  effects: Effect[] | undefined,
+  size: { width: number; height: number },
+  isText: boolean,
+): string {
+  const stroke = (effects ?? []).find((effect) => effect.kind === 'stroke')
+  if (stroke === undefined || stroke.kind !== 'stroke') {
+    return ''
+  }
+
+  return attrs([
+    `stroke="${stroke.color}"`,
+    `stroke-width="${round(stroke.thickness * Math.min(size.width, size.height))}"`,
+    stroke.opacity === undefined ? '' : `stroke-opacity="${round(stroke.opacity)}"`,
+    isText ? 'paint-order="stroke"' : '',
+  ])
 }
 
 function attrs(parts: string[]): string {

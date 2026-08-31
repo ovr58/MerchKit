@@ -31,6 +31,31 @@
         }
       },
       {
+        "id": "column-photo",
+        "type": "frame",
+        "z": 5,
+        "box": {
+          "x": 0,
+          "y": 0,
+          "w": 0.405,
+          "h": 1
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0,
+          "y": 0.5
+        },
+        "effects": [
+          {
+            "kind": "blur",
+            "radius": 0.012
+          }
+        ],
+        "bind": {
+          "kind": "frame"
+        }
+      },
+      {
         "id": "column",
         "type": "shape",
         "z": 10,
@@ -56,15 +81,18 @@
           "stops": [
             {
               "at": 0,
-              "color": "#221a17"
+              "color": "#1c1512",
+              "opacity": 0.62
             },
             {
-              "at": 0.75,
-              "color": "#251d19"
+              "at": 0.72,
+              "color": "#1c1512",
+              "opacity": 0.58
             },
             {
               "at": 1,
-              "color": "#2b221d"
+              "color": "#241b16",
+              "opacity": 0.5
             }
           ]
         }
@@ -192,8 +220,26 @@
           "radius": 0.033
         },
         "fill": {
-          "kind": "solid",
-          "color": "#fbfbfa"
+          "kind": "radial",
+          "center": {
+            "x": 0.42,
+            "y": 0.34
+          },
+          "radius": 0.78,
+          "stops": [
+            {
+              "at": 0,
+              "color": "#fdfdfc"
+            },
+            {
+              "at": 0.55,
+              "color": "#f4f2ef"
+            },
+            {
+              "at": 1,
+              "color": "#d3cfca"
+            }
+          ]
         },
         "effects": [
           {
