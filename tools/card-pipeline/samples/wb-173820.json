@@ -248,7 +248,7 @@
     "props": [
       {
         "value": "+5\n-25",
-        "icon": "thermometer-scale"
+        "icon": "thermometer"
       }
     ],
     "swatches": []
