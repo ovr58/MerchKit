@@ -64,6 +64,8 @@ export function validateLayout(layout: CardLayout): string[] {
     problems.push('в макете нет ни одного слоя')
   }
 
+  checkContrast(layout.layers, '', problems)
+
   walk(layout.layers, '', (layer, path) => {
     if (seenIds.has(layer.id)) {
       problems.push(`идентификатор слоя «${layer.id}» встречается дважды`)
@@ -173,6 +175,10 @@ function checkByType(layer: Layer, path: string, problems: string[]): void {
       problems.push(`${path}: прогон ждёт привязанное содержимое, а привязки у слоя нет`)
     }
     return
+  }
+
+  if (layer.type === 'asset' && layer.ink !== undefined && !HEX.test(layer.ink)) {
+    problems.push(`${path}: краска «${layer.ink}» записана не как #rrggbb`)
   }
 
   if (layer.type === 'group' && layer.children.length === 0) {
@@ -525,6 +531,64 @@ function imageFor(
   if (bind.kind === 'logo') return content.logo
   if (bind.kind === 'prop' && bind.part === 'icon') return content.props[bind.index].icon
   return undefined
+}
+
+/**
+ * Контраст иконки против плашки, на которой она лежит.
+ *
+ * Проверяется ровно там, где фон известен статически: иконка и фигура со сплошной заливкой
+ * внутри одной группы. Иконку поверх фотографии не проверит никто — чтобы узнать её фон,
+ * пришлось бы растеризовать кадр, — и делать вид, что проверка была, хуже, чем честно её не
+ * делать: читаемость там держится плашкой или скримом, и это решение макета.
+ *
+ * Порог 3:1 — норма WCAG для нетекстовой графики (1.4.11). Для текста он выше, но иконка —
+ * не текст, и требовать от неё 4.5:1 значило бы забраковать половину живых карточек.
+ */
+function checkContrast(layers: Layer[], prefix: string, problems: string[]): void {
+  for (const layer of layers) {
+    const path = prefix === '' ? layer.id : `${prefix} → ${layer.id}`
+    if (layer.type !== 'group') continue
+
+    // Фон иконки — ближайшая под ней сплошная заливка из той же группы.
+    const plates = layer.children.filter(
+      (child): child is Layer & { fill: { kind: 'solid'; color: string } } =>
+        child.type === 'shape' && child.fill?.kind === 'solid',
+    )
+
+    for (const child of layer.children) {
+      if (child.type !== 'asset' || child.ink === undefined || !HEX.test(child.ink)) continue
+
+      const under = plates.filter((plate) => plate.z < child.z).sort((a, b) => b.z - a.z)[0]
+      if (under === undefined) continue
+
+      const ratio = contrast(child.ink, under.fill.color)
+      if (ratio < 3) {
+        problems.push(
+          `${path} → ${child.id}: краска ${child.ink} на заливке ${under.fill.color} ` +
+            `даёт контраст ${ratio.toFixed(2)}:1, нужно 3:1`,
+        )
+      }
+    }
+
+    checkContrast(layer.children, path, problems)
+  }
+}
+
+/** Относительная яркость по WCAG: каналы линеаризуются, потом взвешиваются. */
+function luminance(hex: string): number {
+  const channels = [1, 3, 5].map((at) => {
+    const value = Number.parseInt(hex.slice(at, at + 2), 16) / 255
+    return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4
+  })
+
+  return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2]
+}
+
+function contrast(one: string, other: string): number {
+  const a = luminance(one)
+  const b = luminance(other)
+
+  return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)
 }
 
 function walk(layers: Layer[], prefix: string, visit: (layer: Layer, path: string) => void): void {
