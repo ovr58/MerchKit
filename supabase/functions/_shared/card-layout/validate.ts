@@ -35,6 +35,7 @@ import type {
   Effect,
   Layer,
   Paint,
+  TextLine,
 } from './types.ts'
 
 /** Насколько слою позволено вылезти за холст. Вылет за обрез — приём вёрстки (слово-подложка
@@ -74,6 +75,20 @@ export function validateLayout(layout: CardLayout): string[] {
     }
 
     checkBox(layer, path, problems)
+
+    if (layer.rotate !== undefined && (layer.rotate < -360 || layer.rotate > 360)) {
+      problems.push(`${path}: поворот ${layer.rotate}° вне диапазона −360…360`)
+    }
+
+    // Скругление — доля МЕНЬШЕЙ стороны, поэтому половина её и есть предел: дальше углы
+    // сходятся и прямоугольник вырождается.
+    if (
+      (layer.type === 'frame' || layer.type === 'cutout' || layer.type === 'asset') &&
+      layer.radius !== undefined &&
+      (layer.radius < 0 || layer.radius > 0.5)
+    ) {
+      problems.push(`${path}: скругление ${fmt(layer.radius)} вне диапазона 0…0.5`)
+    }
 
     if (layer.opacity !== undefined && (layer.opacity < 0 || layer.opacity > 1)) {
       problems.push(`${path}: прозрачность ${layer.opacity} вне диапазона 0…1`)
@@ -140,6 +155,22 @@ function checkByType(layer: Layer, path: string, problems: string[]): void {
     // Текст без привязки обязан нести строки сам, иначе слой пуст и рисовать нечего.
     if (layer.bind === undefined && (layer.lines === undefined || layer.lines.length === 0)) {
       problems.push(`${path}: у текста без привязки нет строк`)
+    }
+
+    // Гнездо — прогон без собственного текста, куда приходит привязанное содержимое. Их
+    // два на слой быть не может: содержимое одно, и раздвоить его нечем. Гнездо без
+    // привязки — пустое место в кадре, то есть ровно тот брак, ради которого прогоны и
+    // заводились.
+    const holes = (layer.lines ?? []).reduce(
+      (count, line) =>
+        typeof line === 'string' ? count : count + line.filter((run) => run.text === undefined).length,
+      0,
+    )
+    if (holes > 1) {
+      problems.push(`${path}: в строке больше одного прогона под привязанное содержимое`)
+    }
+    if (holes > 0 && layer.bind === undefined) {
+      problems.push(`${path}: прогон ждёт привязанное содержимое, а привязки у слоя нет`)
     }
     return
   }
@@ -251,6 +282,9 @@ function checkBinding(bind: Binding, path: string, problems: string[]): void {
 /** Слой, снятый правилом K-3, и причина — её показывает интерфейс до запуска генерации. */
 export type DroppedLayer = { id: string; reason: string }
 
+/** Прогон с уже подставленным текстом: у сборщика выбора «строка или прогоны» больше нет. */
+export type PlacedRun = { text: string; weight?: number; size?: number; color?: string }
+
 export type ResolvedLayout = {
   /** Плоский список: группы раскрыты, координаты детей пересчитаны в доли холста, порядок —
    *  по возрастанию z. Сборщику остаётся рисовать подряд. */
@@ -264,8 +298,8 @@ export type PlacedLayer = {
   /** Бокс в долях холста — у вложенных слоёв уже пересчитан из долей группы. */
   box: { x: number; y: number; w: number; h: number }
   z: number
-  /** Строки для `text` после подстановки содержимого. */
-  lines?: string[]
+  /** Строки для `text` после подстановки содержимого. Цельная строка — прогон один. */
+  lines?: PlacedRun[][]
   /** Картинка для `frame`, `cutout`, `asset` после подстановки. */
   image?: { dataUri: string; width: number; height: number }
   /** Цвет для образца-плашки, заданного цветом, а не картинкой. */
@@ -371,7 +405,7 @@ function fill(
 
   if (bind === undefined) {
     // Декоративный слой: содержимое записано в самом макете, снимать нечего.
-    return layer.type === 'text' ? { layer, box, z, lines: layer.lines ?? [] } : { layer, box, z }
+    return layer.type === 'text' ? { layer, box, z, lines: runsOf(layer.lines ?? [], []) } : { layer, box, z }
   }
 
   const missing = describeMissing(bind, content)
@@ -380,7 +414,7 @@ function fill(
   }
 
   if (layer.type === 'text') {
-    return { layer, box, z, lines: textFor(bind, content) }
+    return { layer, box, z, lines: runsOf(layer.lines, textFor(bind, content)) }
   }
 
   if (bind.kind === 'swatch') {
@@ -394,7 +428,9 @@ function fill(
 /** Чего не хватило. `null` — содержимое есть, слой рисуется. */
 function describeMissing(bind: Binding, content: CardContent): string | null {
   if (bind.kind === 'frame') {
-    return content.frame === undefined ? 'кадр вендора не передан' : null
+    const index = bind.index ?? 0
+    if (content.frames?.[index] !== undefined) return null
+    return index === 0 ? 'кадр вендора не передан' : `кадра №${index + 1} нет`
   }
 
   if (bind.kind === 'cutout') {
@@ -451,11 +487,34 @@ function textFor(bind: Binding, content: CardContent): string[] {
   return []
 }
 
+/**
+ * Приводит строки макета к прогонам и подставляет привязанное содержимое.
+ *
+ * Шаблон в `lines` задаёт форму фразы, а прогон без собственного `text` — гнездо, куда
+ * приходит привязанное значение. Гнездо и статические прогоны живут в одном слое, поэтому
+ * K-3 снимает их вместе: половина фразы над пустым местом больше не остаётся.
+ *
+ * Шаблона нет — привязанные строки кладутся как есть, по прогону на строку.
+ */
+function runsOf(template: TextLine[] | undefined, bound: string[]): PlacedRun[][] {
+  if (template === undefined || template.length === 0) {
+    return bound.map((line) => [{ text: line }])
+  }
+
+  const filling = bound.join(' ')
+
+  return template.map((line) =>
+    typeof line === 'string'
+      ? [{ text: line }]
+      : line.map((run) => ({ ...run, text: run.text ?? filling })),
+  )
+}
+
 function imageFor(
   bind: Binding,
   content: CardContent,
 ): { dataUri: string; width: number; height: number } | undefined {
-  if (bind.kind === 'frame') return content.frame
+  if (bind.kind === 'frame') return content.frames?.[bind.index ?? 0]
   if (bind.kind === 'cutout') return content.cutout
   if (bind.kind === 'logo') return content.logo
   if (bind.kind === 'prop' && bind.part === 'icon') return content.props[bind.index].icon

@@ -134,7 +134,7 @@ describe('K-3: отсутствующий ассет снимает свой с�
   it('без логотипа снимается только слой логотипа', () => {
     const resolved = resolveLayout(
       layout([frame, title, logo]),
-      content({ frame: IMAGE, texts: { title: ['КУРТКА'] } }),
+      content({ frames: [IMAGE], texts: { title: ['КУРТКА'] } }),
     )
 
     expect(resolved.layers.map((placed) => placed.layer.id)).toEqual(['frame', 'title'])
@@ -169,7 +169,7 @@ describe('K-3: отсутствующий ассет снимает свой с�
 
     const resolved = resolveLayout(
       layout([frame, module]),
-      content({ frame: IMAGE, props: [{ label: 'Пропитка' }] }),
+      content({ frames: [IMAGE], props: [{ label: 'Пропитка' }] }),
     )
 
     expect(resolved.layers.map((placed) => placed.layer.id)).toEqual(['frame', 'prop-0-label'])
@@ -188,7 +188,7 @@ describe('K-3: отсутствующий ассет снимает свой с�
 
     const resolved = resolveLayout(
       layout([frame, module]),
-      content({ frame: IMAGE, props: [{ label: 'Пропитка' }] }),
+      content({ frames: [IMAGE], props: [{ label: 'Пропитка' }] }),
     )
 
     expect(resolved.layers.map((placed) => placed.layer.id)).toEqual(['frame'])
@@ -287,5 +287,50 @@ describe('Раскрытие групп и z-порядок', () => {
     const resolved = resolveLayout(layout([back, front]), content())
 
     expect(resolved.layers.map((placed) => placed.layer.id)).toEqual(['front', 'back'])
+  })
+})
+
+/**
+ * Правила для слов, добавленных в язык 2026-08-31 по разбросу A6. Смысл тот же, что у всего
+ * словаря: чего сборщик не умеет — того нет в макете, и ловится это отказом валидатора до
+ * рендера, а не браком в кадре.
+ */
+describe('Поворот, скругление и прогоны — с границами', () => {
+  it('ловит поворот вне полного оборота', () => {
+    expect(validateLayout(layout([{ ...frame, rotate: 540 }]))).toContain(
+      'frame: поворот 540° вне диапазона −360…360',
+    )
+  })
+
+  it('принимает поворот внутри оборота', () => {
+    expect(validateLayout(layout([{ ...frame, rotate: -90 }, title]))).toEqual([])
+  })
+
+  it('ловит скругление больше половины стороны', () => {
+    expect(validateLayout(layout([{ ...frame, radius: 0.7 }]))).toContain(
+      'frame: скругление 0.700 вне диапазона 0…0.5',
+    )
+  })
+
+  it('ловит два гнезда под привязку в одном слое', () => {
+    const twice: Layer = { ...title, lines: [[{}, { text: ' и ' }, {}]] }
+
+    expect(validateLayout(layout([frame, twice]))).toContain(
+      'title: в строке больше одного прогона под привязанное содержимое',
+    )
+  })
+
+  it('ловит гнездо в слое без привязки', () => {
+    const orphan: Layer = { ...title, bind: undefined, lines: [[{}, { text: ' SIM' }]] }
+
+    expect(validateLayout(layout([frame, orphan]))).toContain(
+      'title: прогон ждёт привязанное содержимое, а привязки у слоя нет',
+    )
+  })
+
+  it('принимает гнездо со статическим хвостом при живой привязке', () => {
+    const dual: Layer = { ...title, lines: [[{}, { text: ' SIM', weight: 700 }]] }
+
+    expect(validateLayout(layout([frame, dual]))).toEqual([])
   })
 })

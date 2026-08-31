@@ -40,7 +40,7 @@ type Sample = {
   source: string
   layout: CardLayout
   /** Иконки в разборе названы именем из базы, а не содержимым: содержимое подставляется здесь. */
-  content: Omit<CardContent, 'frame' | 'cutout' | 'logo' | 'props'> & {
+  content: Omit<CardContent, 'frames' | 'cutout' | 'logo' | 'props'> & {
     props: { label?: string; value?: string; icon?: string }[]
   }
   notes: string[]
@@ -67,7 +67,7 @@ async function main(): Promise<void> {
     // Сборка ложится рядом с оригиналом — сравнивать глазами удобно только там.
     const stem = original.replace(/\.(png|jpe?g)$/i, '')
 
-    await emit(`${stem}.rebuilt.png`, sample.layout, { ...base, frame }, size)
+    await emit(`${stem}.rebuilt.png`, sample.layout, { ...base, frames: [frame] }, size)
     await emit(`${stem}.layers.png`, sample.layout, base, size)
 
     console.log(`  ← ${sample.source} (${size.width} × ${size.height})`)

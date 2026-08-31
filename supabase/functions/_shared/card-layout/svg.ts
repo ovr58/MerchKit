@@ -19,7 +19,7 @@
  */
 
 import { resolveLayout } from './validate.ts'
-import type { DroppedLayer, PlacedLayer } from './validate.ts'
+import type { DroppedLayer, PlacedLayer, PlacedRun } from './validate.ts'
 import type {
   CardContent,
   CardLayout,
@@ -93,6 +93,10 @@ function renderLayer(
       ? ''
       : `style="mix-blend-mode:${layer.blend}"`,
     filterOf(layer.effects, layer.id, size, defs),
+    // Поворот вокруг центра бокса, а не вокруг начала координат: иначе слой уезжает из кадра.
+    layer.rotate === undefined || layer.rotate === 0
+      ? ''
+      : `transform="rotate(${round(layer.rotate)} ${round(rect.x + rect.w / 2)} ${round(rect.y + rect.h / 2)})"`,
   ])
 
   const inner = drawByType(placed, rect, size, fonts, defs)
@@ -114,12 +118,26 @@ function drawByType(
       // Декоративная картинка без привязки — рисовать нечего; привязанную снял бы K-3.
       return ''
     }
-    return image(
+    const drawn = image(
       placed.image.dataUri,
       rect,
       layer.fit,
       layer.type === 'asset' ? undefined : layer.focus,
     )
+
+    if (layer.radius === undefined || layer.radius === 0) {
+      return drawn
+    }
+
+    // Радиус — доля меньшей стороны: одинаковое скругление на кадре любой пропорции.
+    const clipId = `r-${slug(layer.id)}-${defs.length}`
+    const rx = layer.radius * Math.min(rect.w, rect.h)
+    defs.push(
+      `<clipPath id="${clipId}"><rect x="${round(rect.x)}" y="${round(rect.y)}" ` +
+        `width="${round(rect.w)}" height="${round(rect.h)}" ` +
+        `rx="${round(rx)}" ry="${round(rx)}"/></clipPath>`,
+    )
+    return `<g clip-path="url(#${clipId})">${drawn}</g>`
   }
 
   if (layer.type === 'shape') {
@@ -217,7 +235,7 @@ function shape(
 }
 
 function text(
-  lines: string[],
+  lines: PlacedRun[][],
   style: TextStyle,
   rect: { x: number; y: number; w: number; h: number },
   size: { width: number; height: number },
@@ -254,15 +272,37 @@ function text(
     stroke,
   ])
 
+  const cased = (value: string): string =>
+    style.transform === 'upper' ? value.toLocaleUpperCase('ru-RU') : value
+
   return lines
-    .map((line, index) => {
-      const content = style.transform === 'upper' ? line.toLocaleUpperCase('ru-RU') : line
+    .map((runs, index) => {
       const baseline = top + index * lineBox + lineBox / 2 + fontSize * BASELINE_IN_LINE
-      return (
-        `<text x="${round(anchorX)}" y="${round(baseline)}" ${common}>${escapeXml(content)}</text>`
-      )
+      const open = `<text x="${round(anchorX)}" y="${round(baseline)}" ${common}>`
+
+      // Цельная строка остаётся одним <text> без вложений: прогоны появляются только там, где
+      // внутри фразы действительно меняется начертание.
+      const plain = runs.length === 1 && isPlain(runs[0])
+      const body = plain
+        ? escapeXml(cased(runs[0].text))
+        : runs.map((run) => `<tspan ${runAttrs(run, size)}>${escapeXml(cased(run.text))}</tspan>`).join('')
+
+      return `${open}${body}</text>`
     })
     .join('')
+}
+
+/** Прогон без собственных отличий рисуется стилем слоя — оборачивать его не во что. */
+function isPlain(run: PlacedRun): boolean {
+  return run.weight === undefined && run.size === undefined && run.color === undefined
+}
+
+function runAttrs(run: PlacedRun, size: { width: number; height: number }): string {
+  return attrs([
+    run.weight === undefined ? '' : `font-weight="${run.weight}"`,
+    run.size === undefined ? '' : `font-size="${round(run.size * size.height)}"`,
+    run.color === undefined ? '' : `fill="${run.color}"`,
+  ])
 }
 
 function paintOf(

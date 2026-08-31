@@ -130,7 +130,10 @@ export type Effect =
  * исполнимым правило K-3: сборщик знает, чего именно не хватило, и снимает ровно этот слой.
  */
 export type Binding =
-  | { kind: 'frame' }
+  /** Кадр вендора. Индекс не задан — первый: карточка с одним снимком пишется как раньше.
+   *  Индексы появились 2026-08-31 — на образце с детальным снимком товара второй кадр было
+   *  нечем адресовать, и в угол уезжала вся карточка целиком вместо детали. */
+  | { kind: 'frame'; index?: number }
   | { kind: 'cutout' }
   | { kind: 'logo' }
   | { kind: 'text'; slot: TextSlot }
@@ -138,6 +141,27 @@ export type Binding =
    *  нет характеристики → группа не рисуется. */
   | { kind: 'prop'; index: number; part?: 'label' | 'value' | 'icon' }
   | { kind: 'swatch'; index: number }
+
+/**
+ * Прогон внутри строки: кусок текста, отличающийся от стиля слоя начертанием, кеглем или
+ * цветом.
+ *
+ * **Заведён 2026-08-31 по разбросу A6.** Три образца из шести набирают одну фразу двумя
+ * начертаниями («Dual SIM», «СИЗ по ГОСТ», «16/1024 гб»). Раньше это приходилось разбивать на
+ * два слоя — привязанный и декоративный, — и получалась не косметическая, а ломающая ошибка:
+ * привязка снимала только свою половину, а статический хвост оставался висеть в кадре над
+ * пустым местом. Прогоны держат фразу одним слоем, поэтому K-3 уносит её целиком.
+ */
+export type TextRun = {
+  /** Не задан — в этот прогон подставляется содержимое привязки слоя. Такой прогон один. */
+  text?: string
+  weight?: number
+  size?: Fraction
+  color?: string
+}
+
+/** Строка макета: цельная или составленная из прогонов разного начертания. */
+export type TextLine = string | TextRun[]
 
 export type TextStyle = {
   role: FontRole
@@ -166,22 +190,42 @@ type LayerBase = {
   blend?: BlendMode
   effects?: Effect[]
   bind?: Binding
+  /**
+   * Поворот в градусах вокруг центра бокса; положительный — по часовой стрелке.
+   *
+   * **Заведён 2026-08-31 по разбросу A6.** Вертикальные надписи встретились на трёх образцах
+   * из шести (название смартфона в узкой колонке, водяной знак по краю кадра, стрелка-указатель).
+   * Без поворота разбор был вынужден класть их горизонтально, и на смартфоне это разрывало
+   * колонку — сборка выходила не неточной, а неверной.
+   */
+  rotate?: number
 }
 
+/**
+ * Скругление углов слоя-картинки долей МЕНЬШЕЙ стороны бокса: круг из квадрата получается при
+ * 0.5, и та же запись даёт одинаковый радиус на кадре любой пропорции.
+ *
+ * **Заведено 2026-08-31 по разбросу A6.** Скруглённые углы нашлись на трёх образцах из шести
+ * (голубая рамка шин, подложка смартфона, фотовставка в бейдже обуви). У `shape` радиус был
+ * с самого начала, у слоёв с картинкой — нет, и на шинах это оказалось единственным видимым
+ * расхождением с оригиналом.
+ */
+type Rounded = { radius?: Fraction }
+
 /** Кадр вендора целиком. */
-export type FrameLayer = LayerBase & { type: 'frame'; fit: FitMode; focus?: Focus }
+export type FrameLayer = LayerBase & Rounded & { type: 'frame'; fit: FitMode; focus?: Focus }
 
 /** Вырез товара из того же кадра (K-2): нужен, только когда текст должен уходить за товар. */
-export type CutoutLayer = LayerBase & { type: 'cutout'; fit: FitMode; focus?: Focus }
+export type CutoutLayer = LayerBase & Rounded & { type: 'cutout'; fit: FitMode; focus?: Focus }
 
 export type ShapeLayer = LayerBase & { type: 'shape'; shape: ShapeForm; fill?: Paint }
 
 /** Картинка из базы: логотип, иконка, образец цвета. */
-export type AssetLayer = LayerBase & { type: 'asset'; fit: FitMode }
+export type AssetLayer = LayerBase & Rounded & { type: 'asset'; fit: FitMode }
 
 /** Разбиение на строки задаётся макетом, а не подбирается сборщиком: перенос — решение
  *  вёрстки («КУРТКА» и «МУЖСКАЯ» — две строки разного кегля, а не одна фраза). */
-export type TextLayer = LayerBase & { type: 'text'; style: TextStyle; lines?: string[] }
+export type TextLayer = LayerBase & { type: 'text'; style: TextStyle; lines?: TextLine[] }
 
 /** Модуль: иконка + подпись + плашка, которые появляются и исчезают вместе. */
 export type GroupLayer = LayerBase & { type: 'group'; children: Layer[] }
@@ -218,7 +262,8 @@ export type CardProp = { label?: string; value?: string; icon?: ImageRef }
 
 /** Чем наполняется макет на конкретной сборке. */
 export type CardContent = {
-  frame?: ImageRef
+  /** Кадры вендора по порядку: первый — основная сцена, дальше детальные снимки. */
+  frames?: ImageRef[]
   cutout?: ImageRef
   logo?: ImageRef
   texts: Partial<Record<TextSlot, string[]>>
