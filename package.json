@@ -20,9 +20,11 @@
     "test:ui": "node e2e/us01.mjs",
     "bench": "node bench/run.mjs",
     "cards:roundtrip": "node --experimental-strip-types tools/card-pipeline/roundtrip.mts",
+    "cards:parse": "node --env-file=.env --experimental-strip-types tools/card-pipeline/parse.mts",
     "cards:assets": "node --experimental-strip-types tools/card-pipeline/assets.mts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.122.0",
     "@supabase/supabase-js": "^2.58.0",
     "@tanstack/react-query": "^5.102.7",
     "class-variance-authority": "^0.7.1",
