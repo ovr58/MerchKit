@@ -1,0 +1,527 @@
+{
+  "source": "bench/samples/wb-starter/Обувь/Мужская/Рабочая обувь/Снимок экрана 2026-08-31 175307.jpg",
+  "layout": {
+    "id": "work-sneakers-siz",
+    "title": "Рабочая обувь: жёлтая плашка-надзаголовок и крупный белый заголовок сверху, модули-преимущества слева, бейдж сертификации справа, плашка размеров и слоган снизу",
+    "canvas": {
+      "aspectW": 631,
+      "aspectH": 830,
+      "background": {
+        "kind": "solid",
+        "color": "#e2e0dc"
+      }
+    },
+    "layers": [
+      {
+        "id": "frame",
+        "type": "frame",
+        "z": 0,
+        "box": {
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1
+        },
+        "fit": "cover",
+        "focus": {
+          "x": 0.5,
+          "y": 0.62
+        },
+        "bind": {
+          "kind": "frame"
+        }
+      },
+      {
+        "id": "kicker",
+        "type": "group",
+        "z": 20,
+        "box": {
+          "x": 0.266,
+          "y": 0.021,
+          "w": 0.468,
+          "h": 0.073
+        },
+        "children": [
+          {
+            "id": "kicker-plate",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0,
+              "y": 0,
+              "w": 1,
+              "h": 1
+            },
+            "shape": {
+              "form": "rect",
+              "radius": 0.03
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#f7c600"
+            }
+          },
+          {
+            "id": "kicker-text",
+            "type": "text",
+            "z": 2,
+            "box": {
+              "x": 0.04,
+              "y": 0,
+              "w": 0.92,
+              "h": 1
+            },
+            "bind": {
+              "kind": "text",
+              "slot": "kicker"
+            },
+            "style": {
+              "role": "display",
+              "size": 0.048,
+              "weight": 900,
+              "color": "#141414",
+              "align": "center",
+              "valign": "middle",
+              "lineHeight": 1,
+              "transform": "upper"
+            }
+          }
+        ]
+      },
+      {
+        "id": "title",
+        "type": "text",
+        "z": 30,
+        "box": {
+          "x": 0.05,
+          "y": 0.099,
+          "w": 0.9,
+          "h": 0.105
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "title"
+        },
+        "style": {
+          "role": "display",
+          "size": 0.092,
+          "weight": 900,
+          "color": "#ffffff",
+          "align": "center",
+          "valign": "middle",
+          "lineHeight": 1,
+          "transform": "upper"
+        }
+      },
+      {
+        "id": "cert",
+        "type": "group",
+        "z": 40,
+        "box": {
+          "x": 0.552,
+          "y": 0.243,
+          "w": 0.253,
+          "h": 0.135
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 2
+        },
+        "children": [
+          {
+            "id": "cert-plate",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0,
+              "y": 0,
+              "w": 1,
+              "h": 0.78
+            },
+            "shape": {
+              "form": "rect",
+              "radius": 0.07
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#f7c600"
+            }
+          },
+          {
+            "id": "cert-label",
+            "type": "text",
+            "z": 2,
+            "box": {
+              "x": 0.06,
+              "y": 0.04,
+              "w": 0.88,
+              "h": 0.7
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 2,
+              "part": "label"
+            },
+            "style": {
+              "role": "display",
+              "size": 0.038,
+              "weight": 900,
+              "color": "#141414",
+              "align": "center",
+              "valign": "middle",
+              "lineHeight": 1.05,
+              "transform": "upper"
+            }
+          },
+          {
+            "id": "cert-value",
+            "type": "text",
+            "z": 3,
+            "box": {
+              "x": 0,
+              "y": 0.8,
+              "w": 1,
+              "h": 0.2
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 2,
+              "part": "value"
+            },
+            "style": {
+              "role": "label",
+              "size": 0.011,
+              "weight": 700,
+              "color": "#1a1a1a",
+              "align": "center",
+              "valign": "middle",
+              "lineHeight": 1,
+              "transform": "upper",
+              "tracking": 0.02
+            }
+          }
+        ]
+      },
+      {
+        "id": "cert-photo",
+        "type": "asset",
+        "z": 50,
+        "box": {
+          "x": 0.777,
+          "y": 0.19,
+          "w": 0.213,
+          "h": 0.175
+        },
+        "fit": "cover",
+        "bind": {
+          "kind": "prop",
+          "index": 2,
+          "part": "icon"
+        }
+      },
+      {
+        "id": "feature-0",
+        "type": "group",
+        "z": 60,
+        "box": {
+          "x": 0.055,
+          "y": 0.425,
+          "w": 0.4,
+          "h": 0.075
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 0
+        },
+        "children": [
+          {
+            "id": "feature-0-plate",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0,
+              "y": 0,
+              "w": 0.2,
+              "h": 1
+            },
+            "shape": {
+              "form": "rect",
+              "radius": 0.05
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#f7c600"
+            }
+          },
+          {
+            "id": "feature-0-icon",
+            "type": "asset",
+            "z": 2,
+            "box": {
+              "x": 0.02,
+              "y": 0.1,
+              "w": 0.16,
+              "h": 0.8
+            },
+            "fit": "contain",
+            "bind": {
+              "kind": "prop",
+              "index": 0,
+              "part": "icon"
+            }
+          },
+          {
+            "id": "feature-0-label",
+            "type": "text",
+            "z": 3,
+            "box": {
+              "x": 0.24,
+              "y": 0,
+              "w": 0.76,
+              "h": 1
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 0,
+              "part": "label"
+            },
+            "style": {
+              "role": "heading",
+              "size": 0.024,
+              "weight": 700,
+              "color": "#141414",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1.1
+            }
+          }
+        ]
+      },
+      {
+        "id": "feature-1",
+        "type": "group",
+        "z": 70,
+        "box": {
+          "x": 0.055,
+          "y": 0.508,
+          "w": 0.38,
+          "h": 0.075
+        },
+        "bind": {
+          "kind": "prop",
+          "index": 1
+        },
+        "children": [
+          {
+            "id": "feature-1-plate",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0,
+              "y": 0,
+              "w": 0.21,
+              "h": 1
+            },
+            "shape": {
+              "form": "rect",
+              "radius": 0.05
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#f7c600"
+            }
+          },
+          {
+            "id": "feature-1-icon",
+            "type": "asset",
+            "z": 2,
+            "box": {
+              "x": 0.02,
+              "y": 0.1,
+              "w": 0.17,
+              "h": 0.8
+            },
+            "fit": "contain",
+            "bind": {
+              "kind": "prop",
+              "index": 1,
+              "part": "icon"
+            }
+          },
+          {
+            "id": "feature-1-label",
+            "type": "text",
+            "z": 3,
+            "box": {
+              "x": 0.25,
+              "y": 0,
+              "w": 0.75,
+              "h": 1
+            },
+            "bind": {
+              "kind": "prop",
+              "index": 1,
+              "part": "label"
+            },
+            "style": {
+              "role": "heading",
+              "size": 0.024,
+              "weight": 700,
+              "color": "#141414",
+              "align": "left",
+              "valign": "middle",
+              "lineHeight": 1.1
+            }
+          }
+        ]
+      },
+      {
+        "id": "sizes",
+        "type": "group",
+        "z": 80,
+        "box": {
+          "x": 0.735,
+          "y": 0.787,
+          "w": 0.255,
+          "h": 0.094
+        },
+        "children": [
+          {
+            "id": "sizes-plate",
+            "type": "shape",
+            "z": 1,
+            "box": {
+              "x": 0,
+              "y": 0,
+              "w": 1,
+              "h": 1
+            },
+            "shape": {
+              "form": "rect",
+              "radius": 0.08
+            },
+            "fill": {
+              "kind": "solid",
+              "color": "#f7c600"
+            }
+          },
+          {
+            "id": "sizes-caption",
+            "type": "text",
+            "z": 2,
+            "box": {
+              "x": 0.05,
+              "y": 0.1,
+              "w": 0.9,
+              "h": 0.32
+            },
+            "lines": [
+              "Размеры"
+            ],
+            "style": {
+              "role": "heading",
+              "size": 0.021,
+              "weight": 700,
+              "color": "#141414",
+              "align": "center",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          },
+          {
+            "id": "sizes-value",
+            "type": "text",
+            "z": 3,
+            "box": {
+              "x": 0.05,
+              "y": 0.42,
+              "w": 0.9,
+              "h": 0.5
+            },
+            "bind": {
+              "kind": "text",
+              "slot": "sizes"
+            },
+            "style": {
+              "role": "display",
+              "size": 0.042,
+              "weight": 900,
+              "color": "#141414",
+              "align": "center",
+              "valign": "middle",
+              "lineHeight": 1
+            }
+          }
+        ]
+      },
+      {
+        "id": "subtitle",
+        "type": "text",
+        "z": 90,
+        "box": {
+          "x": 0.12,
+          "y": 0.893,
+          "w": 0.76,
+          "h": 0.095
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "subtitle"
+        },
+        "style": {
+          "role": "display",
+          "size": 0.039,
+          "weight": 900,
+          "color": "#ffffff",
+          "align": "center",
+          "valign": "middle",
+          "lineHeight": 1.1,
+          "transform": "upper"
+        }
+      }
+    ]
+  },
+  "content": {
+    "texts": {
+      "kicker": [
+        "Рабочие"
+      ],
+      "title": [
+        "Кроссовки"
+      ],
+      "subtitle": [
+        "Облегченная",
+        "модель"
+      ],
+      "sizes": [
+        "40-47"
+      ]
+    },
+    "props": [
+      {
+        "label": "Антипрокольная\nподошва",
+        "icon": "sole-anti-puncture"
+      },
+      {
+        "label": "Ударопрочный\nподносок",
+        "icon": "toe-cap-impact"
+      },
+      {
+        "label": "СИЗ\nпо ГОСТ",
+        "value": "Сертификат ТР ТС 019/2011",
+        "icon": "worker-in-helmet"
+      }
+    ],
+    "swatches": []
+  },
+  "notes": [
+    "В образце нет логотипа бренда — слоя `logo` в макете тоже нет; при наличии логотипа его пришлось бы добавлять отдельным слоем.",
+    "По левому краю кадра идёт вертикальная надпись-водяной знак «Интеллектуальная собственность ИП ... Все права защищены». Язык не выражает поворот текста, слоя для неё нет; в нашей сборке такой знак либо не нужен, либо должен ставиться отдельным механизмом.",
+    "В бейдже сертификации набор смешанный по кеглю: «СИЗ» крупно, «по» мелко, «ГОСТ» средне — одним текстовым слоем это записывается только приближённо (две строки одного стиля, `label` = «СИЗ\\nпо ГОСТ»). Точное воспроизведение потребовало бы отдельных слоёв на каждое слово или встроенных изменений кегля внутри строки, чего в языке нет.",
+    "Фотография рабочего в жёлтой каске — не иконка, а фотовставка со скруглёнными углами и «выездом» за жёлтую плашку. Привязана как `prop[2].icon`, чтобы уходить вместе с модулем сертификации; скругление углов у `asset` язык не выражает, ассет придётся заготавливать уже с прозрачными углами. Имя в базе: `worker-in-helmet` (заявка на пополнение).",
+    "Иконки преимуществ отсутствуют в базе, нужны новые: `sole-anti-puncture` (подошва с гвоздями) и `toe-cap-impact` (защитный подносок в разрезе). Обе — чёрный контурный рисунок на жёлтой плашке.",
+    "Белое перо у нижнего правого угла (метафора лёгкости) отнесено к кадру вендора: отдельного ассета-пера в базе нет, и как элемент макета оно не воспроизводится.",
+    "Крупный белый заголовок и нижний слоган на образце лежат прямо на фото без подложки и читаются за счёт тёмных участков кадра; тени/обводки у них не различимы, поэтому эффектов не задано. Если фон окажется светлым, потребуется добавить градиентную подложку — в текущем макете её нет.",
+    "Композиция сцены (кроссовок по центру, техника и стройплощадка на фоне) взята из кадра целиком, вырез (`cutout`) не нужен: текст нигде не уходит за товар."
+  ]
+}
