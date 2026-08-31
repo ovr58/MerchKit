@@ -21,17 +21,23 @@
 import { readdir, readFile, writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 
-import { icon, png, render } from './render.mts'
+import { icon, image, render } from './render.mts'
 import type {
   CardContent,
   CardLayout,
 } from '../../supabase/functions/_shared/card-layout/types.ts'
 
 const SAMPLES = fileURLToPath(new URL('samples/', import.meta.url))
-const ORIGINALS = fileURLToPath(new URL('../../docs/assets/cardsforsysprompt/', import.meta.url))
+const ROOT = fileURLToPath(new URL('../../', import.meta.url))
 
 /** Разбор образца в том виде, в каком его будет отдавать vision-модель на шаге A4. */
 type Sample = {
+  /**
+   * Путь к оригиналу от корня репозитория. Явная ссылка, а не угадывание по имени: набор A6
+   * лежит вложенными папками с русскими названиями, и связывать разбор с кадром порядком
+   * файлов, как было на трёх образцах A3, дальше нечем.
+   */
+  source: string
   layout: CardLayout
   /** Иконки в разборе названы именем из базы, а не содержимым: содержимое подставляется здесь. */
   content: Omit<CardContent, 'frame' | 'cutout' | 'logo' | 'props'> & {
@@ -42,16 +48,11 @@ type Sample = {
 
 async function main(): Promise<void> {
   const files = (await readdir(SAMPLES)).filter((name) => name.endsWith('.json')).sort()
-  // Прогон кладёт результат в ту же папку, поэтому свои же файлы из списка исключаем —
-  // иначе следующий прогон разберёт собственную сборку как образец.
-  const originals = (await readdir(ORIGINALS)).filter(
-    (name) => name.endsWith('.png') && !/\.(rebuilt|layers)\.png$/.test(name),
-  )
 
   for (const file of files) {
     const sample = JSON.parse(await readFile(`${SAMPLES}${file}`, 'utf8')) as Sample
-    const original = matchOriginal(originals, file)
-    const frame = await png(`${ORIGINALS}${original}`)
+    const original = `${ROOT}${sample.source}`
+    const frame = await image(original)
     const size = { width: frame.width, height: frame.height }
 
     const props = await Promise.all(
@@ -63,12 +64,13 @@ async function main(): Promise<void> {
     )
 
     const base: CardContent = { ...sample.content, props }
-    const stem = original.replace(/\.png$/, '')
+    // Сборка ложится рядом с оригиналом — сравнивать глазами удобно только там.
+    const stem = original.replace(/\.(png|jpe?g)$/i, '')
 
-    await emit(`${ORIGINALS}${stem}.rebuilt.png`, sample.layout, { ...base, frame }, size)
-    await emit(`${ORIGINALS}${stem}.layers.png`, sample.layout, base, size)
+    await emit(`${stem}.rebuilt.png`, sample.layout, { ...base, frame }, size)
+    await emit(`${stem}.layers.png`, sample.layout, base, size)
 
-    console.log(`  ← ${original} (${size.width} × ${size.height})`)
+    console.log(`  ← ${sample.source} (${size.width} × ${size.height})`)
     for (const note of sample.notes) {
       console.log(`    примечание: ${note}`)
     }
@@ -89,23 +91,6 @@ async function emit(
   for (const drop of dropped) {
     console.log(`    K-3 снял слой ${drop}`)
   }
-}
-
-/** Файлы образцов названы по-русски, разборы — по-английски; связь держим по порядку разбора. */
-function matchOriginal(originals: string[], sampleFile: string): string {
-  const order: Record<string, string> = {
-    'dress-summer.json': 'женской одежды',
-    'jacket-outventure.json': 'верхней одежды',
-    'tshirt-marrengo.json': 'пример карточки одежды',
-  }
-  const needle = order[sampleFile]
-  const found = originals.find((name) => name.includes(needle))
-
-  if (found === undefined) {
-    throw new Error(`для разбора ${sampleFile} нет оригинала (искали «${needle}»)`)
-  }
-
-  return found
 }
 
 await main()

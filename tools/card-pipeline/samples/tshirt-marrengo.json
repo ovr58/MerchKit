@@ -1,4 +1,5 @@
 {
+  "source": "docs/assets/cardsforsysprompt/пример карточки одежды.png",
   "layout": {
     "id": "tshirt-marrengo",
     "title": "Одежда: светлый фон, слово-подложка, строка навигации, вырез товара поверх текста",

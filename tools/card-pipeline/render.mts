@@ -62,13 +62,44 @@ export async function icon(name: string): Promise<ImageRef | undefined> {
   }
 }
 
-export async function png(path: string): Promise<ImageRef> {
+/**
+ * Кадр-оригинал образца. PNG и JPEG, потому что набор A6 приехал скриншотами `.jpg`, а
+ * образцы гейта A3 — `.png`. Размер берётся из самого файла: у PNG он лежит в IHDR по
+ * фиксированному смещению, у JPEG — в маркере SOF, который приходится искать. Раньше здесь
+ * читался только IHDR, и JPEG молча давал размер холста из случайных байт.
+ */
+export async function image(path: string): Promise<ImageRef> {
   const bytes = await readFile(path)
+  const jpeg = /\.jpe?g$/i.test(path)
+
   return {
-    dataUri: `data:image/png;base64,${bytes.toString('base64')}`,
-    width: bytes.readUInt32BE(16),
-    height: bytes.readUInt32BE(20),
+    dataUri: `data:image/${jpeg ? 'jpeg' : 'png'};base64,${bytes.toString('base64')}`,
+    ...(jpeg ? jpegSize(bytes) : { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) }),
   }
+}
+
+/** Размер JPEG — из первого маркера SOF; сегменты до него пропускаются по длине. */
+function jpegSize(bytes: Buffer): { width: number; height: number } {
+  // SOF0…SOF15 несут размер; SOF4 (0xC4), SOF8 (0xCC) и рестарт-маркеры — не несут.
+  const SOF = new Set([0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf])
+
+  for (let i = 2; i + 9 < bytes.length; ) {
+    if (bytes[i] !== 0xff) {
+      i += 1
+      continue
+    }
+
+    const marker = bytes[i + 1]
+    if (SOF.has(marker)) return { height: bytes.readUInt16BE(i + 5), width: bytes.readUInt16BE(i + 7) }
+    if (marker === 0xd8 || marker === 0xd9 || (marker >= 0xd0 && marker <= 0xd7)) {
+      i += 2
+      continue
+    }
+
+    i += 2 + bytes.readUInt16BE(i + 2)
+  }
+
+  throw new Error('в JPEG нет маркера SOF — размер кадра взять неоткуда')
 }
 
 export type RenderResult = { bytes: Uint8Array; dropped: string[] }
