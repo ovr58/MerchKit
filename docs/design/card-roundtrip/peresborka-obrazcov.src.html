@@ -1,0 +1,421 @@
+<title>Пересборка трёх образцов</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;700&family=Golos+Text:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+
+<style>
+  :root {
+    --ground: #f4f6f5;
+    --surface: #ffffff;
+    --sunk: #eaeeec;
+    --ink: #151e1c;
+    --muted: #5c6a67;
+    --faint: #8a9793;
+    --line: #d9e0dd;
+    --accent: #0f6e64;
+    --accent-soft: #dfeeea;
+    --warn: #9a5b12;
+    --warn-soft: #f6ebdb;
+    --shadow: 0 1px 2px rgba(21, 30, 28, .06), 0 8px 24px rgba(21, 30, 28, .05);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0e1413;
+      --surface: #161e1c;
+      --sunk: #111917;
+      --ink: #e7edeb;
+      --muted: #97a5a1;
+      --faint: #6f7c79;
+      --line: #26312e;
+      --accent: #5ac4b3;
+      --accent-soft: #16302c;
+      --warn: #d9a163;
+      --warn-soft: #2c2317;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 10px 28px rgba(0, 0, 0, .3);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0e1413;
+    --surface: #161e1c;
+    --sunk: #111917;
+    --ink: #e7edeb;
+    --muted: #97a5a1;
+    --faint: #6f7c79;
+    --line: #26312e;
+    --accent: #5ac4b3;
+    --accent-soft: #16302c;
+    --warn: #d9a163;
+    --warn-soft: #2c2317;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 10px 28px rgba(0, 0, 0, .3);
+  }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: 'Golos Text', 'Segoe UI', system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 56px 24px 96px;
+    display: flex;
+    flex-direction: column;
+    gap: 56px;
+  }
+
+  h1, h2, h3 {
+    font-family: Bitter, Georgia, serif;
+    font-weight: 700;
+    text-wrap: balance;
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  h1 { font-size: clamp(30px, 4.4vw, 44px); letter-spacing: -.01em; }
+  h2 { font-size: clamp(21px, 2.6vw, 26px); }
+  h3 { font-size: 17px; font-weight: 500; }
+
+  p { margin: 0; max-width: 68ch; }
+
+  .eyebrow {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  /* ── шапка ─────────────────────────────────────────────── */
+  header { display: flex; flex-direction: column; gap: 16px; }
+  header p.lede { font-size: 18px; color: var(--muted); max-width: 60ch; }
+
+  .verdict {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    gap: 0;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .verdict > div { padding: 24px 26px; display: flex; flex-direction: column; gap: 10px; }
+  .verdict > div + div { border-left: 1px solid var(--line); background: var(--sunk); }
+  .verdict strong { font-family: Bitter, Georgia, serif; font-size: 19px; font-weight: 700; }
+  .verdict p { font-size: 15px; color: var(--muted); }
+
+  @media (max-width: 720px) {
+    .verdict { grid-template-columns: 1fr; }
+    .verdict > div + div { border-left: 0; border-top: 1px solid var(--line); }
+  }
+
+  /* ── образцы ───────────────────────────────────────────── */
+  .sample {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding-top: 32px;
+    border-top: 2px solid var(--ink);
+  }
+
+  .sample-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px 20px; }
+  .sample-head h2 { flex: 1 1 auto; }
+
+  .stats {
+    display: flex;
+    gap: 18px;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 12.5px;
+    color: var(--faint);
+    font-variant-numeric: tabular-nums;
+  }
+  .stats b { color: var(--ink); font-weight: 600; }
+
+  .shots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+  @media (max-width: 860px) { .shots { grid-template-columns: 1fr; max-width: 380px; } }
+
+  figure { margin: 0; display: flex; flex-direction: column; gap: 10px; }
+  figure img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    background: var(--sunk);
+  }
+  figcaption { font-size: 13.5px; color: var(--muted); }
+  figcaption b {
+    display: block;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink);
+    margin-bottom: 3px;
+  }
+
+  .notes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 28px; }
+  @media (max-width: 720px) { .notes { grid-template-columns: 1fr; } }
+
+  .notes div { display: flex; gap: 10px; font-size: 14.5px; color: var(--muted); }
+  .notes div::before {
+    content: "";
+    flex: none;
+    width: 3px;
+    margin-top: 7px;
+    height: 1.05em;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+  .notes div.drop::before { background: var(--warn); }
+  .notes b { color: var(--ink); font-weight: 600; }
+
+  /* ── таблица снятых слоёв ──────────────────────────────── */
+  section.block { display: flex; flex-direction: column; gap: 16px; }
+
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+  th, td { text-align: left; padding: 11px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  th {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 11.5px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--faint); background: var(--sunk);
+  }
+  td code {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 13px; color: var(--accent);
+  }
+
+  .pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+  @media (max-width: 720px) { .pair { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 22px 24px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .card.warn { background: var(--warn-soft); border-color: transparent; }
+  .card ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 7px; }
+  .card li { font-size: 14.5px; color: var(--muted); }
+  .card li b { color: var(--ink); font-weight: 600; }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding-top: 20px;
+    font-size: 13.5px;
+    color: var(--faint);
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  footer code { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 12.5px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Веха M7 · шаг A3 · гейт фазы A</span>
+    <h1>Пересборка трёх образцов</h1>
+    <p class="lede">
+      Три чужие карточки разобраны на слои, записаны как данные и собраны заново нашим
+      сборщиком. Вопрос к вам один: композиция узнаётся? Да — начинается отбор 21 образца.
+      Нет — язык макета переделывается, и дальше веха не идёт.
+    </p>
+    <div class="verdict">
+      <div>
+        <span class="eyebrow">Что показал прогон</span>
+        <strong>Все три композиции выражены без единого нового слова в словаре</strong>
+        <p>
+          Язык, написанный до разбора, принял и стопку плашек поверх фото, и тёмную колонку с
+          рукописным заголовком, и светлый макет со словом-подложкой навылет за обрез. Ни один
+          образец не потребовал нового типа слоя или эффекта.
+        </p>
+      </div>
+      <div>
+        <span class="eyebrow">Решение за вами</span>
+        <strong>Отбор образцов не начат</strong>
+        <p>
+          Шаг требует доложить и остановиться. 21 образец «категория × площадка» ждёт вашего
+          подтверждения — переделка языка после набора обесценила бы весь набор.
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <div class="sample">
+    <div class="sample-head">
+      <h2>Верхняя одежда: заголовок слева, стопка плашек поверх фото</h2>
+      <div class="stats"><span>667 × 890</span><span><b>17</b> слоёв</span><span><b>3</b> модуля</span></div>
+    </div>
+    <div class="shots">
+      <figure>
+        <img src="__IMG_JACKET_ORIG__" alt="Оригинальная карточка куртки">
+        <figcaption><b>Оригинал</b>Образец, присланный 2026-08-29.</figcaption>
+      </figure>
+      <figure>
+        <img src="__IMG_JACKET_REBUILT__" alt="Наши слои поверх оригинала">
+        <figcaption><b>Пересборка поверх</b>Оригинал служит кадром вендора: промах в разборе виден как двоение.</figcaption>
+      </figure>
+      <figure>
+        <img src="__IMG_JACKET_LAYERS__" alt="Слои без кадра">
+        <figcaption><b>Только слои</b>Тот же стек без кадра — видно, что в разборе есть.</figcaption>
+      </figure>
+    </div>
+    <div class="notes">
+      <div><span><b>Модуль как единица.</b> Иконка, кружок и подпись живут группой и появляются вместе с характеристикой.</span></div>
+      <div><span><b>Полупрозрачные плашки с тенью</b> ложатся на рукав — тот самый приём, ради которого затевался конвейер.</span></div>
+      <div><span><b>Перенос внутри значения</b> задаёт тот, кто пишет характеристику: «до» и «+5 °C» — две строки, а не одна фраза.</span></div>
+      <div class="drop"><span><b>Логотип снят правилом K-3.</b> Бренд принадлежит продавцу, в базу не заводится — композиция держится без него.</span></div>
+    </div>
+  </div>
+
+  <div class="sample">
+    <div class="sample-head">
+      <h2>Женская одежда: тёмная колонка, карточка размеров, нумерованные выгоды</h2>
+      <div class="stats"><span>665 × 892</span><span><b>18</b> слоёв</span><span><b>2</b> модуля</span></div>
+    </div>
+    <div class="shots">
+      <figure>
+        <img src="__IMG_DRESS_ORIG__" alt="Оригинальная карточка платья">
+        <figcaption><b>Оригинал</b>Образец, присланный 2026-08-29.</figcaption>
+      </figure>
+      <figure>
+        <img src="__IMG_DRESS_REBUILT__" alt="Наши слои поверх оригинала">
+        <figcaption><b>Пересборка поверх</b>Колонка кроет исходный текст целиком, поэтому сравнение здесь чистое.</figcaption>
+      </figure>
+      <figure>
+        <img src="__IMG_DRESS_LAYERS__" alt="Слои без кадра">
+        <figcaption><b>Только слои</b>Тот же стек без кадра.</figcaption>
+      </figure>
+    </div>
+    <div class="notes">
+      <div><span><b>Градиентная колонка</b> — не украшение: без неё белый заголовок на светлой улице нечитаем.</span></div>
+      <div><span><b>Роль шрифта, а не гарнитура.</b> «летнее» набрано ролью «акцент»; какой файл её обслуживает, решает база шрифтов.</span></div>
+      <div><span><b>Образец цвета и образец принта — один слой.</b> В круг кладётся либо цвет, либо картинка.</span></div>
+      <div><span><b>Карточка размеров</b> собрана из плашки, разделителя и одного текста в две строки — разделитель не часть текста.</span></div>
+    </div>
+  </div>
+
+  <div class="sample">
+    <div class="sample-head">
+      <h2>Одежда: светлый фон, слово-подложка, товар поверх вёрстки</h2>
+      <div class="stats"><span>675 × 887</span><span><b>21</b> слой</span><span><b>2</b> модуля</span></div>
+    </div>
+    <div class="shots">
+      <figure>
+        <img src="__IMG_TSHIRT_ORIG__" alt="Оригинальная карточка футболки">
+        <figcaption><b>Оригинал</b>Образец, присланный 2026-08-29.</figcaption>
+      </figure>
+      <figure>
+        <img src="__IMG_TSHIRT_REBUILT__" alt="Наши слои поверх оригинала">
+        <figcaption><b>Пересборка поверх</b>Абзац описания лежит открытым: вырез товара ещё не делается.</figcaption>
+      </figure>
+      <figure>
+        <img src="__IMG_TSHIRT_LAYERS__" alt="Слои без кадра">
+        <figcaption><b>Только слои</b>Весь дизайн без модели — фон, подложка, навигация, вёрстка.</figcaption>
+      </figure>
+    </div>
+    <div class="notes">
+      <div><span><b>Порядок слоёв переменный, и это видно.</b> В оригинале волосы модели перекрывают строку навигации — товар лежит поверх плашки, а не под ней.</span></div>
+      <div><span><b>Вылет за обрез.</b> Слово «OVERSIZE» шире холста, и язык это допускает: доли могут выходить за единицу.</span></div>
+      <div><span><b>Фон холста — градиент</b>, а не кадр вендора: этот макет вообще не требует фотографии на всю площадь.</span></div>
+      <div class="drop"><span><b>Вырез товара снят правилом K-3.</b> Раннер выбирается на шаге B4 — и на сборке ровно видно, зачем этот слой нужен.</span></div>
+    </div>
+  </div>
+
+  <section class="block">
+    <h2>Что гейт доказывает, а что нет</h2>
+    <div class="pair">
+      <div class="card">
+        <h3>Доказано прогоном</h3>
+        <ul>
+          <li>Язык выразил <b>три разные композиции</b> без расширения словаря — 6 типов слоёв, 2 эффекта, 5 ролей шрифта.</li>
+          <li>Геометрия <b>в долях холста</b> работает: макет не знает пикселей, размер приходит из профиля площадки.</li>
+          <li><b>Отсутствующий ассет снимает свой слой</b>, а не роняет макет — сработало трижды, на трёх разных видах ассета.</li>
+          <li>Сборка <b>детерминирована</b>: тот же макет и то же содержимое дают тот же файл.</li>
+        </ul>
+      </div>
+      <div class="card warn">
+        <h3>Не доказано и не проверялось</h3>
+        <ul>
+          <li><b>Совпадение гарнитур.</b> Шрифт опознаётся ролью, а не именем, поэтому наш текст шире там, где у образца узкая гарнитура.</li>
+          <li><b>Качество дизайна.</b> Гейт проверяет выразимость чужой композиции, а не красоту нашей.</li>
+          <li><b>Разбор моделью.</b> Здесь макеты составлены вручную; автоматический разбор — шаг A4.</li>
+          <li><b>Поведение на живом вендоре.</b> Фаза A его не касается вовсе и баллов не тратит.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>Слои, снятые на прогоне</h2>
+    <p>
+      Правило одно на все случаи: чего не хватило — того нет в кадре, и композиция это переживает.
+      Сборщик называет причину, чтобы интерфейс мог предупредить до запуска генерации.
+    </p>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>Образец</th><th>Слой</th><th>Причина</th><th>Что осталось в кадре</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Верхняя одежда</td>
+            <td><code>logo</code></td>
+            <td>логотип не загружен</td>
+            <td>Всё остальное на своих местах; дырки на месте логотипа нет.</td>
+          </tr>
+          <tr>
+            <td>Одежда</td>
+            <td><code>cutout</code></td>
+            <td>вырез товара не готов</td>
+            <td>Вёрстка целиком; абзац, который должен уходить за модель, лежит открытым.</td>
+          </tr>
+          <tr>
+            <td>Все три</td>
+            <td><code>frame</code></td>
+            <td>кадр вендора не передан</td>
+            <td>Сборка «только слои»: фон макета вместо фотографии. Тот же механизм даст бесплатное превью до оплаты.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>Что дальше</h2>
+    <div class="pair">
+      <div class="card">
+        <h3>Если композиция узнаётся</h3>
+        <ul>
+          <li>Шаг <b>A4</b> — разбор образца vision-моделью: тот же JSON, но составленный не руками.</li>
+          <li>Шаг <b>A5</b> — базы иконок и шрифтов с процедурой пополнения.</li>
+          <li>Шаг <b>A6</b> — <b>ваш отбор 21 образца</b>, по одному на пару «категория × площадка».</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Если нет</h3>
+        <ul>
+          <li>Скажите, <b>что именно не сходится</b> — промах геометрии, нехватка выразительности или неверная сама идея разбора.</li>
+          <li>Язык переделывается на шаге <b>A1</b>, разборы трёх образцов переписываются, гейт проходится заново.</li>
+          <li>Это бесплатно: фаза A живого вендора не касается.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Прогон 2026-08-31 · ветка <code>claude/card-assembly-pipeline</code> · <code>npm run cards:roundtrip</code></span>
+    <span>Разборы — <code>tools/card-pipeline/samples/</code> · язык макета — <code>supabase/functions/_shared/card-layout/</code> · решение — ADR-0012</span>
+    <span>Изображения на странице уменьшены до 340 px по ширине; полноразмерные файлы лежат в <code>docs/assets/cardsforsysprompt/</code>.</span>
+  </footer>
+</div>

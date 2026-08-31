@@ -18,7 +18,8 @@
     "test:watch": "vitest",
     "test:generation": "node supabase/tests/generation-flow.mjs",
     "test:ui": "node e2e/us01.mjs",
-    "bench": "node bench/run.mjs"
+    "bench": "node bench/run.mjs",
+    "cards:roundtrip": "node --experimental-strip-types tools/card-pipeline/roundtrip.mts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.58.0",
@@ -32,6 +33,7 @@
     "tailwind-merge": "^3.6.0"
   },
   "devDependencies": {
+    "@resvg/resvg-wasm": "^2.6.2",
     "@tailwindcss/vite": "^4.1.0",
     "@testing-library/jest-dom": "^6.6.0",
     "@testing-library/react": "^16.3.0",
