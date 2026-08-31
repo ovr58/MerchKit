@@ -289,6 +289,13 @@ export function resolveLayout(layout: CardLayout, content: CardContent): Resolve
   return { layers, dropped }
 }
 
+/**
+ * Итог раскладки поддерева. `bound` считает только слои, получившие **содержимое**, а не все
+ * нарисованные, и в этом вся суть: плашка под знаком — леса, а не содержимое, и оставлять её
+ * в кадре, когда знака нет, значит рисовать пустую коробку.
+ */
+type PlaceStats = { drawn: number; bound: number; hasBindings: boolean }
+
 function place(
   children: Layer[],
   parent: { x: number; y: number; w: number; h: number },
@@ -296,8 +303,8 @@ function place(
   out: PlacedLayer[],
   dropped: DroppedLayer[],
   content: CardContent,
-): number {
-  let placed = 0
+): PlaceStats {
+  const stats: PlaceStats = { drawn: 0, bound: 0, hasBindings: false }
 
   for (const layer of children) {
     const box = {
@@ -308,6 +315,10 @@ function place(
     }
     const z = zBase + layer.z
 
+    if (layer.bind !== undefined) {
+      stats.hasBindings = true
+    }
+
     if (layer.type === 'group') {
       // Привязка группы решает судьбу модуля целиком: нет характеристики — нет модуля.
       const missing = layer.bind === undefined ? null : describeMissing(layer.bind, content)
@@ -317,16 +328,20 @@ function place(
       }
 
       const inner: PlacedLayer[] = []
-      const drawn = place(layer.children, box, z, inner, dropped, content)
+      const innerStats = place(layer.children, box, z, inner, dropped, content)
+      stats.hasBindings = stats.hasBindings || innerStats.hasBindings
 
-      // Пустая группа — дырка в композиции, а не «модуль без содержимого»: снимаем целиком.
-      if (drawn === 0) {
+      // Группа, у которой всё содержимое отвалилось, — пустая коробка: снимаем вместе с её
+      // же лесами. Группа БЕЗ привязок внутри — чистое украшение (рамка, разделитель), её
+      // снимать не за что.
+      if (innerStats.hasBindings && innerStats.bound === 0) {
         dropped.push({ id: layer.id, reason: 'ни один слой модуля не получил содержимого' })
         continue
       }
 
       out.push(...inner)
-      placed += drawn
+      stats.drawn += innerStats.drawn
+      stats.bound += innerStats.bound + (layer.bind === undefined ? 0 : 1)
       continue
     }
 
@@ -337,10 +352,13 @@ function place(
     }
 
     out.push(filled)
-    placed += 1
+    stats.drawn += 1
+    if (layer.bind !== undefined) {
+      stats.bound += 1
+    }
   }
 
-  return placed
+  return stats
 }
 
 function fill(

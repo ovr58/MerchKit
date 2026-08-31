@@ -196,6 +196,65 @@ describe('K-3: отсутствующий ассет снимает свой с�
   })
 })
 
+describe('Плашка — леса, а не содержимое', () => {
+  /** Общий случай образца «куртка»: в плашке может быть картинка, может быть текст, может
+   *  быть и то и другое. Сама плашка привязок не имеет и держится на своих слоях. */
+  function markPlate(): Layer {
+    return {
+      id: 'mark',
+      type: 'group',
+      z: 40,
+      box: { x: 0.05, y: 0.6, w: 0.4, h: 0.06 },
+      children: [
+        {
+          id: 'mark-plate',
+          type: 'shape',
+          z: 1,
+          box: { x: 0, y: 0, w: 1, h: 1 },
+          shape: { form: 'rect', radius: 0.01 },
+          fill: { kind: 'solid', color: '#ffffff' },
+        },
+        {
+          ...title,
+          id: 'mark-text',
+          z: 2,
+          box: { x: 0.1, y: 0, w: 0.6, h: 1 },
+          bind: { kind: 'prop', index: 0, part: 'value' },
+        },
+        {
+          id: 'mark-icon',
+          type: 'asset',
+          z: 3,
+          box: { x: 0.8, y: 0.2, w: 0.1, h: 0.6 },
+          fit: 'contain',
+          bind: { kind: 'prop', index: 0, part: 'icon' },
+        },
+      ],
+    }
+  }
+
+  const ids = (layers: { layer: Layer }[]) => layers.map((placed) => placed.layer.id)
+
+  it('есть и картинка, и текст — рисуется всё', () => {
+    const resolved = resolveLayout(
+      layout([markPlate()]),
+      content({ props: [{ value: '+Add Shield', icon: IMAGE }] }),
+    )
+    expect(ids(resolved.layers)).toEqual(['mark-plate', 'mark-text', 'mark-icon'])
+  })
+
+  it('есть только картинка — плашка остаётся под ней', () => {
+    const resolved = resolveLayout(layout([markPlate()]), content({ props: [{ icon: IMAGE }] }))
+    expect(ids(resolved.layers)).toEqual(['mark-plate', 'mark-icon'])
+  })
+
+  it('нет ни картинки, ни текста — плашка уходит вместе с ними, пустой коробки не остаётся', () => {
+    const resolved = resolveLayout(layout([markPlate()]), content({ props: [{ label: 'Пропитка' }] }))
+    expect(ids(resolved.layers)).toEqual([])
+    expect(resolved.dropped.map((drop) => drop.id)).toContain('mark')
+  })
+})
+
 describe('Раскрытие групп и z-порядок', () => {
   it('координаты вложенного слоя пересчитываются в доли холста', () => {
     const module: Layer = {
