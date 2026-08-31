@@ -19,7 +19,8 @@
     "test:generation": "node supabase/tests/generation-flow.mjs",
     "test:ui": "node e2e/us01.mjs",
     "bench": "node bench/run.mjs",
-    "cards:roundtrip": "node --experimental-strip-types tools/card-pipeline/roundtrip.mts"
+    "cards:roundtrip": "node --experimental-strip-types tools/card-pipeline/roundtrip.mts",
+    "cards:assets": "node --experimental-strip-types tools/card-pipeline/assets.mts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.58.0",

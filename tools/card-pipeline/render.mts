@@ -14,7 +14,7 @@
  * Запуск: `node --experimental-strip-types tools/card-pipeline/roundtrip.mts`.
  */
 
-import { readFile } from 'node:fs/promises'
+import { readdir, readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 
 import { initWasm, Resvg } from '@resvg/resvg-wasm'
@@ -31,24 +31,17 @@ import type {
 const here = fileURLToPath(new URL('.', import.meta.url))
 
 /**
- * Стартовая база шрифтов: две гарнитуры на пять ролей. Обе — SIL OFL с разрешённым
- * коммерческим использованием, лицензии лежат рядом с файлами (требование шага A5).
- * Разнообразие добирается пополнением базы, а не подбором в коде.
+ * База шрифтов в рабочей копии: всё, что выложил `assets.mts pull` (шаг A5). Списка файлов
+ * и отображения ролей в коде нет намеренно — это содержимое базы, и вторая копия разошлась
+ * бы с ней на первом же пополнении. Читаем папку целиком, роли берём из `roles.json`.
  */
-const FONT_FILES = [
-  'Montserrat-Regular.ttf',
-  'Montserrat-SemiBold.ttf',
-  'Montserrat-Bold.ttf',
-  'Montserrat-Black.ttf',
-  'MarckScript.ttf',
-]
-
-export const FONTS: FontFamilies = {
-  display: 'Montserrat',
-  heading: 'Montserrat',
-  body: 'Montserrat',
-  label: 'Montserrat',
-  accent: 'Marck Script',
+async function fontBase(): Promise<{ files: Buffer[]; families: FontFamilies }> {
+  const names = (await readdir(`${here}fonts`)).filter((name) => name.endsWith('.ttf'))
+  const [files, roles] = await Promise.all([
+    Promise.all(names.map((name) => readFile(`${here}fonts/${name}`))),
+    readFile(`${here}fonts/roles.json`, 'utf8'),
+  ])
+  return { files, families: JSON.parse(roles) as FontFamilies }
 }
 
 let ready = false
@@ -91,10 +84,10 @@ export async function render(
   }
 
   await ensureWasm()
-  const { svg, dropped } = composeSvg(layout, content, size, FONTS)
-  const fonts = await Promise.all(FONT_FILES.map((file) => readFile(`${here}fonts/${file}`)))
+  const { files, families } = await fontBase()
+  const { svg, dropped } = composeSvg(layout, content, size, families)
 
-  const bytes = new Resvg(svg, { font: { fontBuffers: fonts, loadSystemFonts: false } })
+  const bytes = new Resvg(svg, { font: { fontBuffers: files, loadSystemFonts: false } })
     .render()
     .asPng()
 

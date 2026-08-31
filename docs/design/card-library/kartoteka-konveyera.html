@@ -1,7 +1,7 @@
 <title>Картотека конвейера</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=PT+Sans+Narrow:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=PT+Sans+Narrow:wght@400;700&family=JetBrains+Mono:wght@400;500&family=Montserrat:wght@400;600;700;900&family=Marck+Script&display=swap">
 
 <style>
   :root {
@@ -299,6 +299,27 @@
     flex-direction: column;
     gap: 8px;
   }
+  .icon-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: var(--bg);
+    color: var(--ink);
+  }
+  .icon-chip svg { width: 18px; height: 18px; }
+  .face { font-size: 1.02rem; }
+  .face-montserrat { font-family: "Montserrat", var(--font-body); }
+  .face-marck { font-family: "Marck Script", "Segoe Script", cursive; font-size: 1.25rem; }
+  /* Начертание показано самим начертанием: строка базы говорит «Black 900» и выглядит так же. */
+  .w400 { font-weight: 400; }
+  .w600 { font-weight: 600; }
+  .w700 { font-weight: 700; }
+  .w900 { font-weight: 900; }
+  .cell-ok { color: var(--have); font-weight: 500; }
   .icons-grid { grid-template-columns: 1.1fr 1.6fr 1fr .9fr; }
   .fonts-grid { grid-template-columns: 1.2fr 1.2fr 1.2fr .9fr; }
   @media (max-width: 760px) {
@@ -385,19 +406,19 @@
       <span class="tile-note">По одному на пару «категория × площадка»</span>
     </div>
     <div class="tile">
-      <span class="tile-label">Ждут разбора</span>
+      <span class="tile-label">Разобраны на гейт</span>
       <span class="tile-value">3</span>
-      <span class="tile-note">Лежат в проекте с 29 августа, по ячейкам не разнесены</span>
+      <span class="tile-note">Те же три файла: разобраны вручную ради проверки языка, по ячейкам не разнесены</span>
     </div>
     <div class="tile">
       <span class="tile-label">Иконок в базе</span>
-      <span class="tile-value">0</span>
-      <span class="tile-note">Заявки рождаются при разборе — разбор ещё не запускался</span>
+      <span class="tile-value">2</span>
+      <span class="tile-note">Обе заявки родились из образца с курткой и обе закрыты</span>
     </div>
     <div class="tile">
       <span class="tile-label">Шрифтов в базе</span>
-      <span class="tile-value">0</span>
-      <span class="tile-note">Там же и по тому же правилу</span>
+      <span class="tile-value">5<span class="of"> / 5 ролей</span></span>
+      <span class="tile-note">Пять начертаний двух гарнитур, обе SIL OFL</span>
     </div>
   </div>
 </header>
@@ -620,8 +641,8 @@
   </div>
 
   <div class="shelf">
-    <h3>Полка неразобранного — 3 файла</h3>
-    <p>Лежат в проекте с 29 августа как референсы вида карточки. По ячейкам не разнесены: все три из одной категории, площадка у них не указана. Первый круг конвейера начнётся с них — они же служат проверкой того, что разбор вообще работает.</p>
+    <h3>Полка гейта — 3 файла</h3>
+    <p>Лежат в проекте с 29 августа как референсы вида карточки. По ячейкам не разнесены: все три из одной категории, площадка у них не указана. С них начался первый круг конвейера — все три разобраны вручную и собраны обратно, и это же было проверкой того, что разбор вообще работает.</p>
     <div class="shelf-files">
       <span class="file-chip"><span class="file-name">пример карточки верхней одежды.png</span><span class="file-meta">Одежда и обувь · площадка не указана</span></span>
       <span class="file-chip"><span class="file-name">пример карточки женской одежды.png</span><span class="file-meta">Одежда и обувь · площадка не указана</span></span>
@@ -645,7 +666,7 @@
   <div class="base">
     <div class="base-head">
       <h3>Записей в базе</h3>
-      <span class="base-count">0 · заявок 0</span>
+      <span class="base-count">2 · заявок 0</span>
     </div>
     <div class="base-row icons-grid">
       <span class="cell cell-head">Имя</span>
@@ -653,9 +674,21 @@
       <span class="cell cell-head">Содержимое</span>
       <span class="cell cell-head">Статус</span>
     </div>
+    <div class="base-row icons-grid">
+      <span class="cell"><code>thermometer</code></span>
+      <span class="cell">Температурный режим: столбик термометра со шкалой</span>
+      <span class="cell"><span class="icon-chip"><svg viewBox="0 0 17 26" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.4 15.7V4.3a3.1 3.1 0 0 1 6.2 0v11.4a5.3 5.3 0 1 1-6.2 0z"/><path d="M7.5 9.4v8.2"/><circle cx="7.5" cy="19.7" r="2.7" fill="currentColor" stroke="none"/><path d="M12.7 4.6h3.5M12.7 7.5h2.4M12.7 10.4h3.5"/></svg></span></span>
+      <span class="cell cell-ok">готово</span>
+    </div>
+    <div class="base-row icons-grid">
+      <span class="cell"><code>droplet</code></span>
+      <span class="cell">Водоотталкивающая пропитка: капля</span>
+      <span class="cell"><span class="icon-chip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.2c3.4 4 5.6 6.8 5.6 9.5a5.6 5.6 0 1 1-11.2 0C6.4 10 8.6 7.2 12 3.2z"/><path d="M9.4 13.6a2.6 2.6 0 0 0 2.6 2.6"/></svg></span></span>
+      <span class="cell cell-ok">готово</span>
+    </div>
     <div class="base-empty">
-      <p><strong>Пусто, и это ожидаемо.</strong> Первая заявка появится на первом же разобранном образце — в карточке с курткой видны три кандидата: термометр, плюс в кружке, значок водоотталкивающей пропитки.</p>
-      <p>Строка заполняется в два приёма: разбор создаёт имя, описание и статус «заявка», а человек позже вкладывает сам рисунок и переводит статус в «готово». До этого момента макет просто рисует модуль без значка — текст остаётся на месте, композиция не ломается.</p>
+      <p><strong>Обе заявки родились из образца с курткой</strong> и обе закрыты. Третий кандидат оттуда же — плюс в кружке — иконкой не стал: разбор показал, что это фирменный знак технологии продавца, а не характеристика товара, и приходит он не из нашей базы.</p>
+      <p>Строка заполняется в два приёма: разбор создаёт имя, описание и статус «заявка», а человек позже вкладывает сам рисунок и переводит статус в «готово». Пока рисунка нет, макет рисует модуль без значка — текст остаётся на месте, композиция не ломается. Повтор ловит не человек, а сама база: одно имя — одна иконка, и один и тот же рисунок под вторым именем в неё не ляжет.</p>
     </div>
   </div>
 </section>
@@ -670,7 +703,7 @@
   <div class="base">
     <div class="base-head">
       <h3>Записей в базе</h3>
-      <span class="base-count">0 · заявок 0</span>
+      <span class="base-count">5 начертаний в 2 гарнитурах · заявок 0</span>
     </div>
     <div class="base-row fonts-grid">
       <span class="cell cell-head">Роль</span>
@@ -678,9 +711,40 @@
       <span class="cell cell-head">Лицензия</span>
       <span class="cell cell-head">Статус</span>
     </div>
+    <div class="base-row fonts-grid">
+      <span class="cell"><code>display</code></span>
+      <span class="cell"><span class="face face-montserrat w900">Montserrat</span> · Black 900</span>
+      <span class="cell">SIL OFL 1.1 · текст в базе</span>
+      <span class="cell cell-ok">готово</span>
+    </div>
+    <div class="base-row fonts-grid">
+      <span class="cell"><code>heading</code></span>
+      <span class="cell"><span class="face face-montserrat w700">Montserrat</span> · Bold 700</span>
+      <span class="cell">SIL OFL 1.1 · текст в базе</span>
+      <span class="cell cell-ok">готово</span>
+    </div>
+    <div class="base-row fonts-grid">
+      <span class="cell"><code>body</code></span>
+      <span class="cell"><span class="face face-montserrat w400">Montserrat</span> · Regular 400</span>
+      <span class="cell">SIL OFL 1.1 · текст в базе</span>
+      <span class="cell cell-ok">готово</span>
+    </div>
+    <div class="base-row fonts-grid">
+      <span class="cell"><code>label</code></span>
+      <span class="cell"><span class="face face-montserrat w600">Montserrat</span> · SemiBold 600</span>
+      <span class="cell">SIL OFL 1.1 · текст в базе</span>
+      <span class="cell cell-ok">готово</span>
+    </div>
+    <div class="base-row fonts-grid">
+      <span class="cell"><code>accent</code></span>
+      <span class="cell"><span class="face face-marck">Marck Script</span> · Regular 400</span>
+      <span class="cell">SIL OFL 1.1 · текст в базе</span>
+      <span class="cell cell-ok">готово</span>
+    </div>
     <div class="base-empty">
-      <p><strong>Пусто по той же причине.</strong> Сколько разных характеров встретится в образцах — столько гарнитур и понадобится: набор не назначается числом заранее, а вырастает под то, что реально используется.</p>
-      <p>Лицензия хранится вместе со шрифтом отдельным полем — не как формальность, а потому что коммерческое использование карточек делает это условием, а не пожеланием.</p>
+      <p><strong>Пять ролей закрыты двумя семьями</strong> — этого хватило трём разобранным образцам, и больше набор заранее не назначается: сколько характеров встретится дальше, столько гарнитур и добавится.</p>
+      <p>Начертание — отдельная запись на каждую насыщенность, а не один переменный файл: наш растеризатор берёт у переменного шрифта только экземпляр по умолчанию, и <code>font-weight</code> в нём не действует. Проверено на Montserrat и Inter, прежде чем класть их в базу.</p>
+      <p>Лицензия хранится вместе со шрифтом отдельным полем — не как формальность, а потому что коммерческое использование карточек делает это условием. Хранится и полный её текст: OFL требует распространять его вместе с файлами, а раздаёт файлы отсюда сборщик.</p>
     </div>
   </div>
 </section>
@@ -690,12 +754,12 @@
     <span class="eyebrow">Что дальше</span>
     <h2>Первый оборот</h2>
   </div>
-  <p>Прежде чем набирать двадцать один образец, конвейер должен доказать, что он работает. Проверка простая и бесплатная: разобрать три файла с полки неразобранного, собрать по своему же разбору картинку и положить рядом с оригиналом. Не похоже — разбор описывает не то, что видит, и никакая база этого не исправит.</p>
-  <p>Только после этого отбор двадцати одного образца становится вложением, а не риском.</p>
+  <p>Прежде чем набирать двадцать один образец, конвейер должен был доказать, что он работает: разобрать три файла с полки, собрать по своему же разбору картинку и положить рядом с оригиналом. <strong>Круг пройден 31 августа</strong> — и оправдал себя ровно тем, ради чего его ставили перед набором: со второго захода в языке макета нашлись две дыры, радиальная заливка и обводка. Найдись они после двадцати одного разбора, переписывать пришлось бы двадцать один разбор.</p>
+  <p>Дальше — две вещи, и обе опираются на уже заполненные базы: разбор образца моделью вместо рук и отбор двадцати одного образца по ячейкам. Иконки и шрифты к этому моменту уже не «будут», а есть: заявка заводится разбором, содержимое вкладывается процедурой, повторы ловит сама база.</p>
 </section>
 
 <footer>
-  <p>Состояние баз на 31 августа 2026. Цифры — фактические: три файла в проекте, ноль разобранных образцов, пустые базы иконок и шрифтов.</p>
+  <p>Состояние баз на 31 августа 2026. Цифры — фактические: три образца разобраны вручную на гейт и по ячейкам не разнесены, в базе иконок две записи, в базе шрифтов пять начертаний на пять ролей.</p>
   <p>Требования площадок к кадру и фону — из справочника проекта, собранного по открытым правилам Ozon, Wildberries и Яндекс Маркета.</p>
 </footer>
 
