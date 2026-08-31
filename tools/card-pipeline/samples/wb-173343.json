@@ -601,11 +601,11 @@
     "props": [
       {
         "label": "Свободный\nкрой",
-        "icon": "shirt"
+        "icon": "tshirt-loose"
       },
       {
         "label": "Лёгкая\nи дышащая\nткань",
-        "icon": "leaf"
+        "icon": "leaf-breathable"
       },
       {
         "label": "Стильный\nдизайн",

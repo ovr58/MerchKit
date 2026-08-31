@@ -322,6 +322,48 @@ async function request(args: string[]): Promise<void> {
   console.log(`✓ заявка на иконку «${name}» заведена. Положи ${name}.svg в icons/ и запусти push`)
 }
 
+/**
+ * Заводит заявки на все иконки, которые лежат в `icons/`, но записи в базе ещё не имеют.
+ *
+ * Описания берутся из `icons/DESCRIPTIONS.json` — иначе двадцать с лишним описаний пришлось бы
+ * набирать в командной строке по одному, и они разошлись бы с рисунками при первой же правке.
+ * Уже заведённые имена пропускаются: команда безопасна для повторного запуска.
+ */
+async function requestAll(): Promise<void> {
+  const descriptions = JSON.parse(await readFile(`${ICONS}DESCRIPTIONS.json`, 'utf8')) as Record<
+    string,
+    string
+  >
+  const known = new Set(
+    (await rest('card_icons?select=name')).map((row: { name: string }) => row.name),
+  )
+
+  const files = (await readdir(ICONS))
+    .filter((name) => name.endsWith('.svg'))
+    .map((name) => name.slice(0, -4))
+    .filter((name) => !known.has(name))
+
+  if (files.length === 0) {
+    console.log('Заводить нечего: у каждого файла в icons/ уже есть запись')
+    return
+  }
+
+  for (const name of files) {
+    const description = descriptions[name]
+    if (description === undefined) {
+      console.log(`  ! ${name} — нет описания в DESCRIPTIONS.json, пропущен`)
+      continue
+    }
+    await rest('card_icons', {
+      method: 'POST',
+      body: JSON.stringify({ name, description, requested_by: 'library-a6' }),
+    })
+    console.log(`✓ заявка «${name}»`)
+  }
+
+  console.log('\nдальше: cards:assets push — содержимое поедет в базу')
+}
+
 /* -------------------------------------------------------------------------------- ввод */
 
 const [command, ...args] = process.argv.slice(2)
@@ -339,6 +381,9 @@ switch (command ?? 'list') {
   case 'request':
     await request(args)
     break
+  case 'request-all':
+    await requestAll()
+    break
   default:
-    throw new Error(`Не знаю команды «${command}». Есть list, push, pull, request.`)
+    throw new Error(`Не знаю команды «${command}». Есть list, push, pull, request, request-all.`)
 }
