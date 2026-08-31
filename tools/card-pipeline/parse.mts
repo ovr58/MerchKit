@@ -225,6 +225,24 @@ function problemsInContent(content: unknown): string[] {
     }
   }
 
+  // Кадры, вырез и логотип в разборе появляться не должны: они приходят на сборке, а не из
+  // образца. Три разбора из 31 положили сюда словесные описания сцены («кадр на модели:
+  // кардиган…»), и сборщик получал строку там, где ждал картинку. Раньше это давало
+  // href="undefined" — невидимую битую картинку без единого сообщения.
+  for (const key of ['frames', 'cutout', 'logo'] as const) {
+    if ((root as Record<string, unknown>)[key] !== undefined) {
+      problems.push(`${key} в разборе не место — кадры, вырез и логотип подставляются на сборке`)
+    }
+  }
+
+  const swatches = Array.isArray(root.swatches) ? root.swatches : []
+  swatches.forEach((swatch, index) => {
+    const shape = swatch as Record<string, unknown>
+    if (typeof shape?.color !== 'string' && typeof shape?.dataUri !== 'string') {
+      problems.push(`swatches[${index}] — ни цвет, ни картинка`)
+    }
+  })
+
   const props = Array.isArray(root.props) ? root.props : []
   props.forEach((prop, index) => {
     for (const part of ['label', 'value'] as const) {

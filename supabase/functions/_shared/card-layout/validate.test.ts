@@ -371,3 +371,52 @@ describe('Линия-разделитель живёт в плоском бок�
     )
   })
 })
+
+/**
+ * Шаг A8: контраст иконки проверяется там, где фон известен — иконка в группе поверх фигуры
+ * со сплошной заливкой. Порог 3:1 — норма WCAG для нетекстовой графики. Поверх фотографии не
+ * проверяется никем, и валидатор не делает вид, что проверяет.
+ */
+describe('Контраст иконки — там, где фон известен', () => {
+  const module = (ink: string, plate: string): Layer => ({
+    id: 'module',
+    type: 'group',
+    z: 20,
+    box: { x: 0.1, y: 0.6, w: 0.5, h: 0.1 },
+    children: [
+      {
+        id: 'plate',
+        type: 'shape',
+        z: 1,
+        box: { x: 0, y: 0, w: 1, h: 1 },
+        shape: { form: 'rect', radius: 0.02 },
+        fill: { kind: 'solid', color: plate },
+      },
+      {
+        id: 'icon',
+        type: 'asset',
+        z: 2,
+        box: { x: 0.05, y: 0.2, w: 0.2, h: 0.6 },
+        fit: 'contain',
+        ink,
+        bind: { kind: 'prop', index: 0, part: 'icon' },
+      },
+    ],
+  })
+
+  it('тёмная иконка на тёмной плашке — брак', () => {
+    expect(validateLayout(layout([frame, module('#1c1c1c', '#141210')]))).toContain(
+      'module → icon: краска #1c1c1c на заливке #141210 даёт контраст 1.10:1, нужно 3:1',
+    )
+  })
+
+  it('светлая иконка на той же плашке проходит', () => {
+    expect(validateLayout(layout([frame, module('#f2efe9', '#141210')]))).toEqual([])
+  })
+
+  it('краска не в виде #rrggbb — брак', () => {
+    expect(validateLayout(layout([frame, module('белый', '#141210')]))).toContain(
+      'module → icon: краска «белый» записана не как #rrggbb',
+    )
+  })
+})

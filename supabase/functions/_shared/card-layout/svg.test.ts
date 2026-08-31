@@ -300,3 +300,50 @@ describe('Линия следует за формой своего бокса', 
     expect(svg).toMatch(/<line x1="150" y1="80" x2="150" y2="320"/)
   })
 })
+
+/**
+ * Шаг A8: иконка в базе общая и цвета не несёт — краску даёт макет. Исходник рисуется
+ * `currentColor`, сборщик подставляет её на отрисовке, поэтому один и тот же градусник ложится
+ * и на белую плашку, и на чёрную.
+ */
+describe('Краска иконки приходит из макета', () => {
+  const svgIcon = (): { dataUri: string; width: number; height: number } => ({
+    dataUri:
+      'data:image/svg+xml;base64,' +
+      Buffer.from(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 4h16"/></svg>',
+      ).toString('base64'),
+    width: 24,
+    height: 24,
+  })
+
+  const icon = (ink?: string): Layer => ({
+    id: 'icon',
+    type: 'asset',
+    z: 3,
+    box: { x: 0.1, y: 0.1, w: 0.1, h: 0.1 },
+    fit: 'contain',
+    ink,
+    bind: { kind: 'prop', index: 0, part: 'icon' },
+  })
+
+  function drawn(ink?: string): string {
+    const svg = compose([icon(ink)], {
+      texts: {},
+      props: [{ label: 'Пропитка', icon: svgIcon() }],
+      swatches: [],
+    })
+    const encoded = svg.match(/base64,([A-Za-z0-9+/=]+)/)
+    return Buffer.from(encoded![1], 'base64').toString('utf8')
+  }
+
+  it('краска слоя заменяет currentColor в исходнике', () => {
+    expect(drawn('#f2efe9')).toContain('stroke="#f2efe9"')
+    expect(drawn('#f2efe9')).not.toContain('currentColor')
+  })
+
+  it('без краски остаётся тёмная по умолчанию, а не currentColor в кадре', () => {
+    expect(drawn()).toContain('#1c1c1c')
+    expect(drawn()).not.toContain('currentColor')
+  })
+})

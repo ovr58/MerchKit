@@ -119,7 +119,7 @@ function drawByType(
       return ''
     }
     const drawn = image(
-      placed.image.dataUri,
+      layer.type === 'asset' ? inked(placed.image.dataUri, layer.ink) : placed.image.dataUri,
       rect,
       layer.fit,
       layer.type === 'asset' ? undefined : layer.focus,
@@ -158,6 +158,31 @@ function drawByType(
   }
 
   return ''
+}
+
+/** Тёмная краска по умолчанию: на белой плашке читается, на тёмной поймает валидатор. */
+const DEFAULT_INK = '#1c1c1c'
+
+/**
+ * Подставляет краску слоя в исходник иконки.
+ *
+ * Иконки базы рисуются `currentColor` и цвета не несут — он приходит из макета (шаг A8).
+ * Подстановка идёт здесь, а не при сборке содержимого, потому что только здесь известны обе
+ * половины: исходник из базы и краска из слоя. Растровые ассеты проходят мимо — в PNG красить
+ * нечего.
+ */
+function inked(dataUri: string, ink: string | undefined): string {
+  const prefix = 'data:image/svg+xml;base64,'
+  if (!dataUri.startsWith(prefix)) {
+    return dataUri
+  }
+
+  const source = atob(dataUri.slice(prefix.length))
+  if (!source.includes('currentColor')) {
+    return dataUri
+  }
+
+  return prefix + btoa(source.replaceAll('currentColor', ink ?? DEFAULT_INK))
 }
 
 /** Картинка, обрезанная формой слоя: так образец цвета и образец принта задаются одним и
