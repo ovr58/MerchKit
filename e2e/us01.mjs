@@ -186,7 +186,7 @@ try {
 
   /* ---------------------------------------------- запуск, F5 и результат (NFR-02) */
 
-  await page.getByRole('button', { name: /Запустить генерацию/ }).click()
+  await page.getByRole('button', { name: 'Запустить' }).click()
   await page.waitForURL('**/generation/**', { timeout: 30000 })
   const generationUrl = page.url()
   check('US-01 заявка принята, открылся экран генерации', true)
