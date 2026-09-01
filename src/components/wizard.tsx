@@ -248,11 +248,22 @@ export function OutputParams({ note, profile }: { note?: string; profile: Output
 
 /* -------------------------------------------------------------------- сводка и цена */
 
+/**
+ * Строка сводки перед запуском.
+ *
+ * **Значение переносится, а не обрезается.** Сводка — последний экран перед списанием
+ * баллов, и человек читает на нём ровно то, за что платит: длинные «Пожелания» и описание
+ * товара обязаны быть видны целиком. Многоточие уместно в степпере, где строка свёрнута до
+ * одной, — здесь оно прячет предмет проверки.
+ *
+ * `min-w-0` рядом с переносом — не украшение: у флекс-элемента `min-width: auto`, и без
+ * обнуления он не сжимается ниже своего текста, а распирает страницу шире экрана.
+ */
 export function SummaryRow({ label, value }: { label: string; value: string | null }) {
   return (
     <div className="flex items-baseline justify-between gap-3 text-[13px]">
       <dt className="text-muted-foreground flex-none">{label}</dt>
-      <dd className={cn('min-w-0 truncate text-right', value === null && 'text-muted-foreground')}>
+      <dd className={cn('min-w-0 text-right break-words', value === null && 'text-muted-foreground')}>
         {value ?? '—'}
       </dd>
     </div>
