@@ -10,11 +10,15 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
  */
 
 const download = vi.fn()
+const invoke = vi.fn()
 const warn = vi.fn()
 const writeDraft = vi.fn()
 
 vi.mock('@/lib/supabase', () => ({
-  supabase: { storage: { from: () => ({ download: (path: string) => download(path) }) } },
+  supabase: {
+    storage: { from: () => ({ download: (path: string) => download(path) }) },
+    functions: { invoke: (name: string, options: unknown) => invoke(name, options) },
+  },
 }))
 
 vi.mock('@/lib/logger', () => ({ logger: { warn: (...args: unknown[]) => warn(...args) } }))
@@ -24,7 +28,7 @@ vi.mock('./draft', async (importOriginal) => ({
   writeDraft: (...args: unknown[]) => writeDraft(...args),
 }))
 
-const { restoreDraftFrom } = await import('./api')
+const { launchGeneration, restoreDraftFrom } = await import('./api')
 const { LAST_STEP } = await import('./draft')
 
 const FAILED = {
@@ -53,6 +57,7 @@ function missing(status: number) {
 
 beforeEach(() => {
   download.mockReset()
+  invoke.mockReset()
   warn.mockReset()
   writeDraft.mockReset()
 })
@@ -108,5 +113,75 @@ describe('Возврат к параметрам неуспешной генер
     // «фото удалены по сроку», он бы не стал повторять попытку, хотя файлы на месте.
     expect(restore).toEqual({ restored: 0, expired: 0 })
     expect(warn).toHaveBeenCalledTimes(2)
+  })
+})
+
+/**
+ * Отказ на запуске: 409 приходит на два разных исхода, и клиент обязан показать тот, что
+ * назвал сервер. Пока он выбирал текст по статусу, отказ модерации выглядел как нехватка
+ * баллов — человек с полным балансом шёл пополнять баланс (найдено на живом сбое 2026-09-01).
+ */
+describe('Отказ на запуске генерации', () => {
+  const INPUT = {
+    userId: 'user-1',
+    photos: [],
+    kind: 'card' as const,
+    marketplaceId: 'ozon',
+    categoryId: 'clothing',
+    presetId: 'clothing-model',
+    productTitle: 'Куртка-бомбер',
+    productDescription: '',
+    wishes: '',
+  }
+
+  function refusal(status: number, body: Record<string, string>) {
+    return {
+      data: null,
+      error: Object.assign(new Error('Edge Function returned a non-2xx status code'), {
+        context: new Response(JSON.stringify(body), { status }),
+      }),
+    }
+  }
+
+  it('на отказ модерации показывает причину сервера, а не нехватку баллов', async () => {
+    invoke.mockResolvedValue(
+      refusal(409, {
+        error: 'Заявка не принята: проверьте загруженные фото',
+        code: 'moderation_rejected',
+      }),
+    )
+
+    const outcome = await launchGeneration(INPUT)
+
+    expect(outcome.ok).toBe(false)
+    expect(outcome).toMatchObject({
+      code: 'failed',
+      message: 'Заявка не принята: проверьте загруженные фото',
+    })
+  })
+
+  it('на нехватку баллов уводит на пополнение', async () => {
+    invoke.mockResolvedValue(
+      refusal(409, {
+        error: 'Не хватает баллов для запуска генерации',
+        code: 'insufficient_credits',
+      }),
+    )
+
+    expect(await launchGeneration(INPUT)).toMatchObject({ code: 'insufficient_credits' })
+  })
+
+  it('на серверный сбой берёт текст сервера и пишет код ответа в журнал', async () => {
+    invoke.mockResolvedValue(
+      refusal(503, { error: 'Генерация временно недоступна, попробуйте ещё раз' }),
+    )
+
+    const outcome = await launchGeneration(INPUT)
+
+    expect(outcome).toMatchObject({
+      code: 'failed',
+      message: 'Генерация временно недоступна, попробуйте ещё раз',
+    })
+    expect(warn).toHaveBeenCalledWith('Заявка отклонена', expect.objectContaining({ status: 503 }))
   })
 })

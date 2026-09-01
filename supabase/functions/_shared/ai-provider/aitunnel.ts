@@ -198,6 +198,40 @@ function parseJsonObject(text: string): Record<string, unknown> {
 }
 
 /**
+ * Вердикт модерации из ответа модели, `null` — если ответ не о том.
+ *
+ * **Форма ответа не одна.** `gemini-3.1-flash-lite` на двух фото возвращает не объект, а
+ * массив «по вердикту на фотографию», хотя запрошен `response_format: json_object` и
+ * промпт просит один объект (замерено на живом сбое 2026-09-01: три заявки подряд ушли в
+ * отказ приёма, а шлюз каждый раз отвечал `200` и брал деньги). Разбор обязан пережить обе
+ * формы: это свойство модели, а не наша ошибка, и менять модель ради формы ответа дороже,
+ * чем прочитать массив.
+ *
+ * Запрет одной фотографии запрещает заявку целиком — заявка неделима: генерация идёт по
+ * всему набору сразу.
+ */
+export function readModerationVerdict(parsed: unknown): Moderated | null {
+  if (Array.isArray(parsed)) {
+    if (parsed.length === 0) return null
+
+    const verdicts = parsed.map(readModerationVerdict)
+    if (verdicts.some((verdict) => verdict === null)) return null
+
+    return verdicts.find((verdict) => !verdict?.allowed) ?? { allowed: true }
+  }
+
+  if (typeof parsed !== 'object' || parsed === null) return null
+
+  const { allowed, reason } = parsed as { allowed?: unknown; reason?: unknown }
+  if (typeof allowed !== 'boolean') return null
+
+  return {
+    allowed,
+    reason: typeof reason === 'string' && reason.trim() !== '' ? reason : undefined,
+  }
+}
+
+/**
  * Ошибка шлюза с сохранённым статусом и телом ответа.
  *
  * Класс, а не строка: по телу ответа надо отличать отказ **по содержанию** (его лечит
@@ -345,7 +379,8 @@ const MODERATION_SYSTEM_PROMPT =
   'несовершеннолетних, либо явно нелегальные товары (наркотики, оружие вне легального ' +
   'оборота). Обычное фото товара — одежда, техника, еда, косметика, мебель, аксессуары — ' +
   'всегда разрешено, включая фирменные логотипы и упаковку на товаре: это не проверка на ' +
-  'контрафакт. Ответь строго JSON без пояснений: ' +
+  'контрафакт. Вердикт один на весь набор фотографий, а не по вердикту на каждую. Ответь ' +
+  'строго JSON-объектом без пояснений и без массива: ' +
   '{"allowed": true|false, "reason": "кратко почему, если false"}.'
 
 const RECOGNIZE_SYSTEM_PROMPT =
@@ -508,19 +543,25 @@ export function createAitunnelProvider(
       if (photos.length === 0) return { allowed: true }
 
       const config = requireConfig(providerProfile)
-      const verdict = await chatJson(config, MODERATION_SYSTEM_PROMPT, [
-        { type: 'text', text: 'Проверь приложенные фотографии.' },
-        ...imageContentParts(photos),
-      ], { operation: 'moderate', onUsage })
+      const ask = async (): Promise<Moderated | null> =>
+        readModerationVerdict(
+          await chatJson(config, MODERATION_SYSTEM_PROMPT, [
+            { type: 'text', text: 'Проверь приложенные фотографии.' },
+            ...imageContentParts(photos),
+          ], { operation: 'moderate', onUsage }),
+        )
 
-      if (typeof verdict.allowed !== 'boolean') {
+      // Второй заход — на случай разовой икоты модели: температура своё берёт, и та же
+      // просьба со второго раза приходит в ожидаемой форме. Дороже на 0,13 ₽ ровно в тех
+      // редких заявках, где первый ответ не прочитался, — дешевле, чем отказ живому
+      // человеку. Дальше второго не идём: систематическую поломку формы повтор не лечит.
+      const verdict = (await ask()) ?? (await ask())
+
+      if (verdict === null) {
         throw new Error('AITunnel: модерация вернула ответ неожиданного формата')
       }
 
-      return {
-        allowed: verdict.allowed,
-        reason: typeof verdict.reason === 'string' ? verdict.reason : undefined,
-      }
+      return verdict
     },
 
     async recognize(photos: Uint8Array[]): Promise<Recognized> {

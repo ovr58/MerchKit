@@ -140,7 +140,20 @@ Deno.serve(async (request: Request): Promise<Response> => {
     // узнаёт, что сработала именно модерация.
     const usage: ProviderUsage[] = []
     const photos = await Promise.all(photoPaths.map((path) => downloadFile('uploads', path)))
-    const moderation = await createProvider(undefined, (entry) => usage.push(entry)).moderate(photos)
+
+    // Неудача самой проверки — не «генерация временно недоступна»: человек стоит перед
+    // кнопкой с готовой заявкой, и ему надо сказать, что именно не сработало. Провайдер
+    // уже сходил к вендору дважды (`aitunnel.ts`, moderate) — здесь остаётся честный отказ.
+    let moderation
+    try {
+      moderation = await createProvider(undefined, (entry) => usage.push(entry)).moderate(photos)
+    } catch (error: unknown) {
+      console.error('Модерация не дала вердикта', error)
+      return json(
+        { error: 'Проверка фото не сработала. Попробуйте ещё раз', code: 'moderation_unavailable' },
+        503,
+      )
+    }
 
     if (!moderation.allowed) {
       console.info('Заявка отклонена модерацией', moderation.reason)

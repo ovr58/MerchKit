@@ -89,12 +89,22 @@ export type RecognizeOutcome = Recognized & { limitReached: boolean }
  * типом ошибки и прячет тело ответа в `context`. Без разбора тела «кончилось» неотличимо от
  * «сломалось» — а различие тут и есть весь смысл.
  */
-async function isLimitReached(error: unknown): Promise<boolean> {
+async function failureBody(error: unknown): Promise<{ code?: string; message?: string }> {
   const response = (error as { context?: unknown } | null)?.context
-  if (!(response instanceof Response)) return false
+  if (!(response instanceof Response)) return {}
 
   const body: unknown = await response.clone().json().catch(() => null)
-  return (body as { code?: unknown } | null)?.code === 'recognize_limit'
+  const code = (body as { code?: unknown } | null)?.code
+  const message = (body as { error?: unknown } | null)?.error
+
+  return {
+    code: typeof code === 'string' ? code : undefined,
+    message: typeof message === 'string' ? message : undefined,
+  }
+}
+
+async function isLimitReached(error: unknown): Promise<boolean> {
+  return (await failureBody(error)).code === 'recognize_limit'
 }
 
 /**
@@ -179,19 +189,32 @@ export async function launchGeneration(input: LaunchInput): Promise<LaunchOutcom
   })
 
   if (error) {
+    // Разбираем ТЕЛО отказа, а не только статус. 409 сервер отдаёт на два разных исхода —
+    // нехватку баллов и отказ модерации (`generate/index.ts`), и по форме они намеренно
+    // одинаковы (US-E3). Различает их поле `code`, а показывать «не хватает баллов»
+    // человеку, у которого баллы есть, — врать в лицо: он уйдёт пополнять баланс и
+    // получит тот же отказ.
+    const status = (error as { context?: { status?: number } }).context?.status
+    const failure = await failureBody(error)
+
     // 409 — единственный отказ, который клиент обязан отличать: баллов не хватило (US-E3),
     // и человека надо увести на пополнение, а не показывать «попробуйте ещё раз».
-    const status = (error as { context?: { status?: number } }).context?.status
-    if (status === 409) {
+    if (status === 409 && failure.code !== 'moderation_rejected') {
       return {
         ok: false,
         code: 'insufficient_credits',
-        message: 'Не хватает баллов для запуска генерации',
+        message: failure.message ?? 'Не хватает баллов для запуска генерации',
       }
     }
 
-    logger.warn('Заявка отклонена', { reason: error.message })
-    return { ok: false, code: 'failed', message: 'Не удалось запустить генерацию. Попробуйте ещё раз' }
+    // Код ответа — в журнал: без него отказ на чужом устройстве неотличим от обрыва сети,
+    // а консоли мобильного браузера у нас нет.
+    logger.warn('Заявка отклонена', { status, code: failure.code, reason: error.message })
+    return {
+      ok: false,
+      code: 'failed',
+      message: failure.message ?? 'Не удалось запустить генерацию. Попробуйте ещё раз',
+    }
   }
 
   if (!data) {

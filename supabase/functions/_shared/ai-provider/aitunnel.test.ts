@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import { GatewayError, imageSizeParam, isContentRefusal } from './aitunnel.ts'
+import { GatewayError, imageSizeParam, isContentRefusal, readModerationVerdict } from './aitunnel.ts'
 import type { OutputProfile } from './types.ts'
 
 /**
- * Две чистые функции адаптера, от которых зависит смена модели (ADR-0011): выбор формы
- * запроса и распознавание отказа по содержанию. Остальное в `aitunnel.ts` — сетевые вызовы,
- * они проверяются прогоном через боевой конвейер, а не здесь.
+ * Чистые функции адаптера, от которых зависит смена модели (ADR-0011): выбор формы
+ * запроса, распознавание отказа по содержанию и разбор вердикта модерации. Остальное в
+ * `aitunnel.ts` — сетевые вызовы, они проверяются прогоном через боевой конвейер, а не здесь.
  */
 
 const clothing: OutputProfile = {
@@ -87,5 +87,48 @@ describe('Отказ по содержанию отличается от про�
     expect(isContentRefusal(new GatewayError(500, 'internal error'))).toBe(false)
     expect(isContentRefusal(new Error('Signal timed out.'))).toBe(false)
     expect(isContentRefusal(null)).toBe(false)
+  })
+})
+
+/**
+ * Разбор вердикта модерации. Массив «по вердикту на фото» — не выдуманный случай: ровно так
+ * ответил `gemini-3.1-flash-lite` на двух фотографиях 2026-09-01, и три заявки подряд не
+ * были приняты, хотя фотографии он разрешил.
+ */
+describe('Вердикт модерации', () => {
+  it('читает объект, как просит промпт', () => {
+    expect(readModerationVerdict({ allowed: true, reason: '' })).toEqual({
+      allowed: true,
+      reason: undefined,
+    })
+    expect(readModerationVerdict({ allowed: false, reason: 'оружие' })).toEqual({
+      allowed: false,
+      reason: 'оружие',
+    })
+  })
+
+  it('читает массив «по вердикту на фото»', () => {
+    expect(
+      readModerationVerdict([
+        { allowed: true, reason: '' },
+        { allowed: true, reason: '' },
+      ]),
+    ).toEqual({ allowed: true })
+  })
+
+  it('запрет одной фотографии запрещает заявку целиком', () => {
+    expect(
+      readModerationVerdict([
+        { allowed: true, reason: '' },
+        { allowed: false, reason: 'оружие' },
+      ]),
+    ).toEqual({ allowed: false, reason: 'оружие' })
+  })
+
+  it('не выдаёт вердикт там, где его нет', () => {
+    expect(readModerationVerdict({ verdict: 'ok' })).toBeNull()
+    expect(readModerationVerdict({ allowed: 'true' })).toBeNull()
+    expect(readModerationVerdict([])).toBeNull()
+    expect(readModerationVerdict([{ allowed: true }, { note: 'непонятно' }])).toBeNull()
   })
 })

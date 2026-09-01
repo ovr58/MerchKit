@@ -247,7 +247,7 @@ export function SummaryRow({ label, value }: { label: string; value: string | nu
   return (
     <div className="flex items-baseline justify-between gap-3 text-[13px]">
       <dt className="text-muted-foreground flex-none">{label}</dt>
-      <dd className={cn('truncate text-right', value === null && 'text-muted-foreground')}>
+      <dd className={cn('min-w-0 truncate text-right', value === null && 'text-muted-foreground')}>
         {value ?? '—'}
       </dd>
     </div>
