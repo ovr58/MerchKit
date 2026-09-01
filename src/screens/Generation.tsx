@@ -142,7 +142,7 @@ export default function Generation() {
     <AppLayout active="catalog" balance={balanceLabel} email={user?.email}>
       <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{heading}</h1>
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:items-start">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:items-start">
         {/* -------------------------------------------------------------- заявка */}
         <Panel>
           <PanelTitle title="Заявка" />

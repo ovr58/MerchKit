@@ -66,7 +66,7 @@ export default function Profile() {
     <AppLayout active="profile" balance={balanceText} email={email}>
       <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Профиль</h1>
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] lg:items-start">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] lg:items-start">
         <div className="flex flex-col gap-5">
           <Panel>
             <div className="flex flex-wrap items-end justify-between gap-4">

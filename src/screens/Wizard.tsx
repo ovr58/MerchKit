@@ -97,7 +97,8 @@ function Textarea({
     <label className="flex flex-col gap-1.5">
       <span className="text-sm font-medium">{label}</span>
       <textarea
-        className="border-input bg-background focus-visible:border-ring focus-visible:ring-ring/50 min-h-16 w-full rounded-md border px-3 py-2 text-sm outline-none focus-visible:ring-[3px]"
+        // Кегль 16 px на мобильном — против автомасштаба iOS Safari, см. `ui/input.tsx`.
+        className="border-input bg-background focus-visible:border-ring focus-visible:ring-ring/50 min-h-16 w-full rounded-md border px-3 py-2 text-base outline-none focus-visible:ring-[3px] sm:text-sm"
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         rows={rows}
@@ -248,7 +249,7 @@ export default function Wizard() {
     <AppLayout active="wizard" balance={balanceLabel} email={user?.email}>
       <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Создать генерацию</h1>
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] lg:items-start">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] lg:items-start">
         <Panel>
           <Stepper current={draft.step} labels={STEPS} onGoTo={wizard.goTo} values={stepValues} />
           <hr className="border-border" />
@@ -408,7 +409,7 @@ export default function Wizard() {
                   {draft.recognized && draft.categoryId !== null && <AiBadge />}
                 </span>
                 <select
-                  className="border-input bg-background focus-visible:border-ring focus-visible:ring-ring/50 h-9 w-full rounded-md border px-3 text-sm outline-none focus-visible:ring-[3px]"
+                  className="border-input bg-background focus-visible:border-ring focus-visible:ring-ring/50 h-9 w-full rounded-md border px-3 text-base outline-none focus-visible:ring-[3px] sm:text-sm"
                   onChange={(event) =>
                     wizard.update({ categoryId: event.target.value === '' ? null : event.target.value })
                   }
@@ -585,12 +586,12 @@ export default function Wizard() {
 
               <div className="flex flex-col gap-2 sm:flex-row">
                 {!enoughCredits && (
-                  <Button asChild className="flex-1" size="lg" variant="outline">
+                  <Button asChild className="w-full sm:flex-1" size="lg" variant="outline">
                     <Link to="/profile#packages">Пополнить баланс</Link>
                   </Button>
                 )}
                 <Button
-                  className="flex-1"
+                  className="w-full sm:flex-1"
                   disabled={launching || !enoughCredits}
                   onClick={() => void handleLaunch()}
                   size="lg"
