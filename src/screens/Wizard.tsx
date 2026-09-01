@@ -118,7 +118,6 @@ export default function Wizard() {
   const wizard = useWizard()
   const { draft } = wizard
 
-  const [guestPrompt, setGuestPrompt] = useState(false)
   const [launching, setLaunching] = useState(false)
   const [launchError, setLaunchError] = useState<string | null>(null)
   const [dragging, setDragging] = useState(false)
@@ -157,12 +156,10 @@ export default function Wizard() {
   async function handleLaunch() {
     setLaunchError(null)
 
-    // FR-12: гостю предлагаем регистрацию, генерация не стартует. Настройки уже в
-    // черновике — он вернётся сюда после подтверждения email.
-    if (!user) {
-      setGuestPrompt(true)
-      return
-    }
+    // Гостя сюда не пускает гвард маршрута, но сессия могла истечь прямо перед нажатием:
+    // тогда гвард уведёт на регистрацию сам, а нам остаётся не отправлять заявку без
+    // владельца. Черновик при этом цел — человек вернётся на тот же шаг (US-E6).
+    if (!user) return
 
     // Дойти сюда без категории и площадки штатным путём нельзя — подвал шага не пускает
     // дальше. Но черновик приезжает из хранилища браузера и мог быть записан прошлой
@@ -389,9 +386,6 @@ export default function Wizard() {
                     {wizard.recognitionLimited
                       ? 'Бесплатные распознавания на сегодня закончились. Укажите категорию и наименование сами — на саму генерацию это не влияет.'
                       : 'Не удалось определить товар по фото. Укажите категорию и наименование сами — на саму генерацию это не влияет.'}
-                    {/* Вход возвращает распознавание только гостю: у вошедшего лимит свой, и
-                        звать его войти ещё раз было бы издевательством. */}
-                    {wizard.recognitionLimited && user === undefined && ' Войдите — и мы снова будем заполнять их за вас.'}
                   </span>
                 </Notice>
               )}
@@ -676,47 +670,6 @@ export default function Wizard() {
         </div>
       </div>
 
-      {/* --------------------------------- перехват гостя (FR-12, US-E6) */}
-      {guestPrompt && (
-        <div
-          aria-labelledby="guest-prompt-title"
-          aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4"
-          role="dialog"
-        >
-          <div className="bg-background border-border flex w-full max-w-[460px] flex-col gap-5 rounded-lg border p-6 shadow-lg sm:p-8">
-            <div className="flex flex-col gap-1.5">
-              <h2 className="text-xl font-semibold tracking-tight" id="guest-prompt-title">
-                Нужен аккаунт, чтобы запустить
-              </h2>
-              <p className="text-muted-foreground text-sm leading-5">
-                Настройки генерации сохранены. После регистрации вы вернётесь на этот шаг — фото,
-                товар и сценарий останутся на месте.
-              </p>
-            </div>
-
-            <Notice tone="success">
-              <span>
-                <b>120 стартовых баллов</b> после подтверждения email — это две пробные генерации.
-              </span>
-            </Notice>
-
-            <div className="flex flex-col gap-2">
-              <Button asChild size="lg">
-                <Link to="/signup">Зарегистрироваться</Link>
-              </Button>
-              <Button asChild size="lg" variant="outline">
-                <Link state={{ from: '/generate' }} to="/signin">
-                  У меня уже есть аккаунт
-                </Link>
-              </Button>
-              <Button onClick={() => setGuestPrompt(false)} size="lg" variant="ghost">
-                Вернуться к настройкам
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </AppLayout>
   )
 }

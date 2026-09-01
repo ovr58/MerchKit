@@ -22,13 +22,19 @@ function Waiting() {
   )
 }
 
-/** Пускает только авторизованного. Гостя отправляет на вход, запомнив, куда он шёл. */
-export function RequireAuth() {
+/**
+ * Пускает только авторизованного. Гостя отправляет прочь, запомнив, куда он шёл.
+ *
+ * Куда именно — параметр: на большинстве экранов уместен вход (человек уже знает, что у
+ * него есть аккаунт), а перед мастером генерации — регистрация: туда приходят с улицы, и
+ * первым делом им нужен аккаунт, а не форма для тех, у кого он есть.
+ */
+export function RequireAuth({ to = '/signin' }: { to?: string }) {
   const { session, loading } = useSession()
   const location = useLocation()
 
   if (loading) return <Waiting />
-  if (!session) return <Navigate to="/signin" replace state={{ from: location.pathname }} />
+  if (!session) return <Navigate to={to} replace state={{ from: location.pathname }} />
   return <Outlet />
 }
 

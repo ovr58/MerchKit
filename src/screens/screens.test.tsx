@@ -26,6 +26,8 @@ vi.mock('@/lib/supabase', () => ({
 
 const { default: ResetRequest } = await import('@/screens/ResetRequest')
 const { default: SignUp } = await import('@/screens/SignUp')
+const { default: App } = await import('@/App')
+const { SessionProvider } = await import('@/features/auth')
 
 function renderScreen(element: ReactElement) {
   return render(
@@ -92,5 +94,27 @@ describe('Восстановление пароля (US-E7)', () => {
     await waitFor(() => expect(screen.getByRole('heading')).toHaveTextContent('Проверьте почту'))
 
     expect(unknown.container.textContent).toBe(forKnown)
+  })
+})
+
+/**
+ * Дверь в мастер (FR-12, решение пользователя 2026-09-01). До этого гость проходил мастер
+ * целиком и упирался в перехват только на запуске — успевая потратить платное распознавание.
+ * Проверка здесь, а не в e2e: это свойство карты маршрутов, и ломается оно одной строкой.
+ */
+describe('Мастер закрыт от гостя (FR-12)', () => {
+  it('гостя с адреса мастера встречает регистрация, а не мастер', async () => {
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <SessionProvider>
+          <MemoryRouter initialEntries={['/generate']}>
+            <App />
+          </MemoryRouter>
+        </SessionProvider>
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByRole('button', { name: 'Создать аккаунт' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Создать генерацию' })).not.toBeInTheDocument()
   })
 })

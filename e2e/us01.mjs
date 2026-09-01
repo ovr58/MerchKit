@@ -1,12 +1,16 @@
 /**
- * US-01 в настоящем браузере: гость проходит мастер, регистрируется без потери настроек,
- * запускает генерацию, переживает F5 и скачивает результат.
+ * US-01 в настоящем браузере: гость упирается в регистрацию, регистрируется, проходит
+ * мастер, запускает генерацию, переживает F5 и скачивает результат.
  *
  * **Зачем отдельно от `npm run test:generation`.** Тот скрипт проверяет путь по HTTP и
  * доказывает контракт сервера. Здесь проверяется ровно то, чего в нём нет и быть не может:
- * что настройки гостя переживают регистрацию с подтверждением email (FR-12, US-E6), что
- * перезагрузка во время генерации не теряет результат (NFR-02) и что мастер проходится на
- * узком экране (NFR-09). Это свойства интерфейса, и на уровне API они невидимы.
+ * что мастер закрыт от гостя (FR-12, решение пользователя 2026-09-01), что собранные
+ * настройки переживают возврат в мастер (US-E6), что перезагрузка во время генерации не
+ * теряет результат (NFR-02) и что мастер проходится на узком экране (NFR-09). Это свойства
+ * интерфейса, и на уровне API они невидимы.
+ *
+ * Возврат после **истёкшей** сессии (второе чтение US-E6) здесь не проверяется: сессию в
+ * браузере не состарить, а вычищать её руками — проверять свою же заглушку.
  *
  * Запуск: `npm run test:ui` при поднятом `supabase start` и `npm run dev`.
  */
@@ -75,11 +79,29 @@ const context = await browser.newContext({ viewport: { width: 1440, height: 1000
 const page = await context.newPage()
 
 try {
-  /* ------------------------------------------- гость проходит мастер целиком (FR-12) */
+  /* --------------------------------------- гостя в мастер не пускают (FR-12) */
 
   await page.goto(`${APP}/generate`)
+  await page.getByLabel('Подтверждение пароля').waitFor()
+  check(
+    'FR-12 гость упирается в регистрацию, мастер не показан',
+    !(await page.getByRole('heading', { name: 'Создать генерацию' }).isVisible()),
+  )
+
+  await page.getByLabel('Email').fill(email)
+  await page.getByLabel('Пароль', { exact: true }).fill(password)
+  await page.getByLabel('Подтверждение пароля').fill(password)
+  await page.getByRole('button', { name: 'Создать аккаунт' }).click()
+  await page.getByText('Подтвердите email').waitFor({ timeout: 20000 })
+
+  const confirmation = await verifyLinkFor(email)
+  if (!confirmation) throw new Error('Письмо подтверждения не пришло')
+  await page.goto(confirmation)
+
+  // Ссылка из письма приводит в мастер — туда, куда человек и шёл.
+  await page.waitForURL('**/generate', { timeout: 20000 })
   await page.getByRole('heading', { name: 'Создать генерацию' }).waitFor()
-  check('FR-12 мастер открывается гостю без входа', true)
+  check('US-02 после подтверждения email мастер открылся', true)
 
   await page.setInputFiles('input[type=file]', {
     name: 'куртка.jpg',
@@ -127,25 +149,11 @@ try {
   await page.getByRole('heading', { name: 'Проверьте и запускайте' }).waitFor()
   check('FR-11 цена показана до запуска', await page.getByText('55 баллов').first().isVisible())
 
-  /* ------------------------------------- перехват гостя без потери настроек (US-E6) */
+  /* ------------------------------------------- настройки не теряются (US-E6) */
 
-  await page.getByRole('button', { name: /Запустить генерацию/ }).click()
-  await page.getByRole('dialog').waitFor()
-  check('FR-12 гостю предложена регистрация, генерация не стартовала', true)
-
-  await page.getByRole('link', { name: 'Зарегистрироваться' }).click()
-  await page.getByLabel('Email').fill(email)
-  await page.getByLabel('Пароль', { exact: true }).fill(password)
-  await page.getByLabel('Подтверждение пароля').fill(password)
-  await page.getByRole('button', { name: 'Создать аккаунт' }).click()
-  await page.getByText('Подтвердите email').waitFor({ timeout: 20000 })
-
-  const link = await verifyLinkFor(email)
-  if (!link) throw new Error('Письмо подтверждения не пришло')
-  await page.goto(link)
-
-  // Ссылка из письма приводит в мастер, а не на профиль: настройки на месте.
-  await page.waitForURL('**/generate', { timeout: 20000 })
+  // Черновик живёт в IndexedDB, а не в состоянии вкладки: возврат в мастер обязан вернуть
+  // человека на тот же шаг с теми же ответами.
+  await page.reload()
   await page.getByRole('heading', { name: 'Проверьте и запускайте' }).waitFor()
 
   // Фильтр по видимости обязателен: степпер отрисован дважды — горизонтальный для
@@ -171,7 +179,7 @@ try {
     await page.screenshot({ path: 'e2e-restore.png', fullPage: true })
   }
   check(
-    'US-E6/FR-12 после подтверждения email мастер вернулся с теми же ответами',
+    'US-E6 мастер вернулся на тот же шаг с теми же ответами',
     keptPhoto && keptProduct && keptPreset,
     `фото ${keptPhoto}, товар ${keptProduct}, сценарий ${keptPreset}`,
   )
