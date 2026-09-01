@@ -56,7 +56,7 @@ export function Stepper({
                 >
                   {done ? <CheckIcon className="size-3" /> : index + 1}
                 </span>
-                <span className="truncate">{label}</span>
+                <span className="min-w-0 truncate">{label}</span>
               </button>
               {index < labels.length - 1 && (
                 <span aria-hidden="true" className="bg-border h-px w-3 flex-none" />
@@ -85,7 +85,12 @@ export function Stepper({
                     <CheckIcon className="size-3" />
                   </span>
                   <span className="flex-1 text-sm">{label}</span>
-                  <span className="text-muted-foreground truncate text-[13px]">
+                  {/* `min-w-0` обязателен рядом с `truncate`: у флекс-элемента
+                      `min-width: auto`, и без обнуления он не сжимается ниже своего текста —
+                      `truncate` не срабатывает, а строка распирает страницу шире экрана
+                      (найдено на живой мобилке 2026-09-01: последний шаг мастера, где в
+                      степпере собраны значения всех пройденных шагов). */}
+                  <span className="text-muted-foreground min-w-0 truncate text-[13px]">
                     {values[index] ?? ''}
                   </span>
                 </button>
