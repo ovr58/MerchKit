@@ -39,6 +39,7 @@ import type {
   Moderated,
   OutputProfile,
   ProductBrief,
+  ProductProperty,
   ProviderProfile,
   ProviderUsage,
   Recognized,
@@ -392,6 +393,29 @@ const RECOGNIZE_SYSTEM_PROMPT =
   'не описание. Ответь строго JSON: {"categoryId": "<id из перечня или null>", "productTitle": ' +
   '"<наименование или null>"}.'
 
+const PRODUCT_PROPERTIES_SYSTEM_PROMPT =
+  'Извлеки из текста продавца характеристики товара для карточки. Верни только факты, прямо ' +
+  'названные во входных данных. Ничего не додумывай: если факта нет, не добавляй его. ' +
+  'Расположи свойства по важности для покупателя. Ответь строго JSON: ' +
+  '{"properties":[{"label":"...","value":"..."}]}.'
+
+/** Неполный или лишённый строк ответ не становится свойством: продавец не сможет проверить его. */
+export function readProductProperties(parsed: unknown): ProductProperty[] | null {
+  if (parsed === null || typeof parsed !== 'object' || !Array.isArray((parsed as { properties?: unknown }).properties)) {
+    return null
+  }
+
+  return (parsed as { properties: unknown[] }).properties.flatMap((property) => {
+    if (property === null || typeof property !== 'object') return []
+
+    const { label, value } = property as { label?: unknown; value?: unknown }
+    if (typeof label !== 'string' || typeof value !== 'string') return []
+
+    const normalized = { label: label.trim(), value: value.trim() }
+    return normalized.label === '' && normalized.value === '' ? [] : [normalized]
+  })
+}
+
 const NAME_GENERATION_SYSTEM_PROMPT =
   'Придумай короткое название генерации для каталога пользователя — по нему человек должен ' +
   'узнать генерацию в списке, не открывая её. 3–6 слов, без кавычек и точки в конце. Ответь ' +
@@ -579,6 +603,22 @@ export function createAitunnelProvider(
       const productTitle = typeof parsed.productTitle === 'string' ? parsed.productTitle.trim() : ''
 
       return { categoryId, productTitle: productTitle === '' ? null : productTitle }
+    },
+
+    async extractProductProperties({ description, wishes }): Promise<ProductProperty[]> {
+      const config = requireConfig(providerProfile)
+      const parsed = await chatJson(
+        config,
+        PRODUCT_PROPERTIES_SYSTEM_PROMPT,
+        [
+          description.trim() === '' ? '' : `Описание товара: ${description.trim()}.`,
+          wishes.trim() === '' ? '' : `Пожелания продавца: ${wishes.trim()}.`,
+        ].filter((line) => line !== '').join(' '),
+      )
+
+      const properties = readProductProperties(parsed)
+      if (properties === null) throw new Error('AITunnel: свойства товара вернулись неожиданным форматом')
+      return properties
     },
 
     async generateImages({ photos, product, profile, kind, card, objects }): Promise<GeneratedImage[]> {

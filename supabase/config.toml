@@ -390,6 +390,7 @@ deno_version = 2
 # значение из `supabase/functions/recognize/index.ts`.
 [edge_runtime.secrets]
 RECOGNIZE_MEMBER_DAILY_LIMIT = "10000"
+PRODUCT_PROPERTIES_MEMBER_DAILY_LIMIT = "10000"
 
 # Профиль AI-провайдера для локального стенда. Значения берутся из окружения и в git не
 # попадают — здесь только имена. **Не заданы — все пять приезжают пустыми строками, и

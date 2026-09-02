@@ -2,6 +2,8 @@ import type { GenerationKind } from '@shared/pricing.ts'
 
 import { logger } from '@/lib/logger'
 
+import { normalizeProductProperties, type ProductProperty } from './properties'
+
 /**
  * Черновик мастера генерации, переживающий перезагрузку страницы.
  *
@@ -44,9 +46,17 @@ export type DraftPhoto = {
   blob: Blob
 }
 
+/**
+ * Логотип продавца (шаг B3). Один файл на заявку, поэтому ключа строки у него нет —
+ * в отличие от фото, которые переставляются и удаляются поштучно.
+ */
+export type DraftLogo = { name: string; size: number; blob: Blob }
+
 export type WizardDraft = {
   step: number
   photos: DraftPhoto[]
+  /** Не загружен — штатный случай: слой логотипа снимается правилом K-3 на сборке. */
+  logo: DraftLogo | null
   productTitle: string
   productDescription: string
   categoryId: string | null
@@ -54,6 +64,8 @@ export type WizardDraft = {
   kind: GenerationKind
   presetId: string | null
   wishes: string
+  /** B1: порядок — важность, подтверждённая продавцом для макета ограниченной ёмкости. */
+  productProperties: ProductProperty[]
   /** Распознавание уже отработало: повторно гонять провайдера при возврате незачем. */
   recognized: boolean
 }
@@ -61,6 +73,7 @@ export type WizardDraft = {
 export const EMPTY_DRAFT: WizardDraft = {
   step: 0,
   photos: [],
+  logo: null,
   productTitle: '',
   productDescription: '',
   categoryId: null,
@@ -68,6 +81,7 @@ export const EMPTY_DRAFT: WizardDraft = {
   kind: 'card',
   presetId: null,
   wishes: '',
+  productProperties: [],
   recognized: false,
 }
 
@@ -103,10 +117,37 @@ function transact<T>(mode: IDBTransactionMode, run: (store: IDBObjectStore) => I
 export async function readDraft(): Promise<WizardDraft | null> {
   try {
     const stored = await transact<WizardDraft | undefined>('readonly', (store) => store.get(KEY))
-    return stored ?? null
+    if (stored === undefined) return null
+
+    // Черновики переживают релизы. Старые записи не знают о B1 и B3, поэтому перед выдачей
+    // достраиваем новые поля и чистим значения, которые мог записать прежний клиент.
+    return {
+      ...EMPTY_DRAFT,
+      ...stored,
+      productProperties: normalizeProductProperties(stored.productProperties),
+      logo: normalizeLogo(stored.logo),
+    }
   } catch (error: unknown) {
     logger.warn('Черновик мастера не прочитан', { reason: String(error) })
     return null
+  }
+}
+
+/**
+ * Логотип из хранилища браузера — недоверенная граница, как и ответ модели у свойств.
+ * Запись прежней версии клиента могла не знать поля вовсе, а `Blob` из чужой записи мог
+ * прийти чем угодно: без файла загрузка нарисовала бы миниатюру из `undefined`.
+ */
+function normalizeLogo(value: unknown): DraftLogo | null {
+  if (value === null || typeof value !== 'object') return null
+
+  const { name, size, blob } = value as { name?: unknown; size?: unknown; blob?: unknown }
+  if (!(blob instanceof Blob)) return null
+
+  return {
+    name: typeof name === 'string' ? name : 'logo.png',
+    size: typeof size === 'number' ? size : blob.size,
+    blob,
   }
 }
 

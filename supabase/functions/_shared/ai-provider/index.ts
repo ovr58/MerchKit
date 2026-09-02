@@ -21,6 +21,7 @@ export type {
   Moderated,
   OutputProfile,
   ProductBrief,
+  ProductProperty,
   ProviderProfile,
   ProviderUsage,
   Recognized,

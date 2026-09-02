@@ -22,7 +22,15 @@ export {
   hasPendingDraft,
   LAST_STEP,
   STEPS,
+  type DraftLogo,
   type DraftPhoto,
   type WizardDraft,
 } from './draft'
+export {
+  addProductProperty,
+  moveProductProperty,
+  removeProductProperty,
+  updateProductProperty,
+  type ProductProperty,
+} from './properties'
 export { blockedBy, useWizard, type Wizard } from './wizard'

@@ -10,18 +10,26 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
  */
 
 const download = vi.fn()
+const upload = vi.fn()
 const invoke = vi.fn()
 const warn = vi.fn()
 const writeDraft = vi.fn()
 
 vi.mock('@/lib/supabase', () => ({
   supabase: {
-    storage: { from: () => ({ download: (path: string) => download(path) }) },
+    storage: {
+      from: () => ({
+        download: (path: string) => download(path),
+        upload: (path: string, blob: Blob, options: unknown) => upload(path, blob, options),
+      }),
+    },
     functions: { invoke: (name: string, options: unknown) => invoke(name, options) },
   },
 }))
 
-vi.mock('@/lib/logger', () => ({ logger: { warn: (...args: unknown[]) => warn(...args) } }))
+vi.mock('@/lib/logger', () => ({
+  logger: { info: vi.fn(), warn: (...args: unknown[]) => warn(...args) },
+}))
 
 vi.mock('./draft', async (importOriginal) => ({
   ...(await importOriginal<typeof import('./draft')>()),
@@ -41,6 +49,7 @@ const FAILED = {
   productTitle: 'Куртка-бомбер',
   productDescription: 'Хлопок, цвет хаки',
   wishes: '',
+  productProperties: [],
   price: 55,
   title: null,
   cardTitle: null,
@@ -57,6 +66,7 @@ function missing(status: number) {
 
 beforeEach(() => {
   download.mockReset()
+  upload.mockReset()
   invoke.mockReset()
   warn.mockReset()
   writeDraft.mockReset()
@@ -125,6 +135,7 @@ describe('Отказ на запуске генерации', () => {
   const INPUT = {
     userId: 'user-1',
     photos: [],
+    logo: null,
     kind: 'card' as const,
     marketplaceId: 'ozon',
     categoryId: 'clothing',
@@ -132,6 +143,7 @@ describe('Отказ на запуске генерации', () => {
     productTitle: 'Куртка-бомбер',
     productDescription: '',
     wishes: '',
+    productProperties: [],
   }
 
   function refusal(status: number, body: Record<string, string>) {
@@ -183,5 +195,60 @@ describe('Отказ на запуске генерации', () => {
       message: 'Генерация временно недоступна, попробуйте ещё раз',
     })
     expect(warn).toHaveBeenCalledWith('Заявка отклонена', expect.objectContaining({ status: 503 }))
+  })
+})
+
+/**
+ * Знак продавца (B3) уезжает в бакет отдельным файлом, а в заявку — отдельным полем.
+ *
+ * Проверяется именно разделение: попади знак в `photoPaths`, вендор получил бы его как
+ * пятое фото товара, а повтор неуспешной генерации (US-E4) вернул бы его в мастер
+ * миниатюрой фото.
+ */
+describe('Знак продавца в заявке', () => {
+  const WITH_LOGO = {
+    userId: 'user-1',
+    photos: [],
+    logo: { name: 'brand.png', size: 4, blob: new Blob(['png'], { type: 'image/png' }) },
+    kind: 'card' as const,
+    marketplaceId: 'ozon',
+    categoryId: 'clothing',
+    presetId: 'clothing-model',
+    productTitle: 'Куртка-бомбер',
+    productDescription: '',
+    wishes: '',
+    productProperties: [],
+  }
+
+  it('кладёт знак в бакет и передаёт его путь отдельным полем', async () => {
+    upload.mockResolvedValue({ error: null })
+    invoke.mockResolvedValue({ data: { generationId: 'gen-1' }, error: null })
+
+    expect(await launchGeneration(WITH_LOGO)).toMatchObject({ ok: true })
+
+    const [path, , options] = upload.mock.calls[0]
+    expect(path).toMatch(/^user-1\/\d+-logo\.png$/)
+    expect(options).toMatchObject({ contentType: 'image/png' })
+
+    const body = (invoke.mock.calls[0][1] as { body: { logoPath: string; photoPaths: string[] } }).body
+    expect(body.logoPath).toBe(path)
+    expect(body.photoPaths).toEqual([])
+  })
+
+  it('без знака ничего не грузит и передаёт пустое поле', async () => {
+    invoke.mockResolvedValue({ data: { generationId: 'gen-1' }, error: null })
+
+    expect(await launchGeneration({ ...WITH_LOGO, logo: null })).toMatchObject({ ok: true })
+
+    expect(upload).not.toHaveBeenCalled()
+    expect((invoke.mock.calls[0][1] as { body: { logoPath: null } }).body.logoPath).toBeNull()
+  })
+
+  it('не удалось загрузить знак — заявка не подаётся вовсе', async () => {
+    // Иначе человек заплатил бы за карточку без знака, попросив карточку со знаком.
+    upload.mockResolvedValue({ error: new Error('нет связи') })
+
+    expect(await launchGeneration(WITH_LOGO)).toMatchObject({ code: 'failed' })
+    expect(invoke).not.toHaveBeenCalled()
   })
 })

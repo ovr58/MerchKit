@@ -1,3 +1,4 @@
+import { LOGO_HUMAN, LOGO_MIME } from '@shared/logo.ts'
 import { generationPrice, MAX_OBJECTS_PER_GENERATION, OBJECT_PRICE } from '@shared/pricing.ts'
 import {
   ACCEPTED_FORMATS_HUMAN,
@@ -27,11 +28,16 @@ import { useBalance } from '@/features/billing'
 import {
   blockedBy,
   clearDraft,
+  addProductProperty,
   launchGeneration,
   LAST_STEP,
+  moveProductProperty,
+  removeProductProperty,
   STEPS,
+  updateProductProperty,
   useInvalidateAfterLaunch,
   useWizard,
+  type DraftLogo,
   type DraftPhoto,
 } from '@/features/generation'
 import {
@@ -76,6 +82,20 @@ function usePhotoUrls(photos: DraftPhoto[]): Map<string, string> {
   )
 
   return urls
+}
+
+/** Адрес превью знака живёт по тем же правилам, что и адреса миниатюр фото выше. */
+function useLogoUrl(logo: DraftLogo | null): string | null {
+  const url = useMemo(() => (logo === null ? null : URL.createObjectURL(logo.blob)), [logo])
+
+  useEffect(
+    () => () => {
+      if (url !== null) URL.revokeObjectURL(url)
+    },
+    [url],
+  )
+
+  return url
 }
 
 function Textarea({
@@ -123,6 +143,7 @@ export default function Wizard() {
   const [launchError, setLaunchError] = useState<string | null>(null)
   const [dragging, setDragging] = useState(false)
   const filePicker = useRef<HTMLInputElement>(null)
+  const logoPicker = useRef<HTMLInputElement>(null)
 
   // Сколько фото прежней генерации не пережили срок хранения (веха M5, шаг 6). Приезжает
   // состоянием перехода из карточки генерации, а не полем черновика: это разовое
@@ -131,6 +152,7 @@ export default function Wizard() {
   const expiredPhotos = typeof expiredHint === 'number' ? expiredHint : 0
 
   const urls = usePhotoUrls(draft.photos)
+  const logoUrl = useLogoUrl(draft.logo)
   const data = taxonomy.data
   const price = generationPrice(draft.kind, MAX_OBJECTS_PER_GENERATION)
   const categoryTitle = titleOf(data?.categories ?? [], draft.categoryId)
@@ -187,6 +209,10 @@ export default function Wizard() {
       productTitle: draft.productTitle.trim(),
       productDescription: draft.productDescription.trim(),
       wishes: draft.wishes.trim(),
+      productProperties: draft.productProperties,
+      // Знак нужен только карточке: у фото макета нет вовсе, и класть файл в бакет ради
+      // генерации, которая его не откроет, значит платить за хранение впустую.
+      logo: draft.kind === 'card' ? draft.logo : null,
     })
     setLaunching(false)
 
@@ -431,6 +457,141 @@ export default function Wizard() {
                 placeholder="Состав, цвет, размерный ряд, особенности"
                 value={draft.productDescription}
               />
+
+              <section aria-labelledby="product-properties-title" className="flex flex-col gap-3">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <h2 className="text-sm font-medium" id="product-properties-title">
+                      Свойства товара
+                    </h2>
+                    <p className="text-muted-foreground text-[13px] leading-[18px]">
+                      Проверьте подсказки: только вы отвечаете за сведения в карточке. Порядок задаёт важность.
+                    </p>
+                  </div>
+                  <Button
+                    disabled={
+                      wizard.extractingProperties ||
+                      (draft.productDescription.trim() === '' && draft.wishes.trim() === '')
+                    }
+                    onClick={wizard.extractProperties}
+                    size="sm"
+                    type="button"
+                    variant="outline"
+                  >
+                    {wizard.extractingProperties
+                      ? 'Подбираем…'
+                      : draft.productProperties.length > 0
+                        ? 'Подобрать заново'
+                        : 'Подобрать свойства'}
+                  </Button>
+                </div>
+
+                {wizard.propertiesLimited && (
+                  <Notice tone="info">
+                    <span>Подбор свойств на сегодня закончился. Добавьте или измените свойства вручную.</span>
+                  </Notice>
+                )}
+
+                {wizard.propertiesFailed && (
+                  <Notice tone="error">
+                    <span>Не удалось подобрать свойства. Добавьте их вручную или попробуйте ещё раз.</span>
+                  </Notice>
+                )}
+
+                {wizard.propertiesExtracted && draft.productProperties.length === 0 && (
+                  <Notice tone="info">
+                    <span>В описании и пожеланиях не нашлось явных свойств. При необходимости добавьте их вручную.</span>
+                  </Notice>
+                )}
+
+                {draft.productProperties.length > 0 && (
+                  <ol className="flex flex-col gap-2">
+                    {draft.productProperties.map((property, index) => (
+                      <li className="border-border grid gap-2 rounded-lg border p-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]" key={property.id}>
+                        <Input
+                          aria-label={`Название свойства ${index + 1}`}
+                          onChange={(event) =>
+                            wizard.update({
+                              productProperties: updateProductProperty(draft.productProperties, index, {
+                                label: event.target.value,
+                              }),
+                            })
+                          }
+                          placeholder="Например, материал"
+                          value={property.label}
+                        />
+                        <Input
+                          aria-label={`Значение свойства ${index + 1}`}
+                          onChange={(event) =>
+                            wizard.update({
+                              productProperties: updateProductProperty(draft.productProperties, index, {
+                                value: event.target.value,
+                              }),
+                            })
+                          }
+                          placeholder="Например, хлопок"
+                          value={property.value}
+                        />
+                        <div className="flex gap-1">
+                          <Button
+                            aria-label={`Поднять свойство ${index + 1}`}
+                            disabled={index === 0}
+                            onClick={() =>
+                              wizard.update({
+                                productProperties: moveProductProperty(draft.productProperties, index, -1),
+                              })
+                            }
+                            size="sm"
+                            type="button"
+                            variant="outline"
+                          >
+                            ↑
+                          </Button>
+                          <Button
+                            aria-label={`Опустить свойство ${index + 1}`}
+                            disabled={index === draft.productProperties.length - 1}
+                            onClick={() =>
+                              wizard.update({
+                                productProperties: moveProductProperty(draft.productProperties, index, 1),
+                              })
+                            }
+                            size="sm"
+                            type="button"
+                            variant="outline"
+                          >
+                            ↓
+                          </Button>
+                          <Button
+                            aria-label={`Удалить свойство ${index + 1}`}
+                            onClick={() =>
+                              wizard.update({
+                                productProperties: removeProductProperty(draft.productProperties, index),
+                              })
+                            }
+                            size="sm"
+                            type="button"
+                            variant="outline"
+                          >
+                            Удалить
+                          </Button>
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                )}
+
+                <Button
+                  className="self-start"
+                  onClick={() =>
+                    wizard.update({ productProperties: addProductProperty(draft.productProperties) })
+                  }
+                  size="sm"
+                  type="button"
+                  variant="outline"
+                >
+                  Добавить свойство
+                </Button>
+              </section>
             </>
           )}
 
@@ -532,6 +693,77 @@ export default function Wizard() {
                 placeholder="Например: тёплый вечерний свет, городская улица, модель в движении"
                 value={draft.wishes}
               />
+
+              {/* Знак — только у карточки (B3): у фото макета нет, ставить знак некуда.
+                  Поле стоит здесь, а не на шаге «Тип»: там выбор из двух карточек, и блок
+                  загрузки вырастал бы прямо под пальцем в момент нажатия. */}
+              {draft.kind === 'card' && (
+                <section aria-labelledby="logo-title" className="flex flex-col gap-3">
+                  <div>
+                    <h2 className="text-sm font-medium" id="logo-title">
+                      Логотип
+                    </h2>
+                    <p className="text-muted-foreground text-[13px] leading-[18px]">
+                      Необязательно. Загрузите свой знак — поставим его в карточку, если у
+                      подобранного макета есть для него место.
+                    </p>
+                  </div>
+
+                  <input
+                    accept={LOGO_MIME}
+                    className="sr-only"
+                    onChange={(event) => {
+                      wizard.setLogo(event.target.files?.[0] ?? null)
+                      event.target.value = ''
+                    }}
+                    ref={logoPicker}
+                    type="file"
+                  />
+
+                  {wizard.logoRejected !== null && (
+                    <Notice tone="error">
+                      <span>Знак не подошёл: {wizard.logoRejected}.</span>
+                    </Notice>
+                  )}
+
+                  {draft.logo === null ? (
+                    <Button
+                      className="self-start"
+                      onClick={() => logoPicker.current?.click()}
+                      size="sm"
+                      type="button"
+                      variant="outline"
+                    >
+                      Загрузить знак
+                    </Button>
+                  ) : (
+                    <div className="border-border flex items-center gap-3 rounded-lg border p-3">
+                      <img
+                        alt={draft.logo.name}
+                        // Клетка под знаком — не украшение: на белой плашке прозрачный фон
+                        // неотличим от белого, и человек не увидит, что именно он загрузил.
+                        className="size-16 flex-none rounded-md object-contain"
+                        src={logoUrl ?? ''}
+                        style={{
+                          backgroundColor: '#ffffff',
+                          backgroundImage:
+                            'repeating-conic-gradient(#e5e7eb 0% 25%, #ffffff 0% 50%)',
+                          backgroundSize: '12px 12px',
+                        }}
+                      />
+                      <span className="min-w-0 flex-1 truncate text-[13px]">{draft.logo.name}</span>
+                      <Button onClick={() => wizard.setLogo(null)} size="sm" type="button" variant="outline">
+                        Убрать
+                      </Button>
+                    </div>
+                  )}
+
+                  <span className="text-muted-foreground text-[13px] leading-[18px]">
+                    {LOGO_HUMAN}. Прозрачный фон обязателен: на непрозрачном знак ляжет
+                    поверх фотографии белым прямоугольником.
+                  </span>
+                </section>
+              )}
             </>
           )}
 
@@ -556,6 +788,18 @@ export default function Wizard() {
                 </Notice>
               )}
 
+              {/* B3: не загрузил — генерация не блокируется, но узнать об этом человек
+                  обязан ДО списания, а не по готовой карточке без своего знака. */}
+              {draft.kind === 'card' && draft.logo === null && (
+                <Notice tone="info">
+                  <span>
+                    Логотип не загружен — карточка соберётся без знака: слой с ним просто не
+                    появится. Запуску это не мешает, а добавить знак можно на шаге «Как
+                    показать».
+                  </span>
+                </Notice>
+              )}
+
               <dl className="flex flex-col gap-2.5">
                 <SummaryRow label="Фото" value={`${draft.photos.length} ${plural(draft.photos.length, 'файл', 'файла', 'файлов')}`} />
                 <SummaryRow label="Товар" value={draft.productTitle || null} />
@@ -564,6 +808,9 @@ export default function Wizard() {
                 <SummaryRow label="Площадка" value={marketplaceTitle} />
                 <SummaryRow label="Тип" value={draft.kind === 'card' ? 'Карточка' : 'Фото'} />
                 <SummaryRow label="Как показать" value={presetTitle} />
+                {draft.kind === 'card' && (
+                  <SummaryRow label="Логотип" value={draft.logo?.name ?? null} />
+                )}
                 <SummaryRow label="Пожелания" value={draft.wishes || null} />
               </dl>
 

@@ -21,7 +21,11 @@
     "bench": "node bench/run.mjs",
     "cards:roundtrip": "node --experimental-strip-types tools/card-pipeline/roundtrip.mts",
     "cards:parse": "node --env-file=.env --experimental-strip-types tools/card-pipeline/parse.mts",
-    "cards:assets": "node --experimental-strip-types tools/card-pipeline/assets.mts"
+    "cards:assets": "node --experimental-strip-types tools/card-pipeline/assets.mts",
+    "cards:layouts": "node --experimental-strip-types tools/card-pipeline/layouts.mts",
+    "cards:layout-tags": "node --env-file=.env --experimental-strip-types tools/card-pipeline/layout-tags.mts",
+    "cards:apply-layout-tags": "node --experimental-strip-types tools/card-pipeline/apply-layout-tags.mts",
+    "cards:render-assets": "node --experimental-strip-types tools/card-pipeline/render-assets.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",

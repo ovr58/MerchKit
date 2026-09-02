@@ -1,7 +1,10 @@
+import { rejectLogo, rejectLogoSize } from '@shared/logo.ts'
 import { MAX_PHOTOS, rejectPhoto } from '@shared/uploads.ts'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-import { recognizePhotos } from './api'
+import { logger } from '@/lib/logger'
+
+import { extractProductProperties, recognizePhotos } from './api'
 import {
   clearDraft,
   EMPTY_DRAFT,
@@ -27,12 +30,21 @@ export type Wizard = {
   restored: boolean
   rejected: RejectedPhoto[]
   recognizing: boolean
+  extractingProperties: boolean
+  /** Модель вернула список (включая пустой) — отличает его от ещё не запрошенного. */
+  propertiesExtracted: boolean
   /** Бесплатные распознавания на сегодня кончились — это не сбой, и говорить надо иначе. */
   recognitionLimited: boolean
+  propertiesLimited: boolean
+  propertiesFailed: boolean
+  /** Почему знак не принят — текстом человеку. `null` — претензий нет (B3). */
+  logoRejected: string | null
   update: (patch: Partial<WizardDraft>) => void
   addPhotos: (files: File[]) => void
   removePhoto: (id: string) => void
   clearPhotos: () => void
+  setLogo: (file: File | null) => void
+  extractProperties: () => void
   goTo: (step: number) => void
   next: () => void
   back: () => void
@@ -59,8 +71,15 @@ export function useWizard(): Wizard {
   const [restored, setRestored] = useState(false)
   const [rejected, setRejected] = useState<RejectedPhoto[]>([])
   const [recognizing, setRecognizing] = useState(false)
+  const [extractingProperties, setExtractingProperties] = useState(false)
+  const [propertiesExtracted, setPropertiesExtracted] = useState(false)
   const [recognitionLimited, setRecognitionLimited] = useState(false)
+  const [propertiesLimited, setPropertiesLimited] = useState(false)
+  const [propertiesFailed, setPropertiesFailed] = useState(false)
+  const [logoRejected, setLogoRejected] = useState<string | null>(null)
   const recognitionRun = useRef(0)
+  const propertiesRun = useRef(0)
+  const logoRun = useRef(0)
   const photoCount = draft.photos.length
 
   useEffect(() => {
@@ -85,6 +104,19 @@ export function useWizard(): Wizard {
   }, [draft, restored])
 
   const update = useCallback((patch: Partial<WizardDraft>) => {
+    if (patch.productDescription !== undefined || patch.wishes !== undefined || patch.productProperties !== undefined) {
+      // Ответ относится к исходному тексту и списку. Ручная правка во время запроса важнее
+      // подсказки модели, поэтому делаем уже отправленный запрос неактуальным.
+      propertiesRun.current += 1
+      setExtractingProperties(false)
+    }
+
+    if (patch.productDescription !== undefined || patch.wishes !== undefined) {
+      setPropertiesExtracted(false)
+      setPropertiesLimited(false)
+      setPropertiesFailed(false)
+    }
+
     setDraft((current) => {
       const next = { ...current, ...patch }
 
@@ -164,6 +196,84 @@ export function useWizard(): Wizard {
     setDraft((current) => ({ ...current, photos: [], recognized: false }))
   }, [])
 
+  /**
+   * Принимает знак продавца (B3) или снимает уже принятый.
+   *
+   * Содержимое проверяется тем же кодом, что и на сервере (`@shared/logo.ts`), но здесь —
+   * до отправки: человек узнаёт «фон непрозрачный» на шаге настройки, а не после списания
+   * баллов. Размер файла отсекается раньше чтения байтов: втягивать в память стомегабайтный
+   * снимок ради ответа «слишком большой» незачем.
+   *
+   * Чтение файла асинхронно, поэтому у него свой счётчик заходов: успей человек выбрать
+   * второй файл, пока читается первый, прежний ответ перетёр бы новый выбор.
+   */
+  const setLogo = useCallback((file: File | null) => {
+    const run = ++logoRun.current
+    setLogoRejected(null)
+
+    if (file === null) {
+      setDraft((current) => ({ ...current, logo: null }))
+      return
+    }
+
+    const tooBig = rejectLogoSize(file.size)
+    if (tooBig !== null) {
+      setLogoRejected(tooBig)
+      return
+    }
+
+    void file
+      .arrayBuffer()
+      .then((buffer) => {
+        if (run !== logoRun.current) return
+
+        const reason = rejectLogo(new Uint8Array(buffer))
+        if (reason !== null) {
+          setLogoRejected(reason)
+          return
+        }
+
+        setDraft((current) => ({
+          ...current,
+          logo: { name: file.name, size: file.size, blob: file },
+        }))
+      })
+      .catch((error: unknown) => {
+        if (run !== logoRun.current) return
+        logger.warn('Знак не прочитался', { reason: String(error) })
+        setLogoRejected('файл не прочитался. Попробуйте выбрать его ещё раз')
+      })
+  }, [])
+
+  const extractProperties = useCallback(() => {
+    const { productDescription, wishes } = draft
+    if (productDescription.trim() === '' && wishes.trim() === '') return
+
+    const run = ++propertiesRun.current
+    setExtractingProperties(true)
+    setPropertiesLimited(false)
+    setPropertiesFailed(false)
+    void (async (): Promise<void> => {
+      try {
+        const outcome = await extractProductProperties(productDescription, wishes)
+        if (run !== propertiesRun.current) return
+
+        setPropertiesLimited(outcome.limitReached)
+        setPropertiesFailed(outcome.failed)
+        setPropertiesExtracted(!outcome.limitReached && !outcome.failed)
+        if (outcome.limitReached || outcome.failed) return
+
+        setDraft((current) => ({ ...current, productProperties: outcome.properties }))
+      } catch (error: unknown) {
+        if (run !== propertiesRun.current) return
+        logger.warn('Свойства товара не извлечены', { reason: String(error) })
+        setPropertiesFailed(true)
+      } finally {
+        if (run === propertiesRun.current) setExtractingProperties(false)
+      }
+    })()
+  }, [draft])
+
   const goTo = useCallback((step: number) => {
     setDraft((current) => ({ ...current, step: Math.max(0, Math.min(LAST_STEP, step)) }))
   }, [])
@@ -212,7 +322,14 @@ export function useWizard(): Wizard {
 
   const reset = useCallback(() => {
     recognitionRun.current += 1
+    propertiesRun.current += 1
+    logoRun.current += 1
     setRejected([])
+    setLogoRejected(null)
+    setExtractingProperties(false)
+    setPropertiesExtracted(false)
+    setPropertiesLimited(false)
+    setPropertiesFailed(false)
     setDraft(EMPTY_DRAFT)
     void clearDraft()
   }, [])
@@ -222,11 +339,18 @@ export function useWizard(): Wizard {
     restored,
     rejected,
     recognizing,
+    extractingProperties,
+    propertiesExtracted,
     recognitionLimited,
+    propertiesLimited,
+    propertiesFailed,
+    logoRejected,
     update,
     addPhotos,
     removePhoto,
     clearPhotos,
+    setLogo,
+    extractProperties,
     goTo,
     next,
     back,

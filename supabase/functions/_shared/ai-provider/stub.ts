@@ -53,6 +53,7 @@ import type {
   Moderated,
   OutputProfile,
   ProductBrief,
+  ProductProperty,
   ProviderUsage,
   Recognized,
 } from './types.ts'
@@ -120,6 +121,21 @@ function requestedFailure(product: ProductBrief): Failure {
 function moderationRejected(photos: Uint8Array[]): boolean {
   if (photos.some((photo) => photo[0] === 0x00)) return true
   return Deno.env.get('AI_STUB_FAILURE') === 'moderation'
+}
+
+/** Детерминированный local-эквивалент: заглушка не знает фактов о товаре и ничего не сочиняет. */
+function propertiesFromText(description: string, wishes: string): ProductProperty[] {
+  const source = [description, wishes].filter((value) => value.trim() !== '').join(', ')
+
+  return source
+    .split(/[;,]/)
+    .map((part) => part.trim())
+    .filter((part) => part !== '')
+    .map((part) => {
+      const [label, ...rest] = part.split(/[:—-]/, 2)
+      const value = rest.join('').trim()
+      return value === '' ? { label: '', value: label.trim() } : { label: label.trim(), value }
+    })
 }
 
 /**
@@ -211,6 +227,11 @@ export function createStubProvider(onUsage?: (usage: ProviderUsage) => void): Ai
       const seed = hash(`${photos.length}:${largest}`)
       const categoryId = CATEGORY_IDS[seed % CATEGORY_IDS.length]
       return { categoryId, productTitle: GUESSES[categoryId] }
+    },
+
+    async extractProductProperties({ description, wishes }): Promise<ProductProperty[]> {
+      await wait(Math.min(delay, 300))
+      return propertiesFromText(description, wishes)
     },
 
     async generateImages({ product, profile, kind, objects }): Promise<GeneratedImage[]> {

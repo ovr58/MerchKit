@@ -20,6 +20,10 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     // Общий с сервером код лежит вне `src/`, но проверяется тем же прогоном: тест рядом
     // с модулем, а не в другом дереве.
-    include: ['src/**/*.test.{ts,tsx}', 'supabase/functions/_shared/**/*.test.ts'],
+    include: [
+      'src/**/*.test.{ts,tsx}',
+      'supabase/functions/_shared/**/*.test.ts',
+      'tools/**/*.test.ts',
+    ],
   },
 })

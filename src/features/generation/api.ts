@@ -1,11 +1,13 @@
 import { useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query'
+import { LOGO_MIME } from '@shared/logo.ts'
 import type { GenerationKind } from '@shared/pricing.ts'
 import { useEffect } from 'react'
 
 import { logger } from '@/lib/logger'
 import { supabase } from '@/lib/supabase'
 
-import { LAST_STEP, writeDraft, type DraftPhoto, type WizardDraft } from './draft'
+import { LAST_STEP, writeDraft, type DraftLogo, type DraftPhoto, type WizardDraft } from './draft'
+import { normalizeProductProperties, productPropertiesPayload, type ProductProperty } from './properties'
 
 /**
  * Модуль `generation-wizard` со стороны данных: распознавание, загрузка фото, запуск
@@ -27,6 +29,7 @@ export type Generation = {
   productTitle: string
   productDescription: string
   wishes: string
+  productProperties: ProductProperty[]
   price: number
   title: string | null
   cardTitle: string | null
@@ -39,7 +42,7 @@ export type Generation = {
 
 const SELECT =
   'id, status, kind, marketplace_id, category_id, preset_id, product_title, product_description,' +
-  ' wishes, price, title, card_title, card_description, failure_reason, source_paths, created_at,' +
+  ' wishes, product_properties, price, title, card_title, card_description, failure_reason, source_paths, created_at,' +
   ' generation_assets(storage_path, width, height, format)'
 
 type Row = Record<string, unknown> & {
@@ -57,6 +60,7 @@ function toGeneration(row: Row): Generation {
     productTitle: row.product_title as string,
     productDescription: row.product_description as string,
     wishes: row.wishes as string,
+    productProperties: normalizeProductProperties(row.product_properties),
     price: row.price as number,
     title: (row.title as string | null) ?? null,
     cardTitle: (row.card_title as string | null) ?? null,
@@ -132,11 +136,42 @@ export async function recognizePhotos(photos: DraftPhoto[]): Promise<RecognizeOu
   return { ...data, limitReached: false }
 }
 
+/* -------------------------------------------------------------- свойства товара (B1) */
+
+export type ProductPropertiesOutcome = {
+  properties: ProductProperty[]
+  limitReached: boolean
+  failed: boolean
+}
+
+/**
+ * Просит дешёвую текстовую модель выделить только факты из описания и пожеланий. Ответ —
+ * черновик для продавца, а не источник правды: перед запуском его можно полностью переписать.
+ */
+export async function extractProductProperties(
+  description: string,
+  wishes: string,
+): Promise<ProductPropertiesOutcome> {
+  const { data, error } = await supabase.functions.invoke<{ properties?: unknown }>('product-properties', {
+    body: { description, wishes },
+  })
+
+  if (error || !data) {
+    const limitReached = (await failureBody(error)).code === 'properties_limit'
+    if (!limitReached) logger.warn('Свойства товара не извлечены', { reason: error?.message })
+    return { properties: [], limitReached, failed: !limitReached }
+  }
+
+  return { properties: normalizeProductProperties(data.properties), limitReached: false, failed: false }
+}
+
 /* --------------------------------------------------------------- запуск заявки (US-01) */
 
 export type LaunchInput = {
   userId: string
   photos: DraftPhoto[]
+  /** Знак продавца или его отсутствие (B3): второе — штатный вход, а не пропуск поля. */
+  logo: DraftLogo | null
   kind: GenerationKind
   marketplaceId: string
   categoryId: string
@@ -144,6 +179,7 @@ export type LaunchInput = {
   productTitle: string
   productDescription: string
   wishes: string
+  productProperties: ProductProperty[]
 }
 
 export type LaunchOutcome =
@@ -175,6 +211,23 @@ export async function launchGeneration(input: LaunchInput): Promise<LaunchOutcom
     photoPaths.push(path)
   }
 
+  // Знак едет тем же путём и в тот же бакет, но ОТДЕЛЬНЫМ полем, а не пятым фото: фото
+  // уходят вендору как референсы товара и возвращаются мастеру при повторе (US-E4), а
+  // знак не делает ни того ни другого — его ставит наш сборщик.
+  let logoPath: string | null = null
+
+  if (input.logo !== null) {
+    logoPath = `${input.userId}/${stamp}-logo.png`
+    const { error } = await supabase.storage
+      .from('uploads')
+      .upload(logoPath, input.logo.blob, { contentType: LOGO_MIME, upsert: true })
+
+    if (error) {
+      logger.warn('Знак не загрузился', { reason: error.message })
+      return { ok: false, code: 'failed', message: 'Не удалось загрузить логотип. Попробуйте ещё раз' }
+    }
+  }
+
   const { data, error } = await supabase.functions.invoke<{ generationId: string }>('generate', {
     body: {
       kind: input.kind,
@@ -184,7 +237,9 @@ export async function launchGeneration(input: LaunchInput): Promise<LaunchOutcom
       productTitle: input.productTitle,
       productDescription: input.productDescription,
       wishes: input.wishes,
+      productProperties: productPropertiesPayload(input.productProperties),
       photoPaths,
+      logoPath,
     },
   })
 
@@ -393,6 +448,11 @@ export async function restoreDraftFrom(generation: Generation): Promise<DraftRes
     kind: generation.kind,
     presetId: generation.presetId,
     wishes: generation.wishes,
+    productProperties: generation.productProperties,
+    // Знак в черновик не возвращается: файл заявки лежит в бакете, но повтор идёт через
+    // ту же проверку, что и первый выбор, а восстановленный молча знак человек в сводке
+    // уже не заметит. Пусто честнее — сводка шага запуска скажет, что знака нет.
+    logo: null,
     recognized: true,
   }
 
