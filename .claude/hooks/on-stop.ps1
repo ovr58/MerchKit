@@ -14,7 +14,11 @@ if (-not (Test-Path -LiteralPath $flagPath)) {
     exit 0
 }
 
-$stdin = [Console]::In.ReadToEnd()
+# Claude Code шлёт JSON в UTF-8, а [Console]::InputEncoding на русской Windows — cp866:
+# чтение через [Console]::In декодирует байты не той кодировкой и превращает кириллицу в мусор
+# (озвучка читает бессмыслицу). Читаем поток напрямую как UTF-8, минуя Console.InputEncoding.
+$stdinReader = New-Object System.IO.StreamReader([Console]::OpenStandardInput(), [System.Text.Encoding]::UTF8)
+$stdin = $stdinReader.ReadToEnd()
 if ([string]::IsNullOrWhiteSpace($stdin)) {
     exit 0
 }
