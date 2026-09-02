@@ -1,6 +1,9 @@
 # Локальные override прав Claude Code — машинно-зависимы, НЕ коммитить.
 .claude/settings.local.json
 
+# Переключатель озвучивания ответов (/speech on|off) — машинное состояние, НЕ коммитить.
+.claude/tts-enabled
+
 # Личный локальный оверлей правил для Harvi Code — машинно-зависим, НЕ коммитить.
 AGENTS.local.md
 
