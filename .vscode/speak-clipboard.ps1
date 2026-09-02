@@ -16,6 +16,21 @@ $cyrillicCount = ([regex]::Matches($text, '\p{IsCyrillic}')).Count
 $latinCount = ([regex]::Matches($text, '[A-Za-z]')).Count
 $targetCulture = if ($latinCount -gt $cyrillicCount) { 'en-US' } else { 'ru-RU' }
 
+# --- Новое чтение прерывает предыдущее, а не звучит поверх него ---
+# Убиваем только процессы озвучки, стартовавшие РАНЬШЕ нас: так два почти одновременных запуска
+# не уничтожат друг друга взаимно — побеждает последний, как и ожидает пользователь.
+try {
+    $meStarted = (Get-CimInstance Win32_Process -Filter "ProcessId = $PID").CreationDate
+    Get-CimInstance Win32_Process -Filter "Name = 'powershell.exe'" |
+        Where-Object { $_.ProcessId -ne $PID -and $_.CreationDate -lt $meStarted -and $_.CommandLine -match 'on-stop\.ps1|speak-clipboard\.ps1' } |
+        ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+    Get-CimInstance Win32_Process -Filter "Name = 'piper.exe'" |
+        Where-Object { $_.CreationDate -lt $meStarted } |
+        ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+} catch {
+    # Не смогли прибрать за предыдущим — не повод молчать самим.
+}
+
 # --- Piper (натуральный локальный голос), если установлен tools/piper/install-piper.ps1 ---
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot '..')
 $piperExe = Join-Path $repoRoot 'tools\piper\bin\piper.exe'
@@ -29,7 +44,7 @@ if ((Test-Path $piperExe) -and (Test-Path $piperModel)) {
     $wavPath = Join-Path $env:TEMP ("piper-" + [guid]::NewGuid().ToString('N') + '.wav')
     # Скорость речи Piper: множитель длины фонемы, 1.0 — обычная, МЕНЬШЕ значит БЫСТРЕЕ (обратно
     # System.Speech.Rate ниже). См. `piper.exe --help` → --length_scale.
-    $piperLengthScale = 1.0
+    $piperLengthScale = 0.5
     try {
         $text | & $piperExe --model $piperModel --length_scale $piperLengthScale --output_file $wavPath | Out-Null
         if ((Test-Path $wavPath) -and (Get-Item $wavPath).Length -gt 0) {
