@@ -18,17 +18,21 @@
   "_hooks": {
     "Stop": [
       {
-        "type": "command",
-        "command": "powershell.exe",
-        "args": [
-          "-NoProfile",
-          "-ExecutionPolicy",
-          "Bypass",
-          "-File",
-          "${CLAUDE_PROJECT_DIR}/.claude/hooks/on-stop.ps1"
-        ],
-        "timeout": 30,
-        "async": true
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe",
+            "args": [
+              "-NoProfile",
+              "-ExecutionPolicy",
+              "Bypass",
+              "-File",
+              "${CLAUDE_PROJECT_DIR}/.claude/hooks/on-stop.ps1"
+            ],
+            "timeout": 30,
+            "async": true
+          }
+        ]
       }
     ]
   }
