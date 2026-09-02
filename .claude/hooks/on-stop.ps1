@@ -59,8 +59,11 @@ $piperModel = Join-Path $repoRoot "tools\piper\voices\$piperModelName.onnx"
 $spokenViaPiper = $false
 if ((Test-Path $piperExe) -and (Test-Path $piperModel)) {
     $wavPath = Join-Path $env:TEMP ("piper-" + [guid]::NewGuid().ToString('N') + '.wav')
+    # Скорость речи Piper: множитель длины фонемы, 1.0 — обычная, МЕНЬШЕ значит БЫСТРЕЕ (обратно
+    # System.Speech.Rate ниже). См. `piper.exe --help` → --length_scale.
+    $piperLengthScale = 1.0
     try {
-        $text | & $piperExe --model $piperModel --output_file $wavPath | Out-Null
+        $text | & $piperExe --model $piperModel --length_scale $piperLengthScale --output_file $wavPath | Out-Null
         if ((Test-Path $wavPath) -and (Get-Item $wavPath).Length -gt 0) {
             (New-Object System.Media.SoundPlayer $wavPath).PlaySync()
             $spokenViaPiper = $true
