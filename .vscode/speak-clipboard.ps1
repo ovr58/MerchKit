@@ -1,30 +1,60 @@
-# Озвучивает текущее содержимое буфера обмена (System.Speech). Используется задачей "Speak Clipboard".
-# Голос выбирается по тому же правилу, что в .claude/hooks/on-stop.ps1: Natural, если есть,
-# иначе ru-RU, иначе голос по умолчанию — см. docs/SPEECH_SETUP.md.
+# Озвучивает текущее содержимое буфера обмена через Piper (если установлен, см. tools/piper/)
+# или, если нет, через System.Speech. Используется задачей "Speak Clipboard".
 
 $ErrorActionPreference = 'Stop'
+# Без этого PowerShell кодирует текст, который пайпится во внешний exe (Piper), в US-ASCII по
+# умолчанию — кириллица превращается в мусор ещё до того, как Piper её увидит.
+$OutputEncoding = [System.Text.Encoding]::UTF8
 
 $text = Get-Clipboard -Raw
 if ([string]::IsNullOrWhiteSpace($text)) {
     exit 0
 }
 
-Add-Type -AssemblyName System.Speech
-$synth = New-Object System.Speech.Synthesis.SpeechSynthesizer
-$synth.Rate = 0 # Скорость речи: от -10 (медленнее) до 10 (быстрее), 0 — обычная.
-$voices = $synth.GetInstalledVoices() | Where-Object { $_.Enabled }
-
-# Голос — по языку текста (кириллица vs латиница), внутри языка приоритет "Natural" (Параметры →
-# Время и язык → Речь → Управление голосами), если такой когда-нибудь появится в системе.
+# Язык текста (кириллица vs латиница) определяет и модель Piper, и голос System.Speech ниже.
 $cyrillicCount = ([regex]::Matches($text, '\p{IsCyrillic}')).Count
 $latinCount = ([regex]::Matches($text, '[A-Za-z]')).Count
 $targetCulture = if ($latinCount -gt $cyrillicCount) { 'en-US' } else { 'ru-RU' }
-$inCulture = $voices | Where-Object { $_.VoiceInfo.Culture.Name -eq $targetCulture }
-$chosen = @(
-    $inCulture | Where-Object { $_.VoiceInfo.Name -match 'Natural' } | Select-Object -First 1
-    $inCulture | Select-Object -First 1
-    $voices | Where-Object { $_.VoiceInfo.Name -match 'Natural' } | Select-Object -First 1
-    $voices | Select-Object -First 1
-) | Where-Object { $_ } | Select-Object -First 1
-if ($chosen) { $synth.SelectVoice($chosen.VoiceInfo.Name) }
-$synth.Speak($text)
+
+# --- Piper (натуральный локальный голос), если установлен tools/piper/install-piper.ps1 ---
+$repoRoot = Resolve-Path (Join-Path $PSScriptRoot '..')
+$piperExe = Join-Path $repoRoot 'tools\piper\bin\piper.exe'
+# Имя модели должно совпадать с тем, что скачивает tools/piper/install-piper.ps1 (там же —
+# список альтернативных голосов и как его сменить).
+$piperModelName = if ($targetCulture -eq 'en-US') { 'en_US-lessac-medium' } else { 'ru_RU-irina-medium' }
+$piperModel = Join-Path $repoRoot "tools\piper\voices\$piperModelName.onnx"
+
+$spokenViaPiper = $false
+if ((Test-Path $piperExe) -and (Test-Path $piperModel)) {
+    $wavPath = Join-Path $env:TEMP ("piper-" + [guid]::NewGuid().ToString('N') + '.wav')
+    try {
+        $text | & $piperExe --model $piperModel --output_file $wavPath | Out-Null
+        if ((Test-Path $wavPath) -and (Get-Item $wavPath).Length -gt 0) {
+            (New-Object System.Media.SoundPlayer $wavPath).PlaySync()
+            $spokenViaPiper = $true
+        }
+    } catch {
+        $spokenViaPiper = $false
+    } finally {
+        Remove-Item $wavPath -ErrorAction SilentlyContinue
+    }
+}
+
+# --- Фолбэк на System.Speech, если Piper не установлен или синтез не удался ---
+if (-not $spokenViaPiper) {
+    Add-Type -AssemblyName System.Speech
+    $synth = New-Object System.Speech.Synthesis.SpeechSynthesizer
+    $synth.Rate = 5 # Скорость речи: от -10 (медленнее) до 10 (быстрее), 0 — обычная.
+    $voices = $synth.GetInstalledVoices() | Where-Object { $_.Enabled }
+    # Внутри языка приоритет "Natural" (Параметры → Время и язык → Речь → Управление голосами),
+    # если такой когда-нибудь появится в системе.
+    $inCulture = $voices | Where-Object { $_.VoiceInfo.Culture.Name -eq $targetCulture }
+    $chosen = @(
+        $inCulture | Where-Object { $_.VoiceInfo.Name -match 'Natural' } | Select-Object -First 1
+        $inCulture | Select-Object -First 1
+        $voices | Where-Object { $_.VoiceInfo.Name -match 'Natural' } | Select-Object -First 1
+        $voices | Select-Object -First 1
+    ) | Where-Object { $_ } | Select-Object -First 1
+    if ($chosen) { $synth.SelectVoice($chosen.VoiceInfo.Name) }
+    $synth.Speak($text)
+}

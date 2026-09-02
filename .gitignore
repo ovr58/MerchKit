@@ -4,6 +4,11 @@
 # Переключатель озвучивания ответов (/speech on|off) — машинное состояние, НЕ коммитить.
 .claude/tts-enabled
 
+# Piper TTS (опционально, tools/piper/install-piper.ps1) — бинарник и голосовые модели,
+# десятки МБ, скачиваются по требованию, НЕ коммитить.
+tools/piper/bin/
+tools/piper/voices/
+
 # Личный локальный оверлей правил для Harvi Code — машинно-зависим, НЕ коммитить.
 AGENTS.local.md
 
