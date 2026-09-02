@@ -11,6 +11,7 @@ if ([string]::IsNullOrWhiteSpace($text)) {
 
 Add-Type -AssemblyName System.Speech
 $synth = New-Object System.Speech.Synthesis.SpeechSynthesizer
+$synth.Rate = 0 # Скорость речи: от -10 (медленнее) до 10 (быстрее), 0 — обычная.
 $voices = $synth.GetInstalledVoices() | Where-Object { $_.Enabled }
 
 # Голос — по языку текста (кириллица vs латиница), внутри языка приоритет "Natural" (Параметры →
