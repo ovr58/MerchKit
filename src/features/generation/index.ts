@@ -19,7 +19,6 @@ export {
 } from './api'
 export {
   clearDraft,
-  hasPendingDraft,
   LAST_STEP,
   STEPS,
   type DraftLogo,

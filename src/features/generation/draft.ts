@@ -168,13 +168,3 @@ export async function clearDraft(): Promise<void> {
   }
 }
 
-/**
- * Есть ли черновик, к которому имеет смысл вернуть человека после входа.
- *
- * Пустой мастер возвращать незачем — это выглядело бы как «нас куда-то занесло». Признак
- * «человек уже что-то собрал» — хотя бы одно фото: с него начинается сценарий (FR-02).
- */
-export async function hasPendingDraft(): Promise<boolean> {
-  const draft = await readDraft()
-  return draft !== null && draft.photos.length > 0
-}
