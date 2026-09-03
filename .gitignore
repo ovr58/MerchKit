@@ -1,6 +1,14 @@
 # Локальные override прав Claude Code — машинно-зависимы, НЕ коммитить.
 .claude/settings.local.json
 
+# Переключатель озвучивания ответов (/speech on|off) — машинное состояние, НЕ коммитить.
+.claude/tts-enabled
+
+# Piper TTS (опционально, tools/piper/install-piper.ps1) — бинарник и голосовые модели,
+# десятки МБ, скачиваются по требованию, НЕ коммитить.
+tools/piper/bin/
+tools/piper/voices/
+
 # Личный локальный оверлей правил для Harvi Code — машинно-зависим, НЕ коммитить.
 AGENTS.local.md
 
@@ -53,3 +61,7 @@ bench/runs/
 # На 31 образец это ~30 МБ бинарников; в git держим сам разбор, а не его отрисовку.
 bench/samples/**/*.rebuilt.png
 bench/samples/**/*.layers.png
+
+# Файлы моделей выреза, которые качает оснастка замера (M7 B4.0). Веса — десятки мегабайт и
+# чужая лицензия; в git идут ссылка и лицензия в самой оснастке, а не байты.
+tools/card-pipeline/models/

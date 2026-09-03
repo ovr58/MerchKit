@@ -29,7 +29,7 @@
  *          "presetId":"clothing-model","productTitle":"Куртка-бомбер","photoPaths":[]}'
  */
 
-import { createProvider, type ProviderUsage } from '../_shared/ai-provider/index.ts'
+import { createProvider, type ProductProperty, type ProviderUsage } from '../_shared/ai-provider/index.ts'
 import {
   afterResponse,
   callDatabase,
@@ -41,6 +41,7 @@ import {
   json,
   selectFromDatabase,
 } from '../_shared/edge.ts'
+import { rejectLogo } from '../_shared/logo.ts'
 import { generationPrice, MAX_OBJECTS_PER_GENERATION, type GenerationKind } from '../_shared/pricing.ts'
 import { MAX_PHOTOS } from '../_shared/uploads.ts'
 
@@ -52,11 +53,35 @@ type Request_ = {
   productTitle?: unknown
   productDescription?: unknown
   wishes?: unknown
+  productProperties?: unknown
   photoPaths?: unknown
+  logoPath?: unknown
 }
 
 function text(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
+}
+
+/** Браузер можно обойти, поэтому подтверждённые свойства чистятся и здесь. */
+function productProperties(value: unknown): ProductProperty[] | null {
+  // Старый открытый клиент ещё может не передавать новое поле. Это означает пустой список,
+  // а не нарушение формы; заданное значение всегда проверяется строго.
+  if (value === undefined) return []
+  if (!Array.isArray(value)) return null
+
+  const normalized: ProductProperty[] = []
+
+  for (const entry of value) {
+    if (entry === null || typeof entry !== 'object') return null
+
+    const { label, value: propertyValue } = entry as { label?: unknown; value?: unknown }
+    if (typeof label !== 'string' || typeof propertyValue !== 'string') return null
+
+    const property = { label: label.trim(), value: propertyValue.trim() }
+    if (property.label !== '' || property.value !== '') normalized.push(property)
+  }
+
+  return normalized
 }
 
 /** Нехватка баллов приходит из базы как нарушение check-ограничения (US-E3). */
@@ -97,6 +122,11 @@ Deno.serve(async (request: Request): Promise<Response> => {
     return failure('Не указано наименование товара', 400)
   }
 
+  const confirmedProperties = productProperties(body.productProperties)
+  if (confirmedProperties === null) {
+    return failure('Свойства товара переданы в неверном формате', 400)
+  }
+
   const photoPaths = Array.isArray(body.photoPaths)
     ? body.photoPaths.filter((path): path is string => typeof path === 'string')
     : []
@@ -105,9 +135,18 @@ Deno.serve(async (request: Request): Promise<Response> => {
     return failure(`За одну генерацию принимаем не больше ${MAX_PHOTOS} фото`, 400)
   }
 
+  const logoPath = text(body.logoPath) === '' ? null : text(body.logoPath)
+
+  // Знак — только у карточки: у генерации типа `photo` макета нет, ставить его некуда.
+  // То же правило стоит в схеме, здесь оно отсекает заявку до платной модерации.
+  if (logoPath !== null && kind !== 'card') {
+    return failure('Логотип применим только к карточке', 400)
+  }
+
   // Чужие файлы в свою заявку не подставить: путь начинается с идентификатора владельца,
-  // и это то же условие, по которому их пускает Storage (NFR-04).
-  if (photoPaths.some((path) => !path.startsWith(`${owner}/`))) {
+  // и это то же условие, по которому их пускает Storage (NFR-04). Знак проверяется тем же
+  // правилом, что и фото: он приезжает в том же бакете и той же дорогой.
+  if ([...photoPaths, ...(logoPath === null ? [] : [logoPath])].some((path) => !path.startsWith(`${owner}/`))) {
     return failure('В заявке чужие файлы', 403)
   }
 
@@ -140,13 +179,29 @@ Deno.serve(async (request: Request): Promise<Response> => {
     // узнаёт, что сработала именно модерация.
     const usage: ProviderUsage[] = []
     const photos = await Promise.all(photoPaths.map((path) => downloadFile('uploads', path)))
+    const logo = logoPath === null ? null : await downloadFile('uploads', logoPath)
+
+    // Знак перепроверяется по БАЙТАМ, а не по расширению пути: клиент ту же проверку уже
+    // сделал (`_shared/logo.ts`), но интерфейс можно обойти, а негодный файл ляжет в
+    // карточку уже за деньги. Отказ здесь — до списания.
+    if (logo !== null) {
+      const reason = rejectLogo(logo)
+
+      if (reason !== null) {
+        return json({ error: `Логотип не подошёл: ${reason}`, code: 'logo_rejected' }, 400)
+      }
+    }
 
     // Неудача самой проверки — не «генерация временно недоступна»: человек стоит перед
     // кнопкой с готовой заявкой, и ему надо сказать, что именно не сработало. Провайдер
     // уже сходил к вендору дважды (`aitunnel.ts`, moderate) — здесь остаётся честный отказ.
     let moderation
     try {
-      moderation = await createProvider(undefined, (entry) => usage.push(entry)).moderate(photos)
+      // Знак идёт в тот же вызов, а не в свой: он попадает в оплаченный кадр наравне с
+      // фото, а отдельная проверка стоила бы второго обращения к вендору за ту же цену.
+      // Системный промпт модерации фирменные знаки разрешает прямым текстом.
+      moderation = await createProvider(undefined, (entry) => usage.push(entry))
+        .moderate(logo === null ? photos : [...photos, logo])
     } catch (error: unknown) {
       console.error('Модерация не дала вердикта', error)
       return json(
@@ -171,6 +226,8 @@ Deno.serve(async (request: Request): Promise<Response> => {
       free_wishes: text(body.wishes),
       photo_paths: photoPaths,
       charged_price: price,
+      properties: confirmedProperties,
+      logo: logoPath,
     })
 
     if (typeof generationId !== 'string') {

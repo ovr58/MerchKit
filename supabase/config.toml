@@ -390,6 +390,7 @@ deno_version = 2
 # значение из `supabase/functions/recognize/index.ts`.
 [edge_runtime.secrets]
 RECOGNIZE_MEMBER_DAILY_LIMIT = "10000"
+PRODUCT_PROPERTIES_MEMBER_DAILY_LIMIT = "10000"
 
 # Профиль AI-провайдера для локального стенда. Значения берутся из окружения и в git не
 # попадают — здесь только имена. **Не заданы — все пять приезжают пустыми строками, и
@@ -446,6 +447,12 @@ entrypoint = "./functions/health/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/health/*.html" ]
+
+# B4.0 measurement harness, not a deployable product endpoint. `enabled = false` makes the
+# CLI skip it both for `functions deploy` and normal local `functions serve`; temporarily enable
+# it only on a local checkout while running `npm run cards:bench`.
+[functions.card-bench]
+enabled = false
 
 # Уборка просроченных фото (веха M5, шаг 6). Проверку JWT снимаем не ради послаблений, а
 # потому что её дёргает расписание базы (Supabase Cron, docs/SPEC.md §8), а оно предъявляет

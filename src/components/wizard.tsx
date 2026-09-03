@@ -1,7 +1,17 @@
+import {
+  addProductProperty,
+  moveProductProperty,
+  removeProductProperty,
+  updateProductProperty,
+  type ProductProperty,
+} from '@/features/generation'
 import type { OutputProfile } from '@/features/taxonomy'
 import { useEffect, useState, type ReactNode } from 'react'
 
 import { AlertTriangleIcon, CheckIcon, CloseIcon, SparkIcon } from '@/components/icons'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { plural } from '@/lib/plural'
 import { cn } from '@/lib/utils'
 
 /**
@@ -353,6 +363,113 @@ export function PhotoThumb({
       >
         <CloseIcon className="size-3.5" />
       </button>
+    </div>
+  )
+}
+
+/* ------------------------------------------------------------------- свойства товара */
+
+/**
+ * Список свойств товара (B1) с правкой, порядком и удалением.
+ *
+ * Отдельным блоком, а не разметкой внутри шага, потому что мест у него два: шаг «Товар», где
+ * список подбирается, и шаг «Запуск», где превью показывает, что в макет поместилось (B6).
+ * Порядок — это важность, и чинить его человек должен там же, где узнал о нехватке места, а
+ * не возвращаясь на три шага назад.
+ */
+export function ProductPropertyList({
+  capacity,
+  onChange,
+  properties,
+}: {
+  /** Ёмкость выбранного макета. `null` — превью ещё не собиралось, отсекать нечем. */
+  capacity: number | null
+  onChange: (properties: ProductProperty[]) => void
+  properties: ProductProperty[]
+}) {
+  return (
+    <div className="flex flex-col gap-3">
+      {properties.length > 0 && (
+        <ol className="flex flex-col gap-2">
+          {properties.map((property, index) => {
+            const cut = capacity !== null && index >= capacity
+
+            return (
+              <li
+                className={cn(
+                  'grid gap-2 rounded-lg border p-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]',
+                  cut ? 'border-danger-border bg-danger-surface' : 'border-border',
+                )}
+                key={property.id}
+              >
+                {cut && (
+                  <span className="text-danger-foreground text-[13px] leading-[18px] sm:col-span-3">
+                    В кадр не попадёт: в макете {capacity} {plural(capacity, 'модуль', 'модуля', 'модулей')}.
+                    Поднимите свойство выше, если оно важнее.
+                  </span>
+                )}
+                <Input
+                  aria-label={`Название свойства ${index + 1}`}
+                  onChange={(event) =>
+                    onChange(updateProductProperty(properties, index, { label: event.target.value }))
+                  }
+                  placeholder="Например, материал"
+                  value={property.label}
+                />
+                <Input
+                  aria-label={`Значение свойства ${index + 1}`}
+                  onChange={(event) =>
+                    onChange(updateProductProperty(properties, index, { value: event.target.value }))
+                  }
+                  placeholder="Например, хлопок"
+                  value={property.value}
+                />
+                <div className="flex gap-1">
+                  <Button
+                    aria-label={`Поднять свойство ${index + 1}`}
+                    disabled={index === 0}
+                    onClick={() => onChange(moveProductProperty(properties, index, -1))}
+                    size="sm"
+                    type="button"
+                    variant="outline"
+                  >
+                    ↑
+                  </Button>
+                  <Button
+                    aria-label={`Опустить свойство ${index + 1}`}
+                    disabled={index === properties.length - 1}
+                    onClick={() => onChange(moveProductProperty(properties, index, 1))}
+                    size="sm"
+                    type="button"
+                    variant="outline"
+                  >
+                    ↓
+                  </Button>
+                  <Button
+                    aria-label={`Удалить свойство ${index + 1}`}
+                    onClick={() => onChange(removeProductProperty(properties, index))}
+                    size="sm"
+                    type="button"
+                    variant="outline"
+                  >
+                    Удалить
+                  </Button>
+                </div>
+              </li>
+            )
+          })}
+        </ol>
+      )}
+
+      <Button
+        className="self-start"
+        onClick={() => onChange(addProductProperty(properties))}
+        size="sm"
+        type="button"
+        variant="outline"
+      >
+        Добавить свойство
+      </Button>
     </div>
   )
 }

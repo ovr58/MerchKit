@@ -27,6 +27,11 @@
   consult-first держится правилом.
 - **Ponytail** приезжает плагином через `.claude/settings.json` (в Copilot — через
   `.github/instructions/ponytail.instructions.md`). Проверка — `docs/PONYTAIL_SETUP.md`.
+- **Озвучивание (TTS, Windows):** ручное чтение выделенного текста через задачу VS Code
+  `Speak Clipboard` + `/speech on|off|status` для автоозвучивания ответа по завершении хода
+  (Stop-хук). Голос — Piper, если установлен (`tools/piper/install-piper.ps1`, опционально), иначе
+  `System.Speech`. Регистрация хука — машинно-зависима, не коммитится. Установка —
+  `docs/SPEECH_SETUP.md`.
 - **Plan mode:** черновики планов живут в `~/.claude/plans/<slug>.md` — это стадия `Draft`
   перед `ACTIVE` в lifecycle из канона.
 

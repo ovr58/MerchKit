@@ -35,6 +35,8 @@ import {
 } from '../_shared/edge.ts'
 import { readImageInfo } from '../_shared/image.ts'
 import { describeProfileMismatch } from '../_shared/output-profile.ts'
+import { layoutSnapshot, selectCardLayout, type LayoutCandidate } from '../_shared/card-layout/selection.ts'
+import type { CardLayout } from '../_shared/card-layout/types.ts'
 import type { GenerationKind } from '../_shared/pricing.ts'
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -50,8 +52,10 @@ type GenerationRow = {
   product_title: string
   product_description: string
   wishes: string
+  product_properties: unknown[]
   objects_count: number
   source_paths: string[]
+  logo_path: string | null
   categories: { title: string } | null
   marketplaces: { title: string } | null
   presets: { title: string; prompt: string } | null
@@ -70,6 +74,15 @@ type ProfileRow = {
   color_space: string
   background_hex: string
   background_title: string
+}
+
+type LayoutRow = {
+  id: string
+  layout: CardLayout
+  category_id: string | null
+  marketplace_id: string | null
+  preset_id: string | null
+  is_fallback: boolean
 }
 
 Deno.serve(async (request: Request): Promise<Response> => {
@@ -187,6 +200,16 @@ async function run(generation: GenerationRow, usage: ProviderUsage[]): Promise<s
     backgroundTitle: profileRow.background_title,
   }
 
+  if (generation.kind === 'card') {
+    const selection = await selectLayout(generation, profile)
+    const snapshot = layoutSnapshot(generation.id, selection)
+    await callDatabase('snapshot_generation_layout', {
+      target_generation: snapshot.generationId,
+      selected_layout: snapshot.layoutId,
+      selected_snapshot: snapshot.layout,
+    })
+  }
+
   const product: ProductBrief = {
     title: generation.product_title,
     description: generation.product_description,
@@ -264,4 +287,48 @@ async function run(generation: GenerationRow, usage: ProviderUsage[]): Promise<s
 
   console.info('Генерация', generation.id, 'завершена')
   return 'done'
+}
+
+async function selectLayout(generation: GenerationRow, profile: OutputProfile) {
+  const [layouts, fallbacks] = await Promise.all([
+    selectFromDatabase(
+      `card_layouts?category_id=eq.${encodeURIComponent(generation.category_id)}` +
+        '&select=id,layout,category_id,marketplace_id,preset_id,is_fallback',
+    ),
+    selectFromDatabase(
+      'card_layouts?is_fallback=is.true&select=id,layout,category_id,marketplace_id,preset_id,is_fallback' +
+        '&order=id&limit=1',
+    ),
+  ])
+
+  const fallback = (fallbacks as LayoutRow[])[0]
+  if (fallback === undefined) throw new Error('В библиотеке нет универсального макета')
+
+  return selectCardLayout(
+    (layouts as LayoutRow[]).map(toLayoutCandidate),
+    toLayoutCandidate(fallback),
+    {
+      categoryId: generation.category_id,
+      marketplaceId: generation.marketplace_id,
+      presetId: generation.preset_id,
+      // Знак загружен продавцом и проверен в `generate` до списания баллов (шаг B3).
+      // Не загружен — это не мешает подбору: макет со знаком просто теряет свой балл, а
+      // если он всё же победит, слой снимется правилом K-3 на сборке.
+      hasLogo: generation.logo_path !== null,
+      propertyCount: generation.product_properties.length,
+      targetAspectW: profile.aspectW,
+      targetAspectH: profile.aspectH,
+    },
+  )
+}
+
+function toLayoutCandidate(row: LayoutRow): LayoutCandidate {
+  return {
+    id: row.id,
+    layout: row.layout,
+    categoryId: row.category_id,
+    marketplaceId: row.marketplace_id,
+    presetId: row.preset_id,
+    isFallback: row.is_fallback,
+  }
 }

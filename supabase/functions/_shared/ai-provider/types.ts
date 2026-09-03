@@ -83,6 +83,12 @@ export type Recognized = {
   productTitle: string | null
 }
 
+/** Характеристика из B1. Порядок массива — порядок важности, подтверждённый продавцом. */
+export type ProductProperty = {
+  label: string
+  value: string
+}
+
 export type CardTexts = {
   title: string
   description: string
@@ -125,6 +131,9 @@ export interface AiProvider {
 
   /** FR-03, FR-04: категория и наименование по фото. Не смог — вернуть NULL (US-E2). */
   recognize(photos: Uint8Array[]): Promise<Recognized>
+
+  /** B1: извлекает только явно названные продавцом свойства, в порядке важности. */
+  extractProductProperties(input: { description: string; wishes: string }): Promise<ProductProperty[]>
 
   /** FR-25: изображения строго по профилю — кадр, разрешение, формат и фон. */
   generateImages(input: {

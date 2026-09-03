@@ -1,3 +1,4 @@
+import { LOGO_HUMAN, LOGO_MIME } from '@shared/logo.ts'
 import { generationPrice, MAX_OBJECTS_PER_GENERATION, OBJECT_PRICE } from '@shared/pricing.ts'
 import {
   ACCEPTED_FORMATS_HUMAN,
@@ -19,6 +20,7 @@ import {
   OutputParams,
   PhotoThumb,
   PriceRow,
+  ProductPropertyList,
   Stepper,
   SummaryRow,
 } from '@/components/wizard'
@@ -32,7 +34,10 @@ import {
   STEPS,
   useInvalidateAfterLaunch,
   useWizard,
+  type CardPreview,
+  type DraftLogo,
   type DraftPhoto,
+  type ProductProperty,
 } from '@/features/generation'
 import {
   FREEFORM_CATEGORY,
@@ -42,6 +47,7 @@ import {
   useTaxonomy,
 } from '@/features/taxonomy'
 import { plural } from '@/lib/plural'
+import { cn } from '@/lib/utils'
 
 /**
  * Мастер генерации — шесть шагов по артбордам захода D2 и состояниям
@@ -76,6 +82,161 @@ function usePhotoUrls(photos: DraftPhoto[]): Map<string, string> {
   )
 
   return urls
+}
+
+/** Адрес превью знака живёт по тем же правилам, что и адреса миниатюр фото выше. */
+function useLogoUrl(logo: DraftLogo | null): string | null {
+  const url = useMemo(() => (logo === null ? null : URL.createObjectURL(logo.blob)), [logo])
+
+  useEffect(
+    () => () => {
+      if (url !== null) URL.revokeObjectURL(url)
+    },
+    [url],
+  )
+
+  return url
+}
+
+/**
+ * Бесплатное превью карточки до оплаты — шаг B6, коррекция K-1.
+ *
+ * **Показывает три вещи, и все три обязательные:** что не поместилось, почему (ёмкость
+ * выбранного макета) и где это чинится — список свойств стоит здесь же. Молчаливо пропавшая
+ * характеристика и есть тот брак, ради которого шаг заведён: узнать о ней по оплаченному
+ * кадру продавец не должен.
+ *
+ * **Заглушки названы заглушками.** Кадра вендора до оплаты нет, заголовок карточки сочинит
+ * модель, — и превью говорит об этом словами, а не оставляет продавца гадать, почему в
+ * кадре штриховка и слово «Подзаголовок».
+ */
+function CardPreviewPanel({
+  onChangeProperties,
+  preview,
+  previewFailed,
+  previewStale,
+  previewing,
+  properties,
+  refresh,
+}: {
+  onChangeProperties: (properties: ProductProperty[]) => void
+  preview: CardPreview | null
+  previewFailed: boolean
+  previewStale: boolean
+  previewing: boolean
+  properties: ProductProperty[]
+  refresh: () => void
+}) {
+  // Переполнение на свойстве продавец чинит сам — это его текст, он попадёт в кадр дословно.
+  // Переполнение на подстановке чинить нечем: настоящий заголовок сочинит модель.
+  const ownOverflows = (preview?.overflows ?? []).filter((overflow) => overflow.bind?.kind === 'prop')
+  const titleOverflow = (preview?.overflows ?? []).some(
+    (overflow) => overflow.bind?.kind === 'text' && overflow.bind.slot === 'title',
+  )
+
+  return (
+    <section aria-labelledby="card-preview-title" className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 className="text-sm font-medium" id="card-preview-title">
+            Как ляжет вёрстка
+          </h2>
+          <p className="text-muted-foreground text-[13px] leading-[18px]">
+            Бесплатно и без списания: собрано нашим сборщиком на заглушках.
+          </p>
+        </div>
+        <Button
+          disabled={previewing}
+          onClick={refresh}
+          size="sm"
+          type="button"
+          variant={previewStale ? 'default' : 'outline'}
+        >
+          {previewing ? 'Собираем…' : preview === null ? 'Собрать превью' : 'Обновить превью'}
+        </Button>
+      </div>
+
+      {previewFailed && (
+        <Notice tone="error">
+          <span>Не удалось собрать превью. Запуску это не мешает, но проверить вёрстку заранее не выйдет.</span>
+        </Notice>
+      )}
+
+      {preview !== null && (
+        <>
+          <div className="border-border bg-muted flex justify-center rounded-lg border p-3">
+            <img
+              alt="Превью карточки на заглушках"
+              className={cn('max-h-[420px] w-auto rounded-md', previewStale && 'opacity-50')}
+              src={preview.png}
+            />
+          </div>
+
+          {previewStale && (
+            <Notice tone="info">
+              <span>Настройки изменились после сборки. Обновите превью, чтобы увидеть нынешнюю вёрстку.</span>
+            </Notice>
+          )}
+
+          {preview.cut.length > 0 && (
+            <Notice tone="error">
+              <span>
+                В кадр {plural(preview.cut.length, 'не попадёт', 'не попадут', 'не попадут')}{' '}
+                <b>
+                  {preview.cut.length} {plural(preview.cut.length, 'свойство', 'свойства', 'свойств')}
+                </b>
+                : {preview.cut.map((property) => property.label || property.value).join(', ')}.
+              </span>
+              <span>
+                Причина — ёмкость макета «{preview.layout.title}»: {preview.capacity}{' '}
+                {plural(preview.capacity, 'модуль', 'модуля', 'модулей')}. Отбрасывается хвост списка,
+                а порядок задаёте вы — поднимите наверх то, что важнее.
+              </span>
+            </Notice>
+          )}
+
+          {ownOverflows.length > 0 && (
+            <Notice tone="error">
+              <span>Не помещается в свой модуль — текст обрежется краем плашки:</span>
+              <span>
+                {ownOverflows
+                  .map((overflow) => `«${overflow.text}» — на ${Math.round(overflow.over * 100)}% длиннее`)
+                  .join('; ')}
+                .
+              </span>
+            </Notice>
+          )}
+
+          <Notice tone="info">
+            <span>
+              Штриховка — заглушка кадра: сцену нарисует модель после запуска.
+              {preview.stubbed.length > 0 && ' Подписи-рыба тоже подберёт она — ваши здесь только наименование и свойства.'}
+            </span>
+            {titleOverflow && (
+              <span>
+                Наименование длиннее заголовка в этом макете. Это не ошибка заявки: в карточке
+                заголовок сочинит модель, и он будет короче.
+              </span>
+            )}
+          </Notice>
+        </>
+      )}
+
+      <div className="flex flex-col gap-1">
+        <h3 className="text-sm font-medium">Свойства товара</h3>
+        <p className="text-muted-foreground text-[13px] leading-[18px]">
+          Порядок задаёт важность: в кадр попадают первые
+          {preview === null ? ' — столько, сколько модулей у макета' : ` ${preview.capacity}`}.
+        </p>
+      </div>
+
+      <ProductPropertyList
+        capacity={preview?.capacity ?? null}
+        onChange={onChangeProperties}
+        properties={properties}
+      />
+    </section>
+  )
 }
 
 function Textarea({
@@ -123,6 +284,7 @@ export default function Wizard() {
   const [launchError, setLaunchError] = useState<string | null>(null)
   const [dragging, setDragging] = useState(false)
   const filePicker = useRef<HTMLInputElement>(null)
+  const logoPicker = useRef<HTMLInputElement>(null)
 
   // Сколько фото прежней генерации не пережили срок хранения (веха M5, шаг 6). Приезжает
   // состоянием перехода из карточки генерации, а не полем черновика: это разовое
@@ -131,6 +293,7 @@ export default function Wizard() {
   const expiredPhotos = typeof expiredHint === 'number' ? expiredHint : 0
 
   const urls = usePhotoUrls(draft.photos)
+  const logoUrl = useLogoUrl(draft.logo)
   const data = taxonomy.data
   const price = generationPrice(draft.kind, MAX_OBJECTS_PER_GENERATION)
   const categoryTitle = titleOf(data?.categories ?? [], draft.categoryId)
@@ -187,6 +350,10 @@ export default function Wizard() {
       productTitle: draft.productTitle.trim(),
       productDescription: draft.productDescription.trim(),
       wishes: draft.wishes.trim(),
+      productProperties: draft.productProperties,
+      // Знак нужен только карточке: у фото макета нет вовсе, и класть файл в бакет ради
+      // генерации, которая его не откроет, значит платить за хранение впустую.
+      logo: draft.kind === 'card' ? draft.logo : null,
     })
     setLaunching(false)
 
@@ -431,6 +598,59 @@ export default function Wizard() {
                 placeholder="Состав, цвет, размерный ряд, особенности"
                 value={draft.productDescription}
               />
+
+              <section aria-labelledby="product-properties-title" className="flex flex-col gap-3">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <h2 className="text-sm font-medium" id="product-properties-title">
+                      Свойства товара
+                    </h2>
+                    <p className="text-muted-foreground text-[13px] leading-[18px]">
+                      Проверьте подсказки: только вы отвечаете за сведения в карточке. Порядок задаёт важность.
+                    </p>
+                  </div>
+                  <Button
+                    disabled={
+                      wizard.extractingProperties ||
+                      (draft.productDescription.trim() === '' && draft.wishes.trim() === '')
+                    }
+                    onClick={wizard.extractProperties}
+                    size="sm"
+                    type="button"
+                    variant="outline"
+                  >
+                    {wizard.extractingProperties
+                      ? 'Подбираем…'
+                      : draft.productProperties.length > 0
+                        ? 'Подобрать заново'
+                        : 'Подобрать свойства'}
+                  </Button>
+                </div>
+
+                {wizard.propertiesLimited && (
+                  <Notice tone="info">
+                    <span>Подбор свойств на сегодня закончился. Добавьте или измените свойства вручную.</span>
+                  </Notice>
+                )}
+
+                {wizard.propertiesFailed && (
+                  <Notice tone="error">
+                    <span>Не удалось подобрать свойства. Добавьте их вручную или попробуйте ещё раз.</span>
+                  </Notice>
+                )}
+
+                {wizard.propertiesExtracted && draft.productProperties.length === 0 && (
+                  <Notice tone="info">
+                    <span>В описании и пожеланиях не нашлось явных свойств. При необходимости добавьте их вручную.</span>
+                  </Notice>
+                )}
+
+                <ProductPropertyList
+                  capacity={null}
+                  onChange={(properties) => wizard.update({ productProperties: properties })}
+                  properties={draft.productProperties}
+                />
+              </section>
             </>
           )}
 
@@ -532,6 +752,77 @@ export default function Wizard() {
                 placeholder="Например: тёплый вечерний свет, городская улица, модель в движении"
                 value={draft.wishes}
               />
+
+              {/* Знак — только у карточки (B3): у фото макета нет, ставить знак некуда.
+                  Поле стоит здесь, а не на шаге «Тип»: там выбор из двух карточек, и блок
+                  загрузки вырастал бы прямо под пальцем в момент нажатия. */}
+              {draft.kind === 'card' && (
+                <section aria-labelledby="logo-title" className="flex flex-col gap-3">
+                  <div>
+                    <h2 className="text-sm font-medium" id="logo-title">
+                      Логотип
+                    </h2>
+                    <p className="text-muted-foreground text-[13px] leading-[18px]">
+                      Необязательно. Загрузите свой знак — поставим его в карточку, если у
+                      подобранного макета есть для него место.
+                    </p>
+                  </div>
+
+                  <input
+                    accept={LOGO_MIME}
+                    className="sr-only"
+                    onChange={(event) => {
+                      wizard.setLogo(event.target.files?.[0] ?? null)
+                      event.target.value = ''
+                    }}
+                    ref={logoPicker}
+                    type="file"
+                  />
+
+                  {wizard.logoRejected !== null && (
+                    <Notice tone="error">
+                      <span>Знак не подошёл: {wizard.logoRejected}.</span>
+                    </Notice>
+                  )}
+
+                  {draft.logo === null ? (
+                    <Button
+                      className="self-start"
+                      onClick={() => logoPicker.current?.click()}
+                      size="sm"
+                      type="button"
+                      variant="outline"
+                    >
+                      Загрузить знак
+                    </Button>
+                  ) : (
+                    <div className="border-border flex items-center gap-3 rounded-lg border p-3">
+                      <img
+                        alt={draft.logo.name}
+                        // Клетка под знаком — не украшение: на белой плашке прозрачный фон
+                        // неотличим от белого, и человек не увидит, что именно он загрузил.
+                        className="size-16 flex-none rounded-md object-contain"
+                        src={logoUrl ?? ''}
+                        style={{
+                          backgroundColor: '#ffffff',
+                          backgroundImage:
+                            'repeating-conic-gradient(#e5e7eb 0% 25%, #ffffff 0% 50%)',
+                          backgroundSize: '12px 12px',
+                        }}
+                      />
+                      <span className="min-w-0 flex-1 truncate text-[13px]">{draft.logo.name}</span>
+                      <Button onClick={() => wizard.setLogo(null)} size="sm" type="button" variant="outline">
+                        Убрать
+                      </Button>
+                    </div>
+                  )}
+
+                  <span className="text-muted-foreground text-[13px] leading-[18px]">
+                    {LOGO_HUMAN}. Прозрачный фон обязателен: на непрозрачном знак ляжет
+                    поверх фотографии белым прямоугольником.
+                  </span>
+                </section>
+              )}
             </>
           )}
 
@@ -556,6 +847,30 @@ export default function Wizard() {
                 </Notice>
               )}
 
+              {/* B3: не загрузил — генерация не блокируется, но узнать об этом человек
+                  обязан ДО списания, а не по готовой карточке без своего знака. */}
+              {draft.kind === 'card' && draft.logo === null && (
+                <Notice tone="info">
+                  <span>
+                    Логотип не загружен — карточка соберётся без знака: слой с ним просто не
+                    появится. Запуску это не мешает, а добавить знак можно на шаге «Как
+                    показать».
+                  </span>
+                </Notice>
+              )}
+
+              {draft.kind === 'card' && (
+                <CardPreviewPanel
+                  onChangeProperties={(properties) => wizard.update({ productProperties: properties })}
+                  preview={wizard.preview}
+                  previewFailed={wizard.previewFailed}
+                  previewStale={wizard.previewStale}
+                  previewing={wizard.previewing}
+                  properties={draft.productProperties}
+                  refresh={wizard.refreshPreview}
+                />
+              )}
+
               <dl className="flex flex-col gap-2.5">
                 <SummaryRow label="Фото" value={`${draft.photos.length} ${plural(draft.photos.length, 'файл', 'файла', 'файлов')}`} />
                 <SummaryRow label="Товар" value={draft.productTitle || null} />
@@ -564,6 +879,9 @@ export default function Wizard() {
                 <SummaryRow label="Площадка" value={marketplaceTitle} />
                 <SummaryRow label="Тип" value={draft.kind === 'card' ? 'Карточка' : 'Фото'} />
                 <SummaryRow label="Как показать" value={presetTitle} />
+                {draft.kind === 'card' && (
+                  <SummaryRow label="Логотип" value={draft.logo?.name ?? null} />
+                )}
                 <SummaryRow label="Пожелания" value={draft.wishes || null} />
               </dl>
 

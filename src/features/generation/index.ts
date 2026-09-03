@@ -7,11 +7,14 @@
 export {
   downloadResult,
   launchGeneration,
+  previewCard,
   restoreDraftFrom,
   signedResultUrl,
   useCatalog,
   useGeneration,
   useInvalidateAfterLaunch,
+  type CardPreview,
+  type CardPreviewOverflow,
   type DraftRestore,
   type Generation,
   type GenerationStatus,
@@ -19,10 +22,17 @@ export {
 } from './api'
 export {
   clearDraft,
-  hasPendingDraft,
   LAST_STEP,
   STEPS,
+  type DraftLogo,
   type DraftPhoto,
   type WizardDraft,
 } from './draft'
+export {
+  addProductProperty,
+  moveProductProperty,
+  removeProductProperty,
+  updateProductProperty,
+  type ProductProperty,
+} from './properties'
 export { blockedBy, useWizard, type Wizard } from './wizard'

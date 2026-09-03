@@ -133,9 +133,28 @@ try {
   await page.getByRole('button', { name: /^Ozon/ }).click()
   const params = page.getByText('Каким получится файл')
   await params.waitFor()
-  const shownSize = await page.getByText('1200 × 1600').first().isVisible()
-  const shownGrey = await page.getByText('серый #F2F3F5').first().isVisible()
-  check('FR-25 параметры пары показаны до списания, с исключением Ozon', shownSize && shownGrey)
+
+  // Числа профиля берутся из базы, а не переписываются сюда: требование FR-25 — что
+  // интерфейс показывает ИМЕННО профиль выбранной пары, а вторая копия размера в тесте
+  // однажды уже разошлась с миграцией и молча состарила проверку.
+  const [ozonClothing] = await (
+    await fetch(
+      `${env.API_URL}/rest/v1/marketplace_output_profiles` +
+        '?marketplace_id=eq.ozon&category_id=eq.clothing&select=width,height,background_title',
+      { headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}` } },
+    )
+  ).json()
+
+  const shownSize = await page
+    .getByText(`${ozonClothing.width} × ${ozonClothing.height}`)
+    .first()
+    .isVisible()
+  const shownBackground = await page.getByText(ozonClothing.background_title).first().isVisible()
+  check(
+    'FR-25 параметры пары показаны до списания, с исключением Ozon',
+    shownSize && shownBackground,
+    `${ozonClothing.width} × ${ozonClothing.height}, ${ozonClothing.background_title}`,
+  )
 
   await page.getByRole('button', { name: 'Далее' }).click()
   await page.getByRole('heading', { name: 'Что создаём?' }).waitFor()
@@ -148,6 +167,20 @@ try {
 
   await page.getByRole('heading', { name: 'Проверьте и запускайте' }).waitFor()
   check('FR-11 цена показана до запуска', await page.getByText('55 баллов').first().isVisible())
+
+  // B6 (K-1): вёрстка показана ДО списания, и список свойств правится там же, где человек
+  // узнал, что в макет поместилось. Собирается превью на нашем сборщике, вендор не зовётся.
+  const previewImage = page.getByRole('img', { name: 'Превью карточки на заглушках' })
+  try {
+    await previewImage.waitFor({ timeout: 30000 })
+  } catch {
+    await page.screenshot({ path: 'e2e-preview.png', fullPage: true })
+  }
+  check('B6 карточка собрана на заглушках до списания', await previewImage.isVisible())
+  check(
+    'B6 свойства правятся на том же шаге',
+    await page.getByRole('button', { name: 'Добавить свойство' }).last().isVisible(),
+  )
 
   /* ------------------------------------------- настройки не теряются (US-E6) */
 

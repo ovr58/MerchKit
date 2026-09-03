@@ -21,6 +21,7 @@
 import { resolveLayout } from './validate.ts'
 import type { DroppedLayer, PlacedLayer, PlacedRun } from './validate.ts'
 import type {
+  Binding,
   CardContent,
   CardLayout,
   Effect,
@@ -35,6 +36,34 @@ import type {
 export type FontFamilies = Record<FontRole, string>
 
 export type ComposeResult = { svg: string; dropped: DroppedLayer[] }
+
+/**
+ * Строка композиции, вынутая для арифметики переполнения (K-1, шаг B6).
+ *
+ * **Ширину строки здесь никто не считает.** Средняя ширина знака врёт на любой гарнитуре, а
+ * на карточке это цена ошибки в кадре: строка молча вылезает за плашку. Поэтому наружу
+ * отдаётся готовая проба — самодостаточный SVG с этой же строкой в этом же начертании, —
+ * и обмеряет её тот же растеризатор, который потом рисует. Замер 2026-09-03: обмер строки
+ * стоит 1–3 мс в изоляте.
+ *
+ * Высота обмера не требует: разбивку на строки задаёт макет, а не сборщик, поэтому высота
+ * блока — арифметика вёрстки, и она посчитана здесь.
+ */
+export type TextProbe = {
+  layerId: string
+  /** Чем слой наполнен. Превью по ней отличает окончательный текст от заглушки. */
+  bind?: Binding
+  /** Номер строки в слое, с нуля. */
+  line: number
+  /** Что написано — этим же текстом превью называет переполнение человеку. */
+  text: string
+  /** Самодостаточный SVG с одной строкой: `x=0`, начертание слоя, обмер по `getBBox`. */
+  svg: string
+  /** Бокс слоя в пикселях кадра. */
+  box: { width: number; height: number }
+  /** Высота текстового блока по арифметике вёрстки, в пикселях. */
+  blockHeight: number
+}
 
 /**
  * Доля кегля от верха строки до базовой линии. Не метрика шрифта, а соглашение вёрстки:
@@ -71,6 +100,114 @@ export function composeSvg(
     `</svg>`
 
   return { svg, dropped }
+}
+
+/**
+ * Пробы всех строк композиции — вход арифметики переполнения (B6).
+ *
+ * Отдельным проходом, а не полем `ComposeResult`: сборке (B7) пробы не нужны, а превью не
+ * нужен растр в тот же момент. Оба прохода читают один и тот же `resolveLayout`, поэтому
+ * разойтись с нарисованным пробы не могут.
+ */
+export function textProbes(
+  layout: CardLayout,
+  content: CardContent,
+  size: { width: number; height: number },
+  fonts: FontFamilies,
+): TextProbe[] {
+  const probes: TextProbe[] = []
+
+  for (const placed of resolveLayout(layout, content).layers) {
+    const { layer } = placed
+    if (layer.type !== 'text' || placed.lines === undefined || placed.lines.length === 0) continue
+
+    const fontSize = layer.style.size * size.height
+    const box = { width: placed.box.w * size.width, height: placed.box.h * size.height }
+    const blockHeight = placed.lines.length * layer.style.lineHeight * fontSize
+    // Якорь всегда `start`: проба стоит на x=0, а `text-anchor` двигает строку, но её
+    // ширину не меняет. Обводка в пробу не едет, и сегодня это ничего не искажает — в
+    // библиотеке из 34 макетов нет ни одного текстового слоя с эффектом `stroke`. Появится —
+    // обмер начнёт занижать ширину на её толщину, и обводку придётся добавить сюда.
+    const common = textAttrs(layer.style, size, fonts, 'start', '')
+
+    placed.lines.forEach((runs, line) => {
+      // Холст пробы заведомо шире любой мыслимой строки: `getBBox` меряет дерево, а не то,
+      // что попало в кадр, но обрезанная строка сбивала бы с толку при отладке.
+      const canvas = Math.max(size.width, size.height) * 4
+
+      probes.push({
+        layerId: layer.id,
+        bind: layer.bind,
+        line,
+        text: runs.map((run) => run.text).join(''),
+        svg:
+          `<svg xmlns="http://www.w3.org/2000/svg" width="${round(canvas)}" height="${round(fontSize * 4)}">` +
+          `<text x="0" y="${round(fontSize * 2)}" ${common}>${lineBody(runs, layer.style, size)}</text></svg>`,
+        box,
+        blockHeight,
+      })
+    })
+  }
+
+  return probes
+}
+
+/** Что не поместилось в свой бокс. Пустой список — вёрстка сходится. */
+export type Overflow = {
+  layerId: string
+  bind?: Binding
+  /** Строка шире бокса или блок строк выше бокса. */
+  kind: 'width' | 'height'
+  text: string
+  /** Насколько вылезло долей бокса: 0.18 — строка на 18% длиннее места под неё. Долей, а
+   *  не пикселями: превью уменьшено, и пиксели превью человеку ничего не скажут. */
+  over: number
+}
+
+/** Меньшее превышение — след округлений, а не брак вёрстки. */
+const OVERFLOW_TOLERANCE_PX = 1
+
+/**
+ * Арифметика переполнения (K-1): какие строки не влезают в свои боксы.
+ *
+ * Ширину спрашивает у обмерщика (в изоляте это `resvg`), высоту считает сама. Функция
+ * чистая — обмерщик приходит параметром, иначе половина сборщика знала бы про рантайм.
+ */
+export function overflowsOf(probes: TextProbe[], measure: (svg: string) => number): Overflow[] {
+  const wide: Overflow[] = []
+  const tall = new Map<string, Overflow>()
+
+  for (const probe of probes) {
+    const width = measure(probe.svg)
+    if (width - probe.box.width > OVERFLOW_TOLERANCE_PX) {
+      wide.push({
+        layerId: probe.layerId,
+        bind: probe.bind,
+        kind: 'width',
+        text: probe.text,
+        over: (width - probe.box.width) / probe.box.width,
+      })
+    }
+
+    // Высота — свойство слоя целиком, а не строки: докладывается одной записью на слой, и
+    // текстом в ней стоит весь блок, иначе человек чинил бы первую строку вместо переноса.
+    if (probe.blockHeight - probe.box.height > OVERFLOW_TOLERANCE_PX) {
+      const already = tall.get(probe.layerId)
+      if (already === undefined) {
+        tall.set(probe.layerId, {
+          layerId: probe.layerId,
+          bind: probe.bind,
+          kind: 'height',
+          text: probe.text,
+          over: (probe.blockHeight - probe.box.height) / probe.box.height,
+        })
+      } else {
+        already.text = `${already.text} / ${probe.text}`
+      }
+    }
+  }
+
+  return [...wide, ...tall.values()]
 }
 
 function renderLayer(
@@ -292,7 +429,29 @@ function text(
     style.align === 'left' ? rect.x : style.align === 'center' ? rect.x + rect.w / 2 : rect.x + rect.w
   const anchor = style.align === 'left' ? 'start' : style.align === 'center' ? 'middle' : 'end'
 
-  const common = attrs([
+  const common = textAttrs(style, size, fonts, anchor, stroke)
+
+  return lines
+    .map((runs, index) => {
+      const baseline = top + index * lineBox + lineBox / 2 + fontSize * BASELINE_IN_LINE
+      const open = `<text x="${round(anchorX)}" y="${round(baseline)}" ${common}>`
+
+      return `${open}${lineBody(runs, style, size)}</text>`
+    })
+    .join('')
+}
+
+/** Начертание строки одной записью: рисование и обмер (B6) обязаны спрашивать одно и то же. */
+function textAttrs(
+  style: TextStyle,
+  size: { width: number; height: number },
+  fonts: FontFamilies,
+  anchor: string,
+  stroke: string,
+): string {
+  const fontSize = style.size * size.height
+
+  return attrs([
     `font-family="${escapeXml(fonts[style.role])}"`,
     `font-size="${round(fontSize)}"`,
     `font-weight="${style.weight}"`,
@@ -302,25 +461,18 @@ function text(
     style.tracking === undefined ? '' : `letter-spacing="${round(style.tracking * fontSize)}"`,
     stroke,
   ])
+}
 
+/** Содержимое одного `<text>`: цельная строка или прогоны разного начертания. */
+function lineBody(runs: PlacedRun[], style: TextStyle, size: { width: number; height: number }): string {
   const cased = (value: string): string =>
     style.transform === 'upper' ? value.toLocaleUpperCase('ru-RU') : value
 
-  return lines
-    .map((runs, index) => {
-      const baseline = top + index * lineBox + lineBox / 2 + fontSize * BASELINE_IN_LINE
-      const open = `<text x="${round(anchorX)}" y="${round(baseline)}" ${common}>`
-
-      // Цельная строка остаётся одним <text> без вложений: прогоны появляются только там, где
-      // внутри фразы действительно меняется начертание.
-      const plain = runs.length === 1 && isPlain(runs[0])
-      const body = plain
-        ? escapeXml(cased(runs[0].text))
-        : runs.map((run) => `<tspan ${runAttrs(run, size)}>${escapeXml(cased(run.text))}</tspan>`).join('')
-
-      return `${open}${body}</text>`
-    })
-    .join('')
+  // Цельная строка остаётся одним <text> без вложений: прогоны появляются только там, где
+  // внутри фразы действительно меняется начертание.
+  return runs.length === 1 && isPlain(runs[0])
+    ? escapeXml(cased(runs[0].text))
+    : runs.map((run) => `<tspan ${runAttrs(run, size)}>${escapeXml(cased(run.text))}</tspan>`).join('')
 }
 
 /** Прогон без собственных отличий рисуется стилем слоя — оборачивать его не во что. */

@@ -1,2 +1,4 @@
 # Состояние отправленного батча — машинное, между прогонами живёт локально.
 .batch.json
+.layout-tags.batch.json
+layout-tag-proposals.json
