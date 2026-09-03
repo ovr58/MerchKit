@@ -16,7 +16,7 @@
  *   curl -sX POST http://127.0.0.1:54321/functions/v1/card-preview -H "Authorization: Bearer <jwt>"
  */
 
-import { callerId, CORS_HEADERS, failure, json, selectFromDatabase } from '../_shared/edge.ts'
+import { callDatabase, callerId, CORS_HEADERS, failure, json, selectFromDatabase } from '../_shared/edge.ts'
 import { previewFilling, type PreviewProperty } from '../_shared/card-layout/preview.ts'
 import { renderPreview } from '../_shared/card-layout/render.ts'
 import {
@@ -47,12 +47,53 @@ type FontRoleRow = { role: FontRole; family: string }
  */
 const PREVIEW_LONG_SIDE = 960
 
+/**
+ * Потолок сборок превью на пользователя в сутки.
+ *
+ * **Зачем он бесплатной операции.** Дорого здесь не деньги, а процессорное время изолята —
+ * единственный ограничитель сборки (замер B0.1). Превью по замыслу зовут повторно после
+ * каждой правки списка, интерфейс делает это аккуратно (запрос по ключу черновика, не на
+ * каждый символ), но функция доступна и мимо интерфейса.
+ *
+ * **Счётчик — тот же, что у распознаваний**, с другим префиксом ключа: механизм уже считает
+ * и решает одним запросом, а два одновременных вызова мимо квоты не проскакивают. Заводить
+ * рядом вторую такую же таблицу не за чем. Имя `recognize_quota` после этого шире своего
+ * содержимого — долг записан в BACKLOG, переименование сюда не примешиваем.
+ *
+ * Переменная окружения — ради local, как и у `recognize`: там все прогоны идут одним
+ * пользователем и складываются в один счётчик.
+ */
+const DAILY_LIMIT = limitFromEnv('CARD_PREVIEW_DAILY_LIMIT', 200)
+
+function limitFromEnv(name: string, fallback: number): number {
+  const configured = Number(Deno.env.get(name))
+  return Number.isInteger(configured) && configured > 0 ? configured : fallback
+}
+
 Deno.serve(async (request: Request): Promise<Response> => {
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS_HEADERS })
   if (request.method !== 'POST') return failure('Метод не поддерживается', 405)
 
   const userId = await callerId(request)
   if (userId === null) return failure('Требуется вход', 401)
+
+  // Отказ превью не мешает запустить генерацию: мастер показывает его отдельно от кнопки.
+  let allowed: boolean
+  try {
+    allowed = (await callDatabase('consume_recognize_quota', {
+      caller_key: `preview:user:${userId}`,
+      daily_limit: DAILY_LIMIT,
+    })) === true
+  } catch (error: unknown) {
+    // Счётчик молчит — не пускаем: открыть тяжёлую сборку ровно тогда, когда за ней некому
+    // следить, хуже, чем остаться без превью.
+    console.error('Счётчик превью недоступен', error)
+    return failure('Превью временно недоступно. Запустить генерацию это не мешает', 503)
+  }
+
+  if (!allowed) {
+    return failure('Превью на сегодня закончились. Запустить генерацию это не мешает', 429)
+  }
 
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null
   const categoryId = text(body?.categoryId)

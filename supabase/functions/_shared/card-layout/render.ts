@@ -34,9 +34,14 @@ export async function renderCard(
 
   const assets = await ensureWasm()
   const { svg, dropped } = composeSvg(layout, content, size, fonts)
-  const bytes = new Resvg(svg, { font: { fontBuffers: assets.fonts, loadSystemFonts: false } })
-    .render()
-    .asPng()
+  const bytes = withResvg(svg, assets.fonts, (resvg) => {
+    const image = resvg.render()
+    try {
+      return image.asPng()
+    } finally {
+      image.free()
+    }
+  })
 
   return { bytes, dropped: dropped.map((drop) => `${drop.id}: ${drop.reason}`) }
 }
@@ -65,10 +70,31 @@ export async function renderPreview(
   const rendered = await renderCard(layout, content, size, fonts)
   const assets = await ensureWasm()
 
-  const overflows = overflowsOf(
-    textProbes(layout, content, size, fonts),
-    (probe) => new Resvg(probe, { font: { fontBuffers: assets.fonts, loadSystemFonts: false } }).getBBox()?.width ?? 0,
+  const overflows = overflowsOf(textProbes(layout, content, size, fonts), (probe) =>
+    withResvg(probe, assets.fonts, (resvg) => resvg.getBBox()?.width ?? 0),
   )
 
   return { ...rendered, overflows }
+}
+
+/**
+ * Разбор SVG и его шрифты живут в памяти WASM, а не в куче изолята, и держатся там, пока
+ * объект не освобождён.
+ *
+ * Сама по себе утечка это не даёт: обёртки `resvg` зарегистрированы в `FinalizationRegistry`,
+ * и сборщик мусора их однажды приберёт. Беда в том, что линейная память WASM для него
+ * невидима — по куче в 8–10 МБ он не видит причин собираться, пока снаружи висят десятки
+ * мегабайт. Изолят живёт между запросами (ради этого ресурсы и кэшируются), а превью
+ * создаёт объект НА КАЖДУЮ строку текста, а не один на сборку, — то есть повод собраться
+ * появляется на порядок реже, чем повод занять память.
+ *
+ * Поэтому освобождаем сами, не полагаясь на момент сборки мусора.
+ */
+function withResvg<T>(svg: string, fonts: Uint8Array[], use: (resvg: Resvg) => T): T {
+  const resvg = new Resvg(svg, { font: { fontBuffers: fonts, loadSystemFonts: false } })
+  try {
+    return use(resvg)
+  } finally {
+    resvg.free()
+  }
 }

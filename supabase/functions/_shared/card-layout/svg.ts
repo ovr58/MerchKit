@@ -124,6 +124,10 @@ export function textProbes(
     const fontSize = layer.style.size * size.height
     const box = { width: placed.box.w * size.width, height: placed.box.h * size.height }
     const blockHeight = placed.lines.length * layer.style.lineHeight * fontSize
+    // Якорь всегда `start`: проба стоит на x=0, а `text-anchor` двигает строку, но её
+    // ширину не меняет. Обводка в пробу не едет, и сегодня это ничего не искажает — в
+    // библиотеке из 34 макетов нет ни одного текстового слоя с эффектом `stroke`. Появится —
+    // обмер начнёт занижать ширину на её толщину, и обводку придётся добавить сюда.
     const common = textAttrs(layer.style, size, fonts, 'start', '')
 
     placed.lines.forEach((runs, line) => {
