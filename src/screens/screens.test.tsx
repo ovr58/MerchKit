@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReactElement } from 'react'
-import { MemoryRouter } from 'react-router'
+import { MemoryRouter, Route, Routes } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 /**
@@ -12,11 +12,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const signUp = vi.fn()
 const resetPasswordForEmail = vi.fn()
+const getSession = vi.fn()
 
 vi.mock('@/lib/supabase', () => ({
   supabase: {
     auth: {
-      getSession: vi.fn(() => Promise.resolve({ data: { session: null } })),
+      getSession: () => getSession(),
       onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
       signUp: (...args: unknown[]) => signUp(...args),
       resetPasswordForEmail: (...args: unknown[]) => resetPasswordForEmail(...args),
@@ -27,6 +28,7 @@ vi.mock('@/lib/supabase', () => ({
 const { default: ResetRequest } = await import('@/screens/ResetRequest')
 const { default: SignUp } = await import('@/screens/SignUp')
 const { default: App } = await import('@/App')
+const { default: AuthCallback } = await import('@/screens/AuthCallback')
 const { SessionProvider } = await import('@/features/auth')
 
 function renderScreen(element: ReactElement) {
@@ -40,6 +42,8 @@ function renderScreen(element: ReactElement) {
 beforeEach(() => {
   signUp.mockReset()
   resetPasswordForEmail.mockReset()
+  getSession.mockReset()
+  getSession.mockResolvedValue({ data: { session: null } })
 })
 
 describe('Регистрация (US-02)', () => {
@@ -116,5 +120,31 @@ describe('Мастер закрыт от гостя (FR-12)', () => {
 
     expect(await screen.findByRole('button', { name: 'Создать аккаунт' })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Создать генерацию' })).not.toBeInTheDocument()
+  })
+})
+
+/**
+ * Куда ведёт ссылка подтверждения из письма (ТЗ, сценарий уточнён 2026-09-03). Развилки на
+ * этом экране больше нет, и цель редиректа записана в ТЗ приёмочным сценарием — значит она
+ * проверяется, а не держится на комментарии.
+ */
+describe("Подтверждение почты ведёт в мастер", () => {
+  it("с готовой сессией уводит с /auth/callback на /generate", async () => {
+    getSession.mockResolvedValue({ data: { session: { user: { id: 'u1' } } } })
+
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <SessionProvider>
+          <MemoryRouter initialEntries={['/auth/callback']}>
+            <Routes>
+              <Route element={<AuthCallback />} path="/auth/callback" />
+              <Route element={<h1>Создать генерацию</h1>} path="/generate" />
+            </Routes>
+          </MemoryRouter>
+        </SessionProvider>
+      </QueryClientProvider>,
+    )
+
+    expect(await screen.findByRole('heading', { name: 'Создать генерацию' })).toBeInTheDocument()
   })
 })

@@ -96,19 +96,25 @@ if ((Test-Path $piperExe) -and (Test-Path $piperModel)) {
 
 # --- Фолбэк на System.Speech, если Piper не установлен или синтез не удался ---
 if (-not $spokenViaPiper) {
-    Add-Type -AssemblyName System.Speech
-    $synth = New-Object System.Speech.Synthesis.SpeechSynthesizer
-    $synth.Rate = 5 # Скорость речи: от -10 (медленнее) до 10 (быстрее), 0 — обычная.
-    $voices = $synth.GetInstalledVoices() | Where-Object { $_.Enabled }
-    # Внутри языка приоритет "Natural" (Параметры → Время и язык → Речь → Управление голосами),
-    # если такой когда-нибудь появится в системе.
-    $inCulture = $voices | Where-Object { $_.VoiceInfo.Culture.Name -eq $targetCulture }
-    $chosen = @(
-        $inCulture | Where-Object { $_.VoiceInfo.Name -match 'Natural' } | Select-Object -First 1
-        $inCulture | Select-Object -First 1
-        $voices | Where-Object { $_.VoiceInfo.Name -match 'Natural' } | Select-Object -First 1
-        $voices | Select-Object -First 1
-    ) | Where-Object { $_ } | Select-Object -First 1
-    if ($chosen) { $synth.SelectVoice($chosen.VoiceInfo.Name) }
-    $synth.Speak($text)
+    # Как и у ветки Piper, свои ошибки хук глотает: при $ErrorActionPreference = 'Stop'
+    # машина без подходящего голоса иначе роняет хук в конце каждого хода.
+    try {
+        Add-Type -AssemblyName System.Speech
+        $synth = New-Object System.Speech.Synthesis.SpeechSynthesizer
+        $synth.Rate = 5 # Скорость речи: от -10 (медленнее) до 10 (быстрее), 0 — обычная.
+        $voices = $synth.GetInstalledVoices() | Where-Object { $_.Enabled }
+        # Внутри языка приоритет "Natural" (Параметры → Время и язык → Речь → Управление голосами),
+        # если такой когда-нибудь появится в системе.
+        $inCulture = $voices | Where-Object { $_.VoiceInfo.Culture.Name -eq $targetCulture }
+        $chosen = @(
+            $inCulture | Where-Object { $_.VoiceInfo.Name -match 'Natural' } | Select-Object -First 1
+            $inCulture | Select-Object -First 1
+            $voices | Where-Object { $_.VoiceInfo.Name -match 'Natural' } | Select-Object -First 1
+            $voices | Select-Object -First 1
+        ) | Where-Object { $_ } | Select-Object -First 1
+        if ($chosen) { $synth.SelectVoice($chosen.VoiceInfo.Name) }
+        $synth.Speak($text)
+    } catch {
+        # Озвучка — удобство, а не результат хода: молча остаёмся без голоса.
+    }
 }
