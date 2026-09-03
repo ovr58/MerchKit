@@ -155,11 +155,13 @@ Edge Function загружает `resvg/index_bg.wasm`, `fonts/manifest.json` и
 | `cutout.mts` | то же для раннера выреза в Node и в Chromium, плюс лицензии кандидатов |
 
 ```
+# `functions.card-bench.enabled` в `supabase/config.toml` по умолчанию false, чтобы
+# оснастка не попала в `functions deploy`. Временно поставьте true локально и не коммитьте это.
 npx supabase functions serve            рантайм функций должен быть поднят
 
 npm run cards:bench assemble            сборка 34 макетов в двух размерах
-npm run cards:bench free [макет]        эффект явного free() у объектов resvg
-npm run cards:bench cutout [модель]     раннер выреза в изоляте
+npm run cards:bench -- free [макет]     эффект явного free() у объектов resvg
+npm run cards:bench -- cutout [модель]  раннер выреза в изоляте
 
 npm run cards:cutout licenses           лицензии кандидатов по первоисточникам
 npm run cards:cutout fetch [модель…]    скачать файлы моделей
