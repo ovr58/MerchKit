@@ -8,16 +8,18 @@
 import { initWasm, Resvg } from 'npm:@resvg/resvg-wasm@2.6.2'
 
 import { downloadFile } from '../edge.ts'
-import { composeSvg } from './svg.ts'
+import { composeSvg, overflowsOf, textProbes } from './svg.ts'
 import { validateLayout } from './validate.ts'
 import { createRendererAssets } from './renderer-assets.ts'
-import type { FontFamilies } from './svg.ts'
+import type { FontFamilies, Overflow } from './svg.ts'
 import type { CardContent, CardLayout } from './types.ts'
 
 const loadAssets = createRendererAssets(downloadFile)
 let wasmReady: Promise<void> | undefined
 
 export type RenderResult = { bytes: Uint8Array; dropped: string[] }
+
+export type PreviewRenderResult = RenderResult & { overflows: Overflow[] }
 
 export async function renderCard(
   layout: CardLayout,
@@ -44,4 +46,29 @@ async function ensureWasm(): Promise<Awaited<ReturnType<typeof loadAssets>>> {
   if (wasmReady === undefined) wasmReady = initWasm(assets.wasm)
   await wasmReady
   return assets
+}
+
+/**
+ * Превью до оплаты (шаг B6): тот же кадр плюс арифметика переполнения.
+ *
+ * Обмеряет строки тот же `resvg`, который их рисует, — по одному разбору на строку. Средняя
+ * ширина знака была бы дешевле, но врёт на каждой второй гарнитуре, а цена ошибки здесь —
+ * строка, вылезшая за плашку на оплаченном кадре. Замер 2026-09-03 в локальном рантайме
+ * функций: обмер строки — 1–3 мс после прогрева, весь макет — десятки миллисекунд.
+ */
+export async function renderPreview(
+  layout: CardLayout,
+  content: CardContent,
+  size: { width: number; height: number },
+  fonts: FontFamilies,
+): Promise<PreviewRenderResult> {
+  const rendered = await renderCard(layout, content, size, fonts)
+  const assets = await ensureWasm()
+
+  const overflows = overflowsOf(
+    textProbes(layout, content, size, fonts),
+    (probe) => new Resvg(probe, { font: { fontBuffers: assets.fonts, loadSystemFonts: false } }).getBBox()?.width ?? 0,
+  )
+
+  return { ...rendered, overflows }
 }

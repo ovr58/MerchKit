@@ -1,12 +1,14 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { ProductPropertiesOutcome } from './api'
+import type { CardPreview, ProductPropertiesOutcome } from './api'
 
 const extractProductProperties = vi.fn()
+const previewCard = vi.fn()
 
 vi.mock('./api', () => ({
   extractProductProperties: (...args: unknown[]) => extractProductProperties(...args),
+  previewCard: (...args: unknown[]) => previewCard(...args),
   recognizePhotos: vi.fn(),
 }))
 
@@ -18,6 +20,7 @@ vi.mock('./draft', async (importOriginal) => ({
 }))
 
 const { useWizard } = await import('./wizard')
+const { LAST_STEP } = await import('./draft')
 
 describe('Извлечение свойств товара', () => {
   beforeEach(() => {
@@ -99,5 +102,91 @@ describe('Логотип в черновике', () => {
     act(() => result.current.setLogo(null))
 
     expect(result.current.draft.logo).toBeNull()
+  })
+})
+
+/**
+ * Бесплатное превью (B6). Проверяется не картинка, а обещание шага: превью относится к
+ * тому вводу, при котором собрано, и повод пересобрать возникает только когда человек
+ * приходит на шаг запуска или просит сам. Иначе сборка уходила бы на каждое нажатие клавиши.
+ */
+describe('Превью карточки до оплаты', () => {
+  const PREVIEW: CardPreview = {
+    layout: { id: 'chosen', title: 'Выбранный макет', isFallback: false },
+    size: { width: 720, height: 960 },
+    capacity: 2,
+    cut: [],
+    stubbed: [],
+    overflows: [],
+    png: 'data:image/png;base64,AA==',
+  }
+
+  const READY = {
+    kind: 'card' as const,
+    categoryId: 'clothing',
+    marketplaceId: 'wildberries',
+    productTitle: 'Куртка',
+  }
+
+  beforeEach(() => {
+    previewCard.mockReset()
+    previewCard.mockResolvedValue(PREVIEW)
+  })
+
+  it('собирается при приходе на шаг запуска', async () => {
+    const { result } = renderHook(() => useWizard())
+    await waitFor(() => expect(result.current.restored).toBe(true))
+
+    act(() => result.current.update(READY))
+    act(() => result.current.goTo(LAST_STEP))
+
+    await waitFor(() => expect(result.current.preview).toEqual(PREVIEW))
+    expect(previewCard).toHaveBeenCalledTimes(1)
+  })
+
+  it('после правки свойства помечается устаревшим, но сам не пересобирается', async () => {
+    const { result } = renderHook(() => useWizard())
+    await waitFor(() => expect(result.current.restored).toBe(true))
+
+    act(() => result.current.update(READY))
+    act(() => result.current.goTo(LAST_STEP))
+    await waitFor(() => expect(result.current.preview).not.toBeNull())
+
+    act(() =>
+      result.current.update({ productProperties: [{ id: 'p1', label: 'Сезон', value: 'Зима' }] }),
+    )
+
+    expect(result.current.previewStale).toBe(true)
+    expect(previewCard).toHaveBeenCalledTimes(1)
+
+    act(() => result.current.refreshPreview())
+    await waitFor(() => expect(result.current.previewStale).toBe(false))
+    expect(previewCard).toHaveBeenCalledTimes(2)
+  })
+
+  it('отказ не уходит в повтор сам: иначе неудачная сборка крутилась бы в цикле', async () => {
+    previewCard.mockResolvedValue(null)
+
+    const { result } = renderHook(() => useWizard())
+    await waitFor(() => expect(result.current.restored).toBe(true))
+
+    act(() => result.current.update(READY))
+    act(() => result.current.goTo(LAST_STEP))
+    await waitFor(() => expect(result.current.previewFailed).toBe(true))
+
+    act(() => result.current.goTo(LAST_STEP))
+
+    expect(previewCard).toHaveBeenCalledTimes(1)
+  })
+
+  it('для генерации без карточки не собирается вовсе: макета там нет', async () => {
+    const { result } = renderHook(() => useWizard())
+    await waitFor(() => expect(result.current.restored).toBe(true))
+
+    act(() => result.current.update({ ...READY, kind: 'photo' }))
+    act(() => result.current.goTo(LAST_STEP))
+
+    expect(previewCard).not.toHaveBeenCalled()
+    expect(result.current.preview).toBeNull()
   })
 })

@@ -1,4 +1,5 @@
-import type { CardLayout, Layer } from './types.ts'
+import { propertyCapacity, usesLogo } from './features.ts'
+import type { CardLayout } from './types.ts'
 
 export type LayoutCandidate = {
   id: string
@@ -10,7 +11,6 @@ export type LayoutCandidate = {
 }
 
 export type LayoutSelectionInput = {
-  generationId: string
   categoryId: string
   marketplaceId: string
   presetId: string | null
@@ -50,7 +50,7 @@ export function selectCardLayout(
     .filter((candidate) => candidate.score === highestScore)
     .sort((left, right) => left.id.localeCompare(right.id))
 
-  return leaders[hash(input.generationId) % leaders.length]
+  return leaders[hash(tieKey(input)) % leaders.length]
 }
 
 /** The minimum B2 persistence payload; B7 will replace the empty content and font map. */
@@ -69,11 +69,31 @@ export function layoutSnapshot(
   }
 }
 
+/**
+ * Ключ разрешения ничьей — сам ввод подбора, а не номер генерации.
+ *
+ * Номером было бы достаточно для повтора той же генерации, но не для превью (шаг B6): оно
+ * считается ДО того, как генерация заведена, и обязано назвать тот самый макет, чью ёмкость
+ * показало продавцу. Разошлись бы они — превью соврало бы ровно в том, ради чего его завели:
+ * какие свойства не поместятся.
+ */
+function tieKey(input: LayoutSelectionInput): string {
+  return [
+    input.categoryId,
+    input.marketplaceId,
+    input.presetId ?? '',
+    input.hasLogo ? 'logo' : '',
+    input.propertyCount,
+    input.targetAspectW,
+    input.targetAspectH,
+  ].join('|')
+}
+
 function score(candidate: LayoutCandidate, input: LayoutSelectionInput): number {
   let total = 0
   if (input.presetId !== null && candidate.presetId === input.presetId) total += 3
   if (propertyCapacity(candidate.layout) >= input.propertyCount) total += 2
-  if (input.hasLogo && hasLogoLayer(candidate.layout.layers)) total += 1
+  if (input.hasLogo && usesLogo(candidate.layout)) total += 1
   if (candidate.marketplaceId === input.marketplaceId) total += 1
   return total
 }
@@ -82,20 +102,6 @@ function hasMatchingAspect(layout: CardLayout, targetW: number, targetH: number)
   const expected = targetW / targetH
   const actual = layout.canvas.aspectW / layout.canvas.aspectH
   return Math.abs(actual - expected) / expected <= ASPECT_TOLERANCE
-}
-
-function propertyCapacity(layout: CardLayout): number {
-  return new Set(flatten(layout.layers)
-    .filter((layer) => layer.bind?.kind === 'prop')
-    .map((layer) => layer.bind!.index)).size
-}
-
-function hasLogoLayer(layers: Layer[]): boolean {
-  return flatten(layers).some((layer) => layer.bind?.kind === 'logo')
-}
-
-function flatten(layers: Layer[]): Layer[] {
-  return layers.flatMap((layer) => layer.type === 'group' ? [layer, ...flatten(layer.children)] : [layer])
 }
 
 function hash(value: string): number {

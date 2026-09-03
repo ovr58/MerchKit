@@ -165,6 +165,65 @@ export async function extractProductProperties(
   return { properties: normalizeProductProperties(data.properties), limitReached: false, failed: false }
 }
 
+/* ------------------------------------------- бесплатное превью карточки (B6, K-1) */
+
+/** Строка, не поместившаяся в свой бокс. `bind` отличает окончательный текст от подстановки. */
+export type CardPreviewOverflow = {
+  layerId: string
+  bind?: { kind: string; slot?: string; index?: number }
+  kind: 'width' | 'height'
+  text: string
+  /** Насколько вылезло долей бокса: 0.18 — на 18% длиннее места под него. */
+  over: number
+}
+
+export type CardPreview = {
+  layout: { id: string; title: string; isFallback: boolean }
+  size: { width: number; height: number }
+  /** Сколько характеристик умеет показать выбранный макет. */
+  capacity: number
+  /** Что не поместилось в макет: хвост списка сверх ёмкости. */
+  cut: { label: string; value: string }[]
+  /** Гнёзда, заполненные рыбой: настоящий текст туда подберёт модель на генерации. */
+  stubbed: string[]
+  overflows: CardPreviewOverflow[]
+  /** Готовый data-URI: превью не хранится и подписанная ссылка ему не нужна. */
+  png: string
+}
+
+export type CardPreviewInput = {
+  categoryId: string
+  marketplaceId: string
+  presetId: string | null
+  productTitle: string
+  productProperties: ProductProperty[]
+  hasLogo: boolean
+}
+
+/**
+ * Собирает карточку на заглушках до оплаты (K-1). Ни баллов, ни вендора: пересчитывать можно
+ * сколько угодно — ради этого шаг и заведён.
+ */
+export async function previewCard(input: CardPreviewInput): Promise<CardPreview | null> {
+  const { data, error } = await supabase.functions.invoke<CardPreview>('card-preview', {
+    body: {
+      categoryId: input.categoryId,
+      marketplaceId: input.marketplaceId,
+      presetId: input.presetId,
+      productTitle: input.productTitle,
+      properties: productPropertiesPayload(input.productProperties),
+      hasLogo: input.hasLogo,
+    },
+  })
+
+  if (error || !data) {
+    logger.warn('Превью карточки не собрано', { reason: error?.message })
+    return null
+  }
+
+  return data
+}
+
 /* --------------------------------------------------------------- запуск заявки (US-01) */
 
 export type LaunchInput = {

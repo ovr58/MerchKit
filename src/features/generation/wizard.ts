@@ -4,7 +4,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { logger } from '@/lib/logger'
 
-import { extractProductProperties, recognizePhotos } from './api'
+import { extractProductProperties, previewCard, recognizePhotos, type CardPreview } from './api'
+import { productPropertiesPayload } from './properties'
 import {
   clearDraft,
   EMPTY_DRAFT,
@@ -39,6 +40,13 @@ export type Wizard = {
   propertiesFailed: boolean
   /** Почему знак не принят — текстом человеку. `null` — претензий нет (B3). */
   logoRejected: string | null
+  /** Карточка, собранная на заглушках до оплаты (B6). `null` — ещё не собиралась. */
+  preview: CardPreview | null
+  previewing: boolean
+  previewFailed: boolean
+  /** Ввод изменился после сборки: показанная карточка больше не про эту заявку. */
+  previewStale: boolean
+  refreshPreview: () => void
   update: (patch: Partial<WizardDraft>) => void
   addPhotos: (files: File[]) => void
   removePhoto: (id: string) => void
@@ -66,6 +74,26 @@ export function blockedBy(draft: WizardDraft): string | null {
   }
 }
 
+/**
+ * Ввод, от которого зависит превью. Признак «картинка устарела» считается сравнением ключей,
+ * а не флагом: флаг пришлось бы ставить в каждом месте, меняющем черновик, — и одно
+ * пропущенное место означало бы устаревшее превью, выданное за актуальное.
+ *
+ * `null` — превью не о чем: карточка не выбрана или площадка с категорией ещё не заданы.
+ */
+function previewKey(draft: WizardDraft): string | null {
+  if (draft.kind !== 'card' || draft.categoryId === null || draft.marketplaceId === null) return null
+
+  return JSON.stringify([
+    draft.categoryId,
+    draft.marketplaceId,
+    draft.presetId,
+    draft.productTitle.trim(),
+    draft.logo !== null,
+    productPropertiesPayload(draft.productProperties),
+  ])
+}
+
 export function useWizard(): Wizard {
   const [draft, setDraft] = useState<WizardDraft>(EMPTY_DRAFT)
   const [restored, setRestored] = useState(false)
@@ -77,10 +105,15 @@ export function useWizard(): Wizard {
   const [propertiesLimited, setPropertiesLimited] = useState(false)
   const [propertiesFailed, setPropertiesFailed] = useState(false)
   const [logoRejected, setLogoRejected] = useState<string | null>(null)
+  const [preview, setPreview] = useState<{ key: string; value: CardPreview } | null>(null)
+  const [previewing, setPreviewing] = useState(false)
+  const [previewFailedKey, setPreviewFailedKey] = useState<string | null>(null)
   const recognitionRun = useRef(0)
   const propertiesRun = useRef(0)
   const logoRun = useRef(0)
+  const previewRun = useRef(0)
   const photoCount = draft.photos.length
+  const previewInput = previewKey(draft)
 
   useEffect(() => {
     let cancelled = false
@@ -274,9 +307,60 @@ export function useWizard(): Wizard {
     })()
   }, [draft])
 
-  const goTo = useCallback((step: number) => {
-    setDraft((current) => ({ ...current, step: Math.max(0, Math.min(LAST_STEP, step)) }))
-  }, [])
+  /**
+   * Собирает карточку на заглушках (B6). Бесплатно и без вендора, поэтому повторять можно
+   * сколько угодно — но не на каждое нажатие клавиши: сборка стоит нашего процессорного
+   * времени, и запускается она входом на шаг запуска или кнопкой, а не правкой поля.
+   */
+  const refreshPreview = useCallback(() => {
+    const { categoryId, marketplaceId } = draft
+    if (previewInput === null || categoryId === null || marketplaceId === null) return
+
+    const run = ++previewRun.current
+    setPreviewing(true)
+    setPreviewFailedKey(null)
+
+    void previewCard({
+      categoryId,
+      marketplaceId,
+      presetId: draft.presetId,
+      productTitle: draft.productTitle,
+      productProperties: draft.productProperties,
+      hasLogo: draft.logo !== null,
+    })
+      .then((value) => {
+        // Пока собиралось превью, человек мог поправить свойства: ответ на прошлый список
+        // перетёр бы то, что он уже изменил.
+        if (run !== previewRun.current) return
+        if (value === null) setPreviewFailedKey(previewInput)
+        else setPreview({ key: previewInput, value })
+      })
+      .finally(() => {
+        if (run === previewRun.current) setPreviewing(false)
+      })
+  }, [draft, previewInput])
+
+  /**
+   * Приход на шаг запуска — единственный повод собрать превью самому.
+   *
+   * Это отдельное действие человека, а не набор текста: правка свойства уже на шаге запуска
+   * превью не пересобирает, иначе сборка уходила бы на каждое нажатие клавиши. Устаревшую
+   * картинку шаг помечает и предлагает обновить кнопкой.
+   */
+  const previewOnArrival = useCallback(() => {
+    if (previewInput === null || previewing) return
+    if (preview?.key === previewInput || previewFailedKey === previewInput) return
+    refreshPreview()
+  }, [previewInput, previewing, preview, previewFailedKey, refreshPreview])
+
+  const goTo = useCallback(
+    (step: number) => {
+      const target = Math.max(0, Math.min(LAST_STEP, step))
+      setDraft((current) => ({ ...current, step: target }))
+      if (target === LAST_STEP) previewOnArrival()
+    },
+    [previewOnArrival],
+  )
 
   /**
    * Переход вперёд. С шага «Фото» он же запускает распознавание (FR-03, FR-04): человек
@@ -292,6 +376,7 @@ export function useWizard(): Wizard {
     const photos = draft.photos
 
     setDraft((current) => ({ ...current, step: Math.min(LAST_STEP, current.step + 1) }))
+    if (draft.step + 1 === LAST_STEP) previewOnArrival()
 
     if (!recognizeNow) return
 
@@ -313,7 +398,7 @@ export function useWizard(): Wizard {
         productTitle: latest.productTitle === '' ? (guess.productTitle ?? '') : latest.productTitle,
       }))
     })
-  }, [draft.step, draft.recognized, draft.photos])
+  }, [draft.step, draft.recognized, draft.photos, previewOnArrival])
 
   const back = useCallback(() => {
     setRejected([])
@@ -330,6 +415,10 @@ export function useWizard(): Wizard {
     setPropertiesExtracted(false)
     setPropertiesLimited(false)
     setPropertiesFailed(false)
+    previewRun.current += 1
+    setPreview(null)
+    setPreviewing(false)
+    setPreviewFailedKey(null)
     setDraft(EMPTY_DRAFT)
     void clearDraft()
   }, [])
@@ -345,6 +434,11 @@ export function useWizard(): Wizard {
     propertiesLimited,
     propertiesFailed,
     logoRejected,
+    preview: preview?.value ?? null,
+    previewing,
+    previewFailed: previewFailedKey !== null && previewFailedKey === previewInput,
+    previewStale: preview !== null && previewInput !== null && preview.key !== previewInput,
+    refreshPreview,
     update,
     addPhotos,
     removePhoto,

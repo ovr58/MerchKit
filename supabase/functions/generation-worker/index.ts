@@ -308,7 +308,6 @@ async function selectLayout(generation: GenerationRow, profile: OutputProfile) {
     (layouts as LayoutRow[]).map(toLayoutCandidate),
     toLayoutCandidate(fallback),
     {
-      generationId: generation.id,
       categoryId: generation.category_id,
       marketplaceId: generation.marketplace_id,
       presetId: generation.preset_id,

@@ -72,7 +72,6 @@ function candidate(
 }
 
 const INPUT: LayoutSelectionInput = {
-  generationId: '11111111-1111-4111-8111-111111111111',
   categoryId: 'clothing',
   marketplaceId: 'wildberries',
   presetId: 'clothing-model',
@@ -164,7 +163,7 @@ describe('Server-side card-layout selection (M7 B2)', () => {
     expect(selected).toMatchObject({ id: 'untagged', score: 0, isFallback: false })
   })
 
-  it('resolves an equal top score deterministically from generationId, not database order', () => {
+  it('resolves an equal top score from the selection input itself, not database order', () => {
     const first = candidate('a-layout', { propSlots: 2 })
     const second = candidate('b-layout', { propSlots: 2 })
 
@@ -172,6 +171,29 @@ describe('Server-side card-layout selection (M7 B2)', () => {
     const fromSecondOrder = selectCardLayout([second, first], candidate('fallback'), INPUT)
 
     expect(fromSecondOrder.id).toBe(fromFirstOrder.id)
+  })
+
+  // The free preview (B6) must name the very layout the paid run will assemble: it is
+  // computed before the generation row exists, so the tie-break may not depend on its id.
+  it('gives the same layout to the same input, so the preview can promise it before payment', () => {
+    const library = [candidate('a-layout', { propSlots: 2 }), candidate('b-layout', { propSlots: 2 })]
+
+    const preview = selectCardLayout(library, candidate('fallback'), INPUT)
+    const paidRun = selectCardLayout(library, candidate('fallback'), { ...INPUT })
+
+    expect(paidRun.id).toBe(preview.id)
+  })
+
+  it('may pick another layout once the input changes, tie or not', () => {
+    const library = [candidate('a-layout', { propSlots: 9 }), candidate('b-layout', { propSlots: 9 })]
+
+    const keys = new Set(
+      [0, 1, 2, 3, 4, 5].map(
+        (propertyCount) => selectCardLayout(library, candidate('fallback'), { ...INPUT, propertyCount }).id,
+      ),
+    )
+
+    expect(keys.size).toBe(2)
   })
 
   it('always returns the universal fallback when no candidate survives the hard filters', () => {
@@ -189,8 +211,10 @@ describe('Server-side card-layout selection (M7 B2)', () => {
   it('returns only the selected layout identity and immutable layout for the generation snapshot', () => {
     const selected = selectCardLayout([candidate('chosen', { propSlots: 2 })], candidate('fallback'), INPUT)
 
-    expect(layoutSnapshot(INPUT.generationId, selected)).toEqual({
-      generationId: INPUT.generationId,
+    const generationId = '11111111-1111-4111-8111-111111111111'
+
+    expect(layoutSnapshot(generationId, selected)).toEqual({
+      generationId,
       layoutId: 'chosen',
       layout: expect.objectContaining({ id: 'chosen', title: 'chosen' }),
     })

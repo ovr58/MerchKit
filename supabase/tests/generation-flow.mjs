@@ -192,7 +192,7 @@ const asGuest = await fetch(`${REST}/marketplace_output_profiles?select=*&market
   headers: { apikey: KEY },
 })
 check(
-  'FR-12 справочники читаются гостем: мастер проходится без входа',
+  'FR-12 справочники читаются гостем: витрина и цены видны до регистрации',
   asGuest.status === 200 && (await asGuest.json()).length === 7,
 )
 
@@ -214,17 +214,35 @@ const foreign = await fetch(`${STORAGE}/object/uploads/00000000-0000-4000-8000-0
 })
 check('NFR-04 в чужую папку файл не положить', foreign.status >= 400, `HTTP ${foreign.status}`)
 
-// --- FR-03/FR-04: распознавание работает и до входа ---------------------------
-const form = new FormData()
-form.append('photo', new Blob([photoBytes()], { type: 'image/jpeg' }), 'photo-1.jpg')
-const recognized = await fetch(`${FUNCTIONS}/recognize`, {
+// --- FR-03/FR-04: распознавание — только вошедшему ----------------------------
+// Гварда на маршруте мастера для этого мало: `anon`-ключ публичен, и функцию можно позвать
+// мимо интерфейса. Каждый ответ гостю — деньги вендору за того, кто ни разу не назвался
+// (решение пользователя 2026-09-01, FR-12 переписан; см. шапку `recognize/index.ts`).
+const photoForm = () => {
+  const form = new FormData()
+  form.append('photo', new Blob([photoBytes()], { type: 'image/jpeg' }), 'photo-1.jpg')
+  return form
+}
+
+const asGuestRecognize = await fetch(`${FUNCTIONS}/recognize`, {
   method: 'POST',
   headers: { apikey: KEY },
-  body: form,
+  body: photoForm(),
+})
+check(
+  'FR-12 распознавание не отвечает гостю: ответ гостю — деньги вендору',
+  asGuestRecognize.status === 401,
+  `HTTP ${asGuestRecognize.status}`,
+)
+
+const recognized = await fetch(`${FUNCTIONS}/recognize`, {
+  method: 'POST',
+  headers: { apikey: KEY, Authorization: `Bearer ${seller.token}` },
+  body: photoForm(),
 })
 const recognizedBody = await recognized.json().catch(() => ({}))
 check(
-  'FR-03 распознавание отвечает гостю категорией из справочника',
+  'FR-03 распознавание отвечает вошедшему категорией из справочника',
   recognized.status === 200 && typeof recognizedBody.categoryId === 'string',
   JSON.stringify(recognizedBody),
 )
@@ -232,7 +250,11 @@ check(
 const tiny = new FormData()
 tiny.append('photo', new Blob([Buffer.alloc(64)], { type: 'image/jpeg' }), 'photo-1.jpg')
 const unrecognized = await (
-  await fetch(`${FUNCTIONS}/recognize`, { method: 'POST', headers: { apikey: KEY }, body: tiny })
+  await fetch(`${FUNCTIONS}/recognize`, {
+    method: 'POST',
+    headers: { apikey: KEY, Authorization: `Bearer ${seller.token}` },
+    body: tiny,
+  })
 ).json()
 check(
   'US-E2 не распознал — не ошибка, а пустые поля',
