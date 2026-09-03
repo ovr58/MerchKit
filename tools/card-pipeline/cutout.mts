@@ -7,6 +7,7 @@
  *
  *   npm run cards:cutout fetch              скачать файлы моделей (в git не идут)
  *   npm run cards:cutout node               время инференса, wasm в один поток
+ *   npm run cards:cutout native             то же нативным ORT + кромка на настоящих кадрах
  *   npm run cards:cutout browser            то же в Chromium + маски на настоящих кадрах
  *
  * **Лицензия проверяется по первоисточнику и живёт рядом с файлом модели** — правило ADR-0014,
@@ -16,6 +17,7 @@
  */
 
 import { createServer } from 'node:http'
+import { deflateSync } from 'node:zlib'
 import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises'
 import { extname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -43,6 +45,13 @@ type Candidate = {
   licenseUrl: string
   /** Что с лицензией не так, если не так. */
   note: string
+  /**
+   * Чем выход превращается в маску. `minmax` — растяжка по крайним значениям, как это делает
+   * семейство U²-Net; `sigmoid` — поэлементная сигмоида, как требует BiRefNet, чей выход это
+   * логиты. Перепутать их нельзя молча: на логитах min-max сажает фон около 0,2, и мера
+   * мягкости кромки показывает 99,9% полутона на маске, которая на глаз чистая.
+   */
+  activation?: 'minmax' | 'sigmoid'
 }
 
 const CANDIDATES: Record<string, Candidate> = {
@@ -88,6 +97,7 @@ const CANDIDATES: Record<string, Candidate> = {
     license: 'MIT',
     licenseUrl: 'https://github.com/ZhengPeng7/BiRefNet/blob/main/LICENSE',
     note: 'MIT и в репозитории кода, и в карточке модели на Hugging Face.',
+    activation: 'sigmoid',
   },
 }
 
@@ -465,6 +475,198 @@ async function benchBrowser(
   if (frames.length > 0) console.log(`\nМаски: ${outDir}`)
 }
 
+/**
+ * Выход модели → серая маска и доля полутона. Живёт одной функцией, потому что мера мягкости
+ * кромки имеет смысл только пока она у всех кандидатов считается одинаково.
+ */
+function toMask(raw: Float32Array, activation: Candidate['activation']): { gray: Uint8Array; softShare: number } {
+  const gray = new Uint8Array(raw.length)
+  let soft = 0
+
+  let low = Infinity
+  let high = -Infinity
+  if (activation !== 'sigmoid') {
+    for (const value of raw) {
+      if (value < low) low = value
+      if (value > high) high = value
+    }
+  }
+
+  for (let index = 0; index < raw.length; index += 1) {
+    const value =
+      activation === 'sigmoid'
+        ? 1 / (1 + Math.exp(-raw[index]))
+        : (raw[index] - low) / (high - low || 1)
+    if (value > 0.05 && value < 0.95) soft += 1
+    gray[index] = Math.round(value * 255)
+  }
+
+  return { gray, softShare: soft / raw.length }
+}
+
+/**
+ * Растеризация кадра в RGBA нужного размера **чужим декодером, а не своим**: PNG и JPEG в Node
+ * не декодирует ничто стандартное, а `resvg` в проекте уже стоит и растр внутри SVG умеет.
+ * Заводить ради этого пакет-декодер — тащить зависимость туда, где она уже есть.
+ *
+ * `preserveAspectRatio="none"` — не небрежность, а требование сравнимости: браузерная половина
+ * растягивает кадр до квадрата вызовом `drawImage(source, 0, 0, side, side)`, и нативная обязана
+ * делать ровно то же, иначе на вход модели идут разные картинки.
+ */
+let resvgReady: Promise<unknown> | undefined
+
+async function framePixels(file: string, side: number): Promise<Uint8Array> {
+  const { initWasm, Resvg } = await import('@resvg/resvg-wasm')
+  resvgReady ??= initWasm(
+    await readFile(new URL('../../node_modules/@resvg/resvg-wasm/index_bg.wasm', import.meta.url)),
+  )
+  await resvgReady
+
+  const mime = extname(file).toLowerCase() === '.png' ? 'image/png' : 'image/jpeg'
+  const data = (await readFile(file)).toString('base64')
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${side}" height="${side}">` +
+    `<image href="data:${mime};base64,${data}" width="${side}" height="${side}" preserveAspectRatio="none"/>` +
+    `</svg>`
+
+  return new Resvg(svg, { font: { loadSystemFonts: false } }).render().pixels
+}
+
+/** Таблица CRC32 для PNG — та самая из спецификации формата, считается один раз. */
+const CRC_TABLE = Uint32Array.from({ length: 256 }, (_, index) => {
+  let value = index
+  for (let bit = 0; bit < 8; bit += 1) value = value & 1 ? 0xedb88320 ^ (value >>> 1) : value >>> 1
+  return value >>> 0
+})
+
+function crc32(bytes: Buffer): number {
+  let value = 0xffffffff
+  for (const byte of bytes) value = CRC_TABLE[(value ^ byte) & 0xff] ^ (value >>> 8)
+  return (value ^ 0xffffffff) >>> 0
+}
+
+function pngChunk(type: string, body: Buffer): Buffer {
+  const length = Buffer.alloc(4)
+  length.writeUInt32BE(body.length)
+  const tagged = Buffer.concat([Buffer.from(type, 'ascii'), body])
+  const crc = Buffer.alloc(4)
+  crc.writeUInt32BE(crc32(tagged))
+  return Buffer.concat([length, tagged, crc])
+}
+
+/**
+ * Маска — серый квадрат, а не картинка общего вида, поэтому PNG для неё пишется здесь на
+ * `node:zlib`: восемь бит на пиксель, фильтр 0 на строку. Три чанка и таблица CRC дешевле,
+ * чем зависимость-энкодер ради одного диагностического выхода.
+ */
+function grayPng(gray: Uint8Array, side: number): Buffer {
+  const raw = Buffer.alloc((side + 1) * side)
+  for (let row = 0; row < side; row += 1) {
+    raw[row * (side + 1)] = 0 // тип фильтра строки
+    Buffer.from(gray.subarray(row * side, (row + 1) * side)).copy(raw, row * (side + 1) + 1)
+  }
+
+  const header = Buffer.alloc(13)
+  header.writeUInt32BE(side, 0)
+  header.writeUInt32BE(side, 4)
+  header[8] = 8 // бит на канал
+  header[9] = 0 // серый без альфы
+
+  return Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    pngChunk('IHDR', header),
+    pngChunk('IDAT', deflateSync(raw)),
+    pngChunk('IEND', Buffer.alloc(0)),
+  ])
+}
+
+/**
+ * Инференс нативным ONNX Runtime — тем самым, который ADR-0015 выбрал местом первой реализации
+ * раннера выреза.
+ *
+ * Отдельно от режима `node` он существует потому, что меряет другое. Тот гоняет wasm в один
+ * поток и отвечает на вопрос изолята «влезает ли». Этот отвечает на вопрос шага B4 «годится ли
+ * кромка»: в wasm32 `birefnet-general-lite` не помещается вовсе и падает `bad_alloc`, то есть
+ * единственную модель, назначенную ADR-0015 по умолчанию, прежними половинами оснастки было
+ * не измерить ни в Node, ни в браузере.
+ *
+ * Кадры настоящие, а не синтетические: время задаёт размер входа, а кромку — содержимое.
+ */
+async function benchNative(
+  list: string[],
+  runs: number,
+  framesRoot: string,
+  frameLimit: number,
+): Promise<void> {
+  const ort = await import('onnxruntime-node')
+
+  const frames = await frameFiles(framesRoot, frameLimit)
+  if (frames.length === 0) console.log(`Кадров в ${framesRoot} не нашлось — кромку смотреть не на чем`)
+
+  const stamp = new Date().toISOString().replace(/[-:]/g, '').slice(0, 15)
+  const outDir = join(here, '..', '..', 'bench', 'runs', `${RUN_PREFIX}native-${stamp}`)
+  await mkdir(outDir, { recursive: true })
+
+  console.log('\n## Инференс нативным ONNX Runtime')
+
+  for (const id of list) {
+    const file = modelFile(id)
+    const size = await exists(file)
+    if (size === null) {
+      console.log(`${id}: файла нет — сначала \`npm run cards:cutout fetch ${id}\``)
+      continue
+    }
+
+    const { side } = CANDIDATES[id]
+    const loadStarted = performance.now()
+    const session = await ort.InferenceSession.create(file)
+    const loadMs = performance.now() - loadStarted
+
+    // Синтетический вход — тот же, что у обеих прежних половин: только так числа сравнимы.
+    const synthetic = new Float32Array(3 * side * side)
+    for (let index = 0; index < synthetic.length; index += 1) {
+      synthetic[index] = ((index % 255) / 255 - MEAN[index % 3]) / STD[index % 3]
+    }
+
+    const times: number[] = []
+    for (let run = 0; run < runs; run += 1) {
+      const started = performance.now()
+      await session.run({ [session.inputNames[0]]: new ort.Tensor('float32', synthetic, [1, 3, side, side]) })
+      times.push(performance.now() - started)
+    }
+
+    console.log(
+      `${id}: файл ${(size / 1048576).toFixed(1)} МБ, вход ${side}×${side}, ` +
+        `сессия ${loadMs.toFixed(0)} мс, инференс ${median(times).toFixed(0)} мс ` +
+        `(мин ${Math.min(...times).toFixed(0)}, макс ${Math.max(...times).toFixed(0)}), ` +
+        `RSS ${(process.memoryUsage().rss / 1048576).toFixed(0)} МБ`,
+    )
+
+    const plane = side * side
+    for (const frame of frames) {
+      const rgba = await framePixels(frame, side)
+      const pixels = new Float32Array(3 * plane)
+      for (let index = 0; index < plane; index += 1) {
+        for (let channel = 0; channel < 3; channel += 1) {
+          pixels[channel * plane + index] = (rgba[index * 4 + channel] / 255 - MEAN[channel]) / STD[channel]
+        }
+      }
+
+      const output = await session.run({
+        [session.inputNames[0]]: new ort.Tensor('float32', pixels, [1, 3, side, side]),
+      })
+      const raw = output[session.outputNames[0]].data as Float32Array
+      const { gray, softShare } = toMask(raw, CANDIDATES[id].activation)
+
+      const stem = frame.split(/[\\/]/).pop()?.replace(/\.[a-z]+$/i, '') ?? 'frame'
+      await writeFile(join(outDir, `${id}--${stem}.png`), grayPng(gray, side))
+      console.log(`  кромка ${stem}: полутон на ${(softShare * 100).toFixed(1)}% пикселей`)
+    }
+  }
+
+  if (frames.length > 0) console.log(`\nМаски: ${outDir}`)
+}
+
 function licenceTable(): void {
   console.log('\n## Лицензии кандидатов — по первоисточникам')
   for (const [id, candidate] of Object.entries(CANDIDATES)) {
@@ -490,8 +692,9 @@ async function main(): Promise<void> {
   if (mode === 'licenses') licenceTable()
   else if (mode === 'fetch') await fetchModels(ids(rest))
   else if (mode === 'node') await benchNode(ids(rest), runs)
+  else if (mode === 'native') await benchNative(ids(rest), runs, framesRoot, frameLimit)
   else if (mode === 'browser') await benchBrowser(ids(rest), runs, framesRoot, frameLimit, threads)
-  else throw new Error(`Неизвестный режим «${mode}». Есть: licenses, fetch, node, browser`)
+  else throw new Error(`Неизвестный режим «${mode}». Есть: licenses, fetch, node, native, browser`)
 }
 
 main().catch((error: unknown) => {
