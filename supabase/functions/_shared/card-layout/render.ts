@@ -46,6 +46,17 @@ export async function renderCard(
   return { bytes, dropped: dropped.map((drop) => `${drop.id}: ${drop.reason}`) }
 }
 
+/**
+ * Шрифты растеризатора для оснастки замера (`card-bench`, шаг B4.0).
+ *
+ * Своего загрузчика ей заводить нельзя, и дело не в лишних мегабайтах: `initWasm` у
+ * `@resvg/resvg-wasm` глобален для модуля, а специфик импорта у обоих один — второй вызов
+ * пришёлся бы на уже поднятый экземпляр.
+ */
+export async function rendererFonts(): Promise<Uint8Array[]> {
+  return (await ensureWasm()).fonts
+}
+
 async function ensureWasm(): Promise<Awaited<ReturnType<typeof loadAssets>>> {
   const assets = await loadAssets()
   if (wasmReady === undefined) wasmReady = initWasm(assets.wasm)

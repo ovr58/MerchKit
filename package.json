@@ -25,7 +25,9 @@
     "cards:layouts": "node --experimental-strip-types tools/card-pipeline/layouts.mts",
     "cards:layout-tags": "node --env-file=.env --experimental-strip-types tools/card-pipeline/layout-tags.mts",
     "cards:apply-layout-tags": "node --experimental-strip-types tools/card-pipeline/apply-layout-tags.mts",
-    "cards:render-assets": "node --experimental-strip-types tools/card-pipeline/render-assets.mts"
+    "cards:render-assets": "node --experimental-strip-types tools/card-pipeline/render-assets.mts",
+    "cards:bench": "node --experimental-strip-types tools/card-pipeline/bench.mts",
+    "cards:cutout": "node --experimental-strip-types tools/card-pipeline/cutout.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",
@@ -50,6 +52,7 @@
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.4.0",
     "jsdom": "^26.0.0",
+    "onnxruntime-web": "^1.29.0",
     "oxlint": "^1.0.0",
     "playwright": "^1.62.1",
     "supabase": "^2.0.0",
