@@ -6,7 +6,7 @@
   [ADR-0015](0015-card-service-on-vps-not-edge-function.md) · контракт раннера —
   [ADR-0014](0014-cutout-runner-onnx-behind-interface.md) · Supabase как единственный бэкенд —
   [ADR-0006](0006-supabase-as-backend.md) · развёртывание и защита коробки — план
-  [`cutout-service-vps_2026-09-03.md`](../../planning/active/cutout-service-vps_2026-09-03.md)
+  [`cutout-service-vps_2026-09-03.md`](../../planning/archive/plans/cutout-service-vps_2026-09-03.md)
 
 ## Context
 
