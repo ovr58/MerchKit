@@ -5,7 +5,7 @@
 - **Related:** **supersede-ит пункт 4** [ADR-0015](0015-card-service-on-vps-not-edge-function.md)
   (остальные его пункты в силе) · требование «лицензия, подтверждённая первоисточником» —
   [ADR-0014](0014-cutout-runner-onnx-behind-interface.md) · замер и решение —
-  [`cutout-model-speed_2026-09-05.md`](../../planning/active/cutout-model-speed_2026-09-05.md) ·
+  [`cutout-model-speed_2026-09-05.md`](../../planning/archive/plans/cutout-model-speed_2026-09-05.md) ·
   лицензионный долг — запись B7 в [`BACKLOG.md`](../../planning/BACKLOG.md) · клиентский вырез
   с ластиком — запись B22 там же
 
