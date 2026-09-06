@@ -9,6 +9,7 @@
  *   npm run cards:cutout node               время инференса, wasm в один поток
  *   npm run cards:cutout native             то же нативным ORT + кромка на настоящих кадрах
  *   npm run cards:cutout browser            то же в Chromium + маски на настоящих кадрах
+ *   npm run cards:cutout occupancy          карта занятости по маскам прошлого прогона
  *
  * **Лицензия проверяется по первоисточнику и живёт рядом с файлом модели** — правило ADR-0014,
  * пункт 4, и тот же приём, что у гарнитур в `card_font_families`. Поэтому таблица кандидатов
@@ -21,6 +22,10 @@ import { deflateSync } from 'node:zlib'
 import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises'
 import { extname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+
+import { readImageInfo } from '../../supabase/functions/_shared/image.ts'
+import { occupancyOf } from '../../supabase/functions/_shared/card-layout/occupancy.ts'
+import type { OccupancyMap } from '../../supabase/functions/_shared/card-layout/occupancy.ts'
 
 const here = fileURLToPath(new URL('.', import.meta.url))
 const MODELS = join(here, 'models')
@@ -707,6 +712,135 @@ async function benchNative(
   if (frames.length > 0) console.log(`\nМаски: ${outDir}`)
 }
 
+/**
+ * Карта занятости на настоящих масках — проверка того обещания шага B4, ради которого карта и
+ * считается по долям кадра, а не по пикселям: **смена модели выреза не должна переделывать B5.**
+ *
+ * Инференса здесь нет и не нужно: маски прошлого прогона `native` уже лежат на диске, и по
+ * одним и тем же кадрам их считали разные модели. Прогон бесплатный и берёт секунды.
+ *
+ *   npm run cards:cutout occupancy -- --masks bench/runs/cutout-native-… [--grid]
+ *
+ * Последняя строка на кадр и есть замер: сколько ячеек разошлось вердиктом «занято» между
+ * моделями. Разойдётся много — форма карты зависит от модели, и это брак проектирования, а не
+ * повод подкрутить порог.
+ */
+async function reportOccupancy(rest: string[], showGrid: boolean): Promise<void> {
+  const dir = rest.includes('--masks')
+    ? rest[rest.indexOf('--masks') + 1]
+    : await latestMaskRun()
+
+  const byFrame = new Map<string, { model: string; map: OccupancyMap }[]>()
+
+  for (const name of (await readdir(dir)).filter((file) => file.toLowerCase().endsWith('.png')).sort()) {
+    const path = join(dir, name)
+    const info = readImageInfo(new Uint8Array(await readFile(path)))
+    if (info === null) {
+      console.log(`${name}: не распознано как изображение — пропуск`)
+      continue
+    }
+
+    // Растеризатор оснастки тянет картинку к квадрату (`preserveAspectRatio="none"`), поэтому
+    // не-квадратную маску он молча исказил бы, а карта отчиталась бы о чужой геометрии.
+    if (info.width !== info.height) {
+      console.log(`${name}: маска ${info.width}×${info.height} не квадратная — пропуск`)
+      continue
+    }
+
+    const rgba = await framePixels(path, info.width)
+    // Маска серая: её яркость и есть непрозрачность, поэтому хватает одного канала.
+    const alpha = new Uint8Array(info.width * info.height)
+    for (let index = 0; index < alpha.length; index += 1) alpha[index] = rgba[index * 4]
+
+    const [model, stem] = splitMaskName(name)
+    byFrame.set(stem, [
+      ...(byFrame.get(stem) ?? []),
+      { model, map: occupancyOf({ width: info.width, height: info.height, alpha }) },
+    ])
+  }
+
+  console.log(`\n## Карта занятости — ${dir}`)
+
+  for (const [stem, taken] of [...byFrame].sort(([left], [right]) => left.localeCompare(right))) {
+    console.log(`\n${stem}`)
+
+    for (const { model, map } of taken) {
+      const places = map.free.slice(0, 2).map(boxText).join(' · ')
+      console.log(
+        `  ${model.padEnd(30)} занято ${map.coverage.toFixed(2)}  ` +
+          `габарит ${boxText(map.bounds)}  места ${places === '' ? '—' : places}`,
+      )
+      if (showGrid) for (const row of gridRows(map)) console.log(`    ${row}`)
+    }
+
+    for (let index = 1; index < taken.length; index += 1) {
+      const first = taken[0]
+      const other = taken[index]
+      const apart = cellsApart(first.map, other.map)
+      const sameZone = boxText(first.map.free[0] ?? null) === boxText(other.map.free[0] ?? null)
+      console.log(
+        `  ${first.model} ↔ ${other.model}: вердиктом врозь ${apart.verdicts} ячеек из ` +
+          `${first.map.cells.length}, максимум расхождения ${apart.max.toFixed(2)}, ` +
+          `лучшее место ${sameZone ? 'то же' : 'другое'}`,
+      )
+    }
+  }
+}
+
+async function latestMaskRun(): Promise<string> {
+  const root = join(here, '..', '..', 'bench', 'runs')
+  const runs = (await readdir(root, { withFileTypes: true }))
+    .filter((entry) => entry.isDirectory() && entry.name.startsWith(`${RUN_PREFIX}native-`))
+    .map((entry) => entry.name)
+    .sort()
+
+  if (runs.length === 0) throw new Error('Масок на диске нет — сначала `npm run cards:cutout native`')
+  return join(root, runs[runs.length - 1])
+}
+
+/** Имена масок пишет `native`: `модель__набор--кадр.png`. У прогонов до 2026-09-05 разделитель
+ *  был один и тот же (`--`), поэтому разбор пробует оба, а не падает на старом каталоге. */
+function splitMaskName(name: string): [string, string] {
+  const stem = name.replace(/\.png$/i, '')
+  const at = stem.includes('__') ? stem.indexOf('__') : stem.indexOf('--')
+  return at === -1 ? ['?', stem] : [stem.slice(0, at), stem.slice(at + 2)]
+}
+
+/** Расхождение двух карт: сколько ячеек разошлись вердиктом «занято» и насколько далеко
+ *  разошлась сама доля. Первое решает, разъедется ли вёрстка; второе — насколько близко. */
+function cellsApart(left: OccupancyMap, right: OccupancyMap): { verdicts: number; max: number } {
+  if (left.cols !== right.cols || left.rows !== right.rows) {
+    return { verdicts: left.cells.length, max: 1 }
+  }
+
+  let verdicts = 0
+  let max = 0
+  for (let index = 0; index < left.cells.length; index += 1) {
+    const a = left.cells[index]
+    const b = right.cells[index]
+    if ((a >= 0.5) !== (b >= 0.5)) verdicts += 1
+    max = Math.max(max, Math.abs(a - b))
+  }
+
+  return { verdicts, max }
+}
+
+function boxText(box: { x: number; y: number; w: number; h: number } | null): string {
+  return box === null
+    ? 'нет'
+    : `${box.x.toFixed(2)},${box.y.toFixed(2)} ${box.w.toFixed(2)}×${box.h.toFixed(2)}`
+}
+
+/** Сетка глазами: цифра на ячейку, 0 — фон, 9 — товар. */
+function gridRows(map: OccupancyMap): string[] {
+  const rows: string[] = []
+  for (let row = 0; row < map.rows; row += 1) {
+    const cells = map.cells.slice(row * map.cols, (row + 1) * map.cols)
+    rows.push(cells.map((share) => Math.round(share * 9)).join(''))
+  }
+  return rows
+}
+
 function licenceTable(): void {
   console.log('\n## Лицензии кандидатов — по первоисточникам')
   for (const [id, candidate] of Object.entries(CANDIDATES)) {
@@ -734,7 +868,12 @@ async function main(): Promise<void> {
   else if (mode === 'node') await benchNode(ids(rest), runs)
   else if (mode === 'native') await benchNative(ids(rest), runs, framesRoot, frameLimit)
   else if (mode === 'browser') await benchBrowser(ids(rest), runs, framesRoot, frameLimit, threads)
-  else throw new Error(`Неизвестный режим «${mode}». Есть: licenses, fetch, node, native, browser`)
+  else if (mode === 'occupancy') await reportOccupancy(rest, rest.includes('--grid'))
+  else {
+    throw new Error(
+      `Неизвестный режим «${mode}». Есть: licenses, fetch, node, native, browser, occupancy`,
+    )
+  }
 }
 
 main().catch((error: unknown) => {
