@@ -58,12 +58,15 @@ const CANDIDATES: Record<string, Candidate> = {
   u2netp: {
     url: 'https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2netp.onnx',
     side: 320,
-    license: 'код — Apache-2.0; веса — лицензия не объявлена',
+    license: 'код — Apache-2.0; веса — предварительное согласие авторов (2026-09-06)',
     licenseUrl: 'https://github.com/xuebinqin/U-2-Net/blob/master/LICENSE',
     note:
-      'LICENSE в репозитории покрывает код. Веса лежат на Google Drive вне репозитория, ' +
-      'и README отправляет за разрешением к авторам письмом — то есть по правилу ADR-0014 ' +
-      'лицензия НЕ подтверждена первоисточником.',
+      'LICENSE в репозитории покрывает код. Веса лежат на Google Drive вне репозитория, и ' +
+      'README отправляет за разрешением к авторам письмом. Владелец написал и получил ' +
+      'ПРЕДВАРИТЕЛЬНОЕ согласие на коммерческое использование; детали оговариваются при ' +
+      'коммерческом запуске. Этого хватило, чтобы выбрать модель (решение 2026-09-06), но ' +
+      'риск отложен, а не закрыт: до коммерческого запуска лицензию надо урегулировать — ' +
+      'условие висит на записи B7 в planning/BACKLOG.md и на ADR-0017.',
   },
   silueta: {
     url: 'https://github.com/danielgatis/rembg/releases/download/v0.0.0/silueta.onnx',
@@ -71,15 +74,6 @@ const CANDIDATES: Record<string, Candidate> = {
     license: 'производная U²-Net; веса — лицензия не объявлена',
     licenseUrl: 'https://github.com/xuebinqin/U-2-Net/blob/master/LICENSE',
     note: 'Уменьшенная сборка U²-Net, наследует ровно ту же неопределённость с весами.',
-  },
-  'isnet-general-use': {
-    url: 'https://github.com/danielgatis/rembg/releases/download/v0.0.0/isnet-general-use.onnx',
-    side: 1024,
-    license: 'код — Apache-2.0; веса обучены на DIS5K с отдельными условиями',
-    licenseUrl: 'https://github.com/xuebinqin/DIS',
-    note:
-      'README отсылает к DIS5K-Dataset-Terms-of-Use.pdf; условия набора данных отдельны от ' +
-      'Apache-2.0 на код и по первоисточнику не прочитаны — считать неподтверждёнными.',
   },
   ormbg: {
     url: 'https://huggingface.co/schirrmacher/ormbg/resolve/main/ormbg.onnx',
@@ -99,14 +93,46 @@ const CANDIDATES: Record<string, Candidate> = {
     note: 'MIT и в репозитории кода, и в карточке модели на Hugging Face.',
     activation: 'sigmoid',
   },
+  'birefnet-general-lite-int8': {
+    // Готового int8-экспорта BiRefNet нет ни на Hugging Face, ни в релизах rembg — там только
+    // fp32 и fp16, а fp16 на x86 ORT разворачивает обратно в fp32 и времени не экономит.
+    // Поэтому файл делается локально и качать его неоткуда.
+    url: '',
+    side: 1024,
+    license: 'MIT — производная от MIT-весов',
+    licenseUrl: 'https://github.com/ZhengPeng7/BiRefNet/blob/main/LICENSE',
+    note:
+      'Динамическое квантование `birefnet-general-lite` в два шага. Сначала свернуть узлы ' +
+      '`Identity` над инициализаторами: в этом экспорте у 28 `MatMul` вес приходит через ' +
+      '`Identity`, а `quantize_dynamic` берёт только те, у кого вес — инициализатор, и молча ' +
+      'пропускает остальные (файл худеет на 10% вместо 4×). Затем ' +
+      '`quantize_dynamic(weight_type=QInt8, reduce_range=True)`. `reduce_range` обязателен: ' +
+      'цель — Zen 3 (EPYC 7763) без VNNI, где u8s8-ядра насыщаются на полном диапазоне весов. ' +
+      'Штатный `onnxruntime.quantization.preprocess` тот же результат даёт только с ' +
+      '`--auto_merge`, а он разруливает конфликты форм «мягким слиянием» — для сравнения ' +
+      'качества кромки это лишняя неопределённость, поэтому взят минимальный путь.',
+    activation: 'sigmoid',
+  },
 }
 
 /**
- * Отвергнута до замера, и причина записана: без этой строки вопрос «а почему не самая
- * точная?» вернётся на следующем шаге. RMBG у BRIA — единственный кандидат, чьи веса прямо
- * запрещены к коммерческому использованию без платного договора.
+ * Отвергнуты до замера, и причина записана: без этих строк вопрос «а почему не самая точная?»
+ * вернётся на следующем шаге. Обе — с прямым запретом коммерческого использования весов,
+ * прочитанным по первоисточнику, а не предположенным.
  */
 const REJECTED = {
+  'isnet-general-use': {
+    license: 'код — Apache-2.0; данные DIS5K — НЕкоммерческие, запрет распространён на производные',
+    licenseUrl: 'https://github.com/xuebinqin/DIS/blob/main/DIS5K-Dataset-Terms-of-Use.pdf',
+    note:
+      'DIS5K Terms of Use, пункт 2 дословно: «The Dataset is available for non-commercial use ' +
+      'in research or educational purpose. Without permission from the original authors, ' +
+      'commercial use of this dataset is prohibited even after copying, editing, processing ' +
+      'or any operations of this database». Пункт 4 запрещает и распространение производных. ' +
+      'Apache-2.0 в README покрывает только «code and evaluation metric»; весам лицензия не ' +
+      'назначена, а обучены они на этих данных. Прочитано по PDF 2026-09-06 — это не ' +
+      '«условия неизвестны», а прямой запрет.',
+  },
   'bria-rmbg': {
     license: 'bria-rmbg — некоммерческая; коммерция по платному договору',
     licenseUrl: 'https://huggingface.co/briaai/RMBG-1.4',
@@ -154,6 +180,13 @@ async function fetchModels(list: string[]): Promise<void> {
     if (already !== null) {
       console.log(`${id}: уже есть, ${(already / 1048576).toFixed(1)} МБ`)
       continue
+    }
+
+    // Пустой `url` — не забытое поле, а «этот файл делается локально». Без явного отказа
+    // сюда прилетел бы `fetch('')`, и молча положить чужие байты под чужим именем — худшее,
+    // что может сделать стенд, чьё единственное назначение — сравнивать модели честно.
+    if (CANDIDATES[id].url === '') {
+      throw new Error(`${id}: качать неоткуда, файл делается локально — ${CANDIDATES[id].note}`)
     }
 
     const response = await fetch(CANDIDATES[id].url, { redirect: 'follow' })
@@ -658,9 +691,16 @@ async function benchNative(
       const raw = output[session.outputNames[0]].data as Float32Array
       const { gray, softShare } = toMask(raw, CANDIDATES[id].activation)
 
-      const stem = frame.split(/[\\/]/).pop()?.replace(/\.[a-z]+$/i, '') ?? 'frame'
-      await writeFile(join(outDir, `${id}--${stem}.png`), grayPng(gray, side))
-      console.log(`  кромка ${stem}: полутон на ${(softShare * 100).toFixed(1)}% пикселей`)
+      // Имя каталога входит в стебель не для красоты: в `bench/samples/` каждый набор зовёт
+      // свой снимок `photo-1.jpg`, и по одному имени файла семь масок легли бы друг на друга,
+      // оставив от прогона одну последнюю.
+      const parts = frame.split(/[\\/]/)
+      const leaf = parts.at(-1)?.replace(/\.[a-z]+$/i, '') ?? 'frame'
+      const stem = parts.length > 1 ? `${parts.at(-2)}--${leaf}` : leaf
+      await writeFile(join(outDir, `${id}__${stem}.png`), grayPng(gray, side))
+      // Два знака, а не один: у кандидатов этого класса полутон живёт в десятых долях
+      // процента, и на одном знаке 0,24% и 0,35% сливаются в неразличимые «0,2» и «0,4».
+      console.log(`  кромка ${stem}: полутон на ${(softShare * 100).toFixed(2)}% пикселей`)
     }
   }
 
