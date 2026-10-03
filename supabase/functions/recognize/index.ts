@@ -18,7 +18,8 @@
  * не стоил; на живом вендоре каждый ответ — деньги с нашего счёта, и вход это не отменяет.
  * Исчерпанный лимит — единственный случай, когда шаг отвечает отказом, а не пустыми полями:
  * человек должен узнать, что распознавание не сломалось, а кончилось. Обоснование выбора
- * «лимит, а не плата» — в миграции `20260829130000_recognize_quota.sql`.
+ * «лимит, а не плата» — в миграции `20260829130000_recognize_quota.sql`
+ * (таблица потом переименована в `daily_quota`, миграция `20261003110000`).
  *
  * Проверить локально:
  *   curl -sX POST http://127.0.0.1:54321/functions/v1/recognize \
@@ -105,7 +106,7 @@ Deno.serve(async (request: Request): Promise<Response> => {
   let allowed: boolean
 
   try {
-    allowed = (await callDatabase('consume_recognize_quota', {
+    allowed = (await callDatabase('consume_daily_quota', {
       caller_key: `user:${userId}`,
       daily_limit: MEMBER_DAILY_LIMIT,
     })) === true
