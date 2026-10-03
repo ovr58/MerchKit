@@ -58,10 +58,6 @@ describe('Форма запроса: пиксели вместо бакетов 
     expect(() => imageSizeParam(clothing, ['2048x2048'])).toThrow(/3:4/)
   })
 
-  it('требует соотношение площадки ровно, без допуска: список размеров — наша конфигурация', () => {
-    expect(() => imageSizeParam(clothing, ['912x1200'])).toThrow(/3:4/)
-  })
-
   it('не принимает мусор в списке размеров молча', () => {
     expect(() => imageSizeParam(clothing, ['большой'])).toThrow(/AI_PROVIDER_IMAGE_SIZES/)
   })

@@ -269,9 +269,10 @@ async function run(generation: GenerationRow, usage: ProviderUsage[]): Promise<s
   const results = assembly !== null ? [assembly.bytes] : images.map((image) => image.bytes)
 
   // Профиль уходил В запрос, но верить на слово нельзя: файл не по требованиям площадки —
-  // это файл, за который пользователь заплатил зря (FR-25).
+  // это файл, за который пользователь заплатил зря (FR-25). Собранную карточку — на точный
+  // размер профиля (её рисуем мы), кадр фото — порогом и допуском, как и до сборки.
   for (const bytes of results) {
-    const mismatch = describeProfileMismatch(bytes, profile)
+    const mismatch = describeProfileMismatch(bytes, profile, { exact: assembly !== null })
 
     if (mismatch !== null) {
       throw new Error(`Изображение не подходит профилю площадки: ${mismatch}`)

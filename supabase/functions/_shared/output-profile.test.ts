@@ -4,20 +4,21 @@ import { describeProfileMismatch } from './output-profile.ts'
 import type { OutputProfile } from './ai-provider/types.ts'
 
 /**
- * Сверка готового файла с профилем площадки (FR-25, долг ADR-0012 закрыт шагом B7.3).
+ * Сверка готового файла с профилем площадки (FR-25).
  *
- * Карточку собираем мы и в пикселях профиля, поэтому размер сверяется на равенство: пиксель
- * в сторону — уже не тот кадр, который мы обещали площадке.
+ * Два режима. Кадр вендора (фото) — порогом и допуском по соотношению: точный размер вендору
+ * недостижим (миграция 20260829140000). Собранная карточка — точным размером профиля: её
+ * рисует наш сборщик (ADR-0012, шаг B7.3).
  */
 
 const PROFILE: OutputProfile = {
-  marketplaceId: 'ozon',
-  marketplaceTitle: 'Ozon',
+  marketplaceId: 'wildberries',
+  marketplaceTitle: 'Wildberries',
   categoryId: 'clothing',
-  width: 1440,
-  height: 1920,
-  minWidth: 900,
-  minHeight: 1200,
+  width: 896,
+  height: 1200,
+  minWidth: 700,
+  minHeight: 900,
   aspectW: 3,
   aspectH: 4,
   aspectLabel: '3 : 4',
@@ -38,24 +39,38 @@ function pngHeader(width: number, height: number): Uint8Array {
   return bytes
 }
 
-describe('Сверка файла с профилем площадки', () => {
-  it('принимает файл ровно в размер профиля', () => {
-    expect(describeProfileMismatch(pngHeader(1440, 1920), PROFILE)).toBeNull()
+describe('Сверка кадра вендора (фото): порог и допуск', () => {
+  it('принимает кадр 1536×2048 при профиле 896×1200 — выше порога, та же пропорция', () => {
+    expect(describeProfileMismatch(pngHeader(1536, 2048), PROFILE)).toBeNull()
   })
 
-  it('отвергает файл на пиксель больше профиля', () => {
-    expect(describeProfileMismatch(pngHeader(1440, 1921), PROFILE)).toMatch(/1440 × 1921 не совпадает/)
+  it('отвергает кадр ниже порога площадки', () => {
+    expect(describeProfileMismatch(pngHeader(600, 800), PROFILE)).toMatch(/ниже порога/)
   })
 
-  it('отвергает файл той же пропорции, но другого размера', () => {
-    expect(describeProfileMismatch(pngHeader(1800, 2400), PROFILE)).toMatch(/не совпадает с профилем/)
+  it('отвергает кадр другой пропорции', () => {
+    expect(describeProfileMismatch(pngHeader(1024, 1024), PROFILE)).toMatch(/соотношение сторон/)
   })
 
   it('отвергает формат, которого площадка не принимает', () => {
-    expect(describeProfileMismatch(pngHeader(1440, 1920), { ...PROFILE, formats: ['jpeg'] })).toMatch(/формат png/)
+    expect(describeProfileMismatch(pngHeader(896, 1200), { ...PROFILE, formats: ['jpeg'] })).toMatch(/формат png/)
   })
 
   it('отвергает файл тяжелее предела площадки', () => {
-    expect(describeProfileMismatch(pngHeader(1440, 1920), { ...PROFILE, maxBytes: 10 })).toMatch(/превышает предел/)
+    expect(describeProfileMismatch(pngHeader(896, 1200), { ...PROFILE, maxBytes: 10 })).toMatch(/превышает предел/)
+  })
+})
+
+describe('Сверка собранной карточки: точный размер профиля', () => {
+  it('принимает карточку ровно в размер профиля', () => {
+    expect(describeProfileMismatch(pngHeader(896, 1200), PROFILE, { exact: true })).toBeNull()
+  })
+
+  it('отвергает карточку на пиксель выше профиля', () => {
+    expect(describeProfileMismatch(pngHeader(896, 1201), PROFILE, { exact: true })).toMatch(/896 × 1201 не совпадает/)
+  })
+
+  it('отвергает карточку на пиксель шире профиля', () => {
+    expect(describeProfileMismatch(pngHeader(897, 1200), PROFILE, { exact: true })).toMatch(/не совпадает с профилем/)
   })
 })
