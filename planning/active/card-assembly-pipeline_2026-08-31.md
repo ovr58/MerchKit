@@ -279,7 +279,12 @@ M7 меняет.
   - **Критерий приёмки:** ADR со всеми пятью пунктами принят владельцем; в отчёте — тексты шагов
     B5.2… по шаблону микро-шага, каждый проходит диагностический вопрос.
 
-- [ ] **B5.1. Пересчёт «доли кадра → доли холста» — чистая функция.**
+- [x] **B5.1. Пересчёт «доли кадра → доли холста» — чистая функция.** Исполнено и сведено
+  2026-10-03 (`79b4301`). Сигнатуры расширены размером кадра, пропорцию по сетке карты не
+  восстановить: `frameToCanvas(map, frameLayer, canvas, frame)`, `canvasBoxToFrame(box,
+  frameLayer, canvas, frame)`, `frameBoxToCanvas(...)`; `canvas` и `frame` — `{width, height}` в
+  пикселях. `canvasBoxToFrame` не обрезает по боксу слоя `frame` — занятость текстового бокса
+  проверять как `occupancyOfBox(frameToCanvas(...), box)`. `radius`/`rotate` слоя `frame` не учтены.
   - **Целевой файл(ы):** `supabase/functions/_shared/card-layout/frame-space.ts` (новый),
     `frame-space.test.ts` (новый).
   - **Файлы-контракты:** `card-layout/occupancy.ts` — `OccupancyMap` (всё в долях кадра) ·
@@ -386,7 +391,7 @@ M7 меняет.
 | --- | --- | --- | --- | --- | --- | --- |
 | M7-1 | B7.1 (НЕДЕЛИМ, головной), B7.2, B7.3, B7.4 | Opus · high | доверенная | `claude/m7-card-assembly` | — | M7-2, M7-3 |
 | M7-2 | B5.0 (НЕДЕЛИМ) | Opus · high | доверенная | `claude/m7-art-director-contract` | — | M7-1, M7-3 |
-| M7-3 | B5.1 | Sonnet · medium | консервативная | `feature/m7-frame-space` | — | M7-1, M7-2 |
+| M7-3 ✓ сведена 2026-10-03 | B5.1 | Sonnet · medium | консервативная | `feature/m7-frame-space` | — | M7-1, M7-2 |
 | M7-4 | B7.5, B7.6 | Sonnet · high | консервативная | `feature/m7-card-rebuild` | M7-1 сведена; B18 (BACKLOG) сведена | M7-5 |
 | M7-5 | C1 | Sonnet · high | консервативная | `feature/m7-mechanical-acceptance` | M7-1 сведена | M7-4 |
 | M7-6 | B7.7 | Sonnet · high | консервативная | `feature/m7-edge-heavy` | M7-1 сведена; держит стенд (bench, test:db) | M7-4; с M7-5 и B18 — по времени (воркер, стенд) |
