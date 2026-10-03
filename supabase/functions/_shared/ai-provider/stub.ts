@@ -271,6 +271,14 @@ export function createStubProvider(onUsage?: (usage: ProviderUsage) => void): Ai
       }
     },
 
+    // Пустой ответ — штатный для `parseDirection`: ни правок, ни гнёзд, ни иконок, макет
+    // остаётся таким, каким его собрал сборщик. Затраты нулевые, но строка пишется: местный
+    // прогон упражняет тот же путь `record_generation_costs`, что и живой вендор.
+    async directCard(): Promise<Record<string, unknown>> {
+      recordZeroCost(onUsage, 'directCard', 0)
+      return {}
+    },
+
     async nameGeneration({ product }): Promise<string> {
       const started = Date.now()
       await wait(Math.min(delay, 300))

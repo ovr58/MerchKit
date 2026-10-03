@@ -17,6 +17,7 @@
  * способ проверить именно тот набор фото, что списывается и уходит в генерацию.
  */
 
+import type { DirectorBrief } from '../card-layout/direction.ts'
 import type { GenerationKind } from '../pricing.ts'
 
 /**
@@ -115,7 +116,7 @@ export type Moderated = {
  * `recognize` сюда намеренно не входит — см. миграцию `20260830000000_generation_costs.sql`.
  */
 export type ProviderUsage = {
-  operation: 'moderate' | 'generateImages' | 'composeCard' | 'nameGeneration'
+  operation: 'moderate' | 'generateImages' | 'composeCard' | 'nameGeneration' | 'directCard'
   /** Профиль, который в самом деле обслужил вызов ("stub" | "aitunnel") — записывается
    *  реализацией, а не берётся вызывающим из конфигурации: смена вендора мимо кода не
    *  должна расходиться с тем, что легло в БД. */
@@ -151,6 +152,15 @@ export interface AiProvider {
 
   /** FR-16: название генерации для каталога — список из «Генерация №17» нечитаем. */
   nameGeneration(input: { product: ProductBrief }): Promise<string>
+
+  /**
+   * Арт-директор ([ADR-0018](../../../../docs/adr/0018-art-director-layout-patch.md), п. 1):
+   * правка вёрстки и наполнение гнёзд по постановке `DirectorBrief`. Возвращает **сырой**
+   * объект ответа модели: форму и содержание проверяет `parseDirection`, одна для любого
+   * вендора, — провайдер ответ не разбирает, иначе проверка разошлась бы с заглушкой.
+   * Отказ вызова (сеть, пустой ответ) — исключение, как у остальных текстовых операций.
+   */
+  directCard(input: { brief: DirectorBrief }): Promise<Record<string, unknown>>
 }
 
 /**

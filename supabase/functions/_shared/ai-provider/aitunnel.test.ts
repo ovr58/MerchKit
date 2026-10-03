@@ -1,7 +1,13 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { GatewayError, imageSizeParam, isContentRefusal, readModerationVerdict } from './aitunnel.ts'
-import type { OutputProfile } from './types.ts'
+import {
+  createAitunnelProvider,
+  GatewayError,
+  imageSizeParam,
+  isContentRefusal,
+  readModerationVerdict,
+} from './aitunnel.ts'
+import type { OutputProfile, ProviderProfile, ProviderUsage } from './types.ts'
 
 /**
  * Чистые функции адаптера, от которых зависит смена модели (ADR-0011): выбор формы
@@ -130,5 +136,81 @@ describe('Вердикт модерации', () => {
     expect(readModerationVerdict({ allowed: 'true' })).toBeNull()
     expect(readModerationVerdict([])).toBeNull()
     expect(readModerationVerdict([{ allowed: true }, { note: 'непонятно' }])).toBeNull()
+  })
+})
+
+/**
+ * `directCard` (ADR-0018, п. 1): текстовая операция на подменном `fetch`, вендор не вызывается.
+ * Проверяется то, что провайдер обязан сделать сам: какая модель, какой формат ответа, что
+ * уходит пользовательским телом и что записывается в затраты. Ответ модели провайдер не
+ * разбирает — разбор живёт в `parseDirection`, поэтому возвращается сырой объект.
+ */
+describe('Операция directCard', () => {
+  const profile: ProviderProfile = {
+    name: 'aitunnel',
+    baseUrl: 'https://gateway.test/v1',
+    imageModel: 'image-model',
+    imageModelFallback: null,
+    imageSizes: null,
+    imageSizesFallback: null,
+    textModel: 'text-model',
+  }
+
+  // Бриф собирает `directorBrief` (card-layout/direction.ts); провайдеру важно лишь, что он
+  // уходит в запрос дословно, поэтому форма здесь минимальная.
+  const brief = { mode: 'content', texts: { title: 'Куртка', body: '' }, complaints: [] } as never
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  function stubGateway(reply: unknown) {
+    vi.stubGlobal('Deno', { env: { get: () => 'test-key' } })
+    const fetchMock = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          choices: [{ message: { content: JSON.stringify(reply) } }],
+          usage: { cost_rub: 0.0123 },
+        }),
+        { status: 200 },
+      ))
+    vi.stubGlobal('fetch', fetchMock)
+    return fetchMock
+  }
+
+  it('идёт на текстовую модель, просит JSON-объект и отдаёт бриф телом пользователя', async () => {
+    const fetchMock = stubGateway({ texts: { kicker: ['Куртка'] } })
+
+    const raw = await createAitunnelProvider(profile).directCard({ brief })
+
+    expect(raw).toEqual({ texts: { kicker: ['Куртка'] } })
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
+    expect(url).toBe('https://gateway.test/v1/chat/completions')
+
+    const body = JSON.parse(init.body as string)
+    expect(body.model).toBe('text-model')
+    expect(body.response_format).toEqual({ type: 'json_object' })
+    expect(body.messages[0].role).toBe('system')
+    expect(body.messages[1]).toEqual({ role: 'user', content: JSON.stringify(brief) })
+  })
+
+  it('пишет вызов в затраты под именем directCard', async () => {
+    stubGateway({})
+    const usages: ProviderUsage[] = []
+
+    await createAitunnelProvider(profile, (usage) => usages.push(usage)).directCard({ brief })
+
+    expect(usages).toHaveLength(1)
+    expect(usages[0]).toMatchObject({ operation: 'directCard', vendor: 'aitunnel', costRub: 0.0123 })
+  })
+
+  it('не разбирает ответ: форма не по контракту доходит до parseDirection как есть', async () => {
+    stubGateway({ boxes: 'не массив' })
+
+    await expect(createAitunnelProvider(profile).directCard({ brief })).resolves.toEqual({
+      boxes: 'не массив',
+    })
   })
 })

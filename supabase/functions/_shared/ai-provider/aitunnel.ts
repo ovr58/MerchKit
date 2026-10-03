@@ -2,7 +2,7 @@
  * Реализация `AiProvider` через шлюз AITunnel (docs/SPEC.md §5, решение шага 0 вехи M5).
  *
  * **OpenAI-совместимый HTTP.** Текстовые операции (`moderate`, `recognize`, `composeCard`,
- * `nameGeneration`) идут на `POST {baseUrl}/chat/completions` дешёвой моделью
+ * `nameGeneration`, `directCard`) идут на `POST {baseUrl}/chat/completions` дешёвой моделью
  * `AI_PROVIDER_TEXT_MODEL`; изображения — на `POST {baseUrl}/images/generations` моделью
  * `AI_PROVIDER_IMAGE_MODEL`. Контракт сверен по сырому JSON публичного каталога шлюза
  * 2026-08-29 (план вехи M5, шаг 0): референсные фото — полем `input_references` с
@@ -297,7 +297,7 @@ async function callGateway(url: string, apiKey: string, body: unknown, timeoutMs
  *
  * `record` — необязательный: `recognize` его не передаёт (шаг мастера без генерации,
  * себестоимость сюда не пишется — см. миграцию `20260830000000_generation_costs.sql`),
- * остальные три текстовые операции контракта передают своё имя и общий колбэк `onUsage`.
+ * остальные текстовые операции контракта передают своё имя и общий колбэк `onUsage`.
  */
 async function chatJson(
   config: Config,
@@ -386,6 +386,34 @@ const COMPOSE_CARD_SYSTEM_PROMPT =
   'символов, точный и по делу, без капслока и лишних восклицаний. Описание — 2–4 предложения: ' +
   'что за товар и чем полезен, без воды и без придуманных характеристик, которых не было в ' +
   'исходных данных от продавца. Ответь строго JSON: {"title": "...", "description": "..."}.'
+
+/**
+ * Один промпт на оба режима постановки (ADR-0018, п. 1): режим модель читает из поля `mode`
+ * самого брифа. Форму ответа и правила проверки держит `parseDirection`; здесь они
+ * повторены словами, чтобы модель не тратила попытку на заведомо отвергаемое.
+ */
+const DIRECT_CARD_SYSTEM =
+  'Ты арт-директор готового макета карточки товара для маркетплейса. На вход — JSON ' +
+  'постановки. Твоя работа — разместить блоки макета по кадру и наполнить пустые гнёзда. ' +
+  'Цвета, стили, порядок слоёв и состав макета менять нельзя. ' +
+  'Правила. ' +
+  '1) Поле mode: при "content" верни только texts и icons; при "full" ещё и boxes. ' +
+  '2) Все координаты — доли холста от 0 до 1. map.cells — занятость ячеек кадра товаром ' +
+  'от 0 до 1; map.free — свободные места кадра. ' +
+  '3) Двигай только слои с editable: true. Бокс слоя целиком лежит внутри [0, 1]; ' +
+  'размер — от 0,5 до 1,5 исходного. ' +
+  '4) Голый текст, у которого нет плашки под ним, не клади на занятые ячейки; исключение — ' +
+  'слои, лежащие за слоем cutout. ' +
+  '5) Блоки не накладывай друг на друга. ' +
+  '6) Гнёзда из fillSlots наполняй только словами и числами из texts, properties и wishes ' +
+  'продавца: 1–3 строки, каждая до 60 знаков. Ничего не придумывай — ни свойств, ни ' +
+  'рекламных слов вроде «хит продаж». ' +
+  '7) Иконки: только имена из icons и только для индексов из iconProps; если ни одна не ' +
+  'подходит — null. ' +
+  '8) Если complaints не пуст, это возражения проверки к твоему прошлому ответу: исправь ' +
+  'перечисленное и верни только запрошенные части. ' +
+  'Ответь строго JSON без пояснений: {"boxes":[{"layerId":"…","box":{"x":…,"y":…,"w":…,' +
+  '"h":…}}],"texts":{…},"icons":[{"prop":0,"icon":"…"}]}.'
 
 function composeCardPrompt(product: ProductBrief, profile: OutputProfile): string {
   return [
@@ -642,6 +670,15 @@ export function createAitunnelProvider(
       }
 
       return { title, description }
+    },
+
+    async directCard({ brief }): Promise<Record<string, unknown>> {
+      const config = requireConfig(providerProfile)
+
+      return await chatJson(config, DIRECT_CARD_SYSTEM, JSON.stringify(brief), {
+        operation: 'directCard',
+        onUsage,
+      })
     },
 
     async nameGeneration({ product }): Promise<string> {
