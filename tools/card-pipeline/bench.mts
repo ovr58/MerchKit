@@ -10,6 +10,7 @@
  * вопроса к его собственной таблице переспросить оказалось нечем. Здесь они и закрываются:
  *
  *   npm run cards:bench assemble   сборка 34 макетов: время и память по каждому прогону
+ *                                  (`--size 896x1200` — только этот размер)
  *   npm run cards:bench free       эффект явного free() у объектов resvg
  *   npm run cards:bench cutout     раннер выреза в изоляте (шаг B4.0, гейт ADR-0014)
  *
@@ -412,14 +413,27 @@ async function main(): Promise<void> {
     const ids = await layoutIds()
     if (ids.length === 0) throw new Error('Библиотека макетов пуста. Сначала `npm run cards:layouts push`.')
 
-    const profile = await assemble(PROFILE_SIZE, ids)
-    reportAssemble(`Профиль площадки ${PROFILE_SIZE.width}×${PROFILE_SIZE.height}`, profile)
+    // `--size 896x1200` — один размер вместо пары «профиль + превью» (профили площадок из
+    // `marketplace_profiles`); без параметра поведение прежнее.
+    const sizeArg = rest.includes('--size') ? rest[rest.indexOf('--size') + 1] : null
+    if (sizeArg !== null) {
+      const match = /^(\d+)x(\d+)$/.exec(sizeArg ?? '')
+      if (match === null) throw new Error('Размер задаётся как --size 896x1200')
+      const size = { width: Number(match[1]), height: Number(match[2]) }
 
-    const preview = await assemble(PREVIEW_SIZE, ids)
-    reportAssemble(`Размер превью ${PREVIEW_SIZE.width}×${PREVIEW_SIZE.height}`, preview)
+      const single = await assemble(size, ids)
+      reportAssemble(`Размер ${size.width}×${size.height}`, single)
+      record.profile = single
+    } else {
+      const profile = await assemble(PROFILE_SIZE, ids)
+      reportAssemble(`Профиль площадки ${PROFILE_SIZE.width}×${PROFILE_SIZE.height}`, profile)
 
-    record.profile = profile
-    record.preview = preview
+      const preview = await assemble(PREVIEW_SIZE, ids)
+      reportAssemble(`Размер превью ${PREVIEW_SIZE.width}×${PREVIEW_SIZE.height}`, preview)
+
+      record.profile = profile
+      record.preview = preview
+    }
   } else if (mode === 'free') {
     const layoutId = rest.find((arg) => !arg.startsWith('--')) ?? (await layoutIds())[0]
     const rounds = Number(rest.includes('--rounds') ? rest[rest.indexOf('--rounds') + 1] : 20)
