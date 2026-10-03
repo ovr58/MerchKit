@@ -347,3 +347,138 @@ describe('Краска иконки приходит из макета', () => {
     expect(drawn()).not.toContain('currentColor')
   })
 })
+
+/**
+ * Шаг C1: механическая приёмка сборки. Определённость SVG — половина определённости PNG;
+ * вторую половину (растеризатор) под vitest не проверить, он тянет npm-wasm для Deno, и её
+ * держит сравнение sha256 двух прогонов `npm run cards:roundtrip`.
+ */
+describe('Сборка детерминирована', () => {
+  const layers: Layer[] = [
+    { ...plate, effects: [{ kind: 'shadow', color: '#000000', dx: 0.01, dy: 0.01, blur: 0.02, opacity: 0.4 }] },
+    {
+      id: 'shot',
+      type: 'frame',
+      z: 0,
+      box: { x: 0, y: 0, w: 1, h: 1 },
+      fit: 'cover',
+      radius: 0.02,
+      bind: { kind: 'frame' },
+    },
+    {
+      id: 'glow',
+      type: 'shape',
+      z: 2,
+      box: { x: 0.2, y: 0.5, w: 0.6, h: 0.3 },
+      shape: { form: 'ellipse' },
+      fill: {
+        kind: 'radial',
+        center: { x: 0.5, y: 0.5 },
+        radius: 0.6,
+        stops: [
+          { at: 0, color: '#fdfdfc' },
+          { at: 1, color: '#d3cfca' },
+        ],
+      },
+    },
+    {
+      id: 'title',
+      type: 'text',
+      z: 3,
+      box: { x: 0.1, y: 0.1, w: 0.8, h: 0.1 },
+      bind: { kind: 'text', slot: 'title' },
+      style: {
+        role: 'heading',
+        size: 0.04,
+        weight: 700,
+        color: '#111111',
+        align: 'left',
+        valign: 'middle',
+        lineHeight: 1.1,
+        transform: 'upper',
+      },
+    },
+  ]
+  const content: CardContent = {
+    frames: [{ dataUri: 'data:image/png;base64,AA==', width: 10, height: 10 }],
+    texts: { title: ['Куртка <пуховая> & тёплая'] },
+    props: [],
+    swatches: [],
+  }
+
+  it('один вход 20 раз подряд даёт одну и ту же строку', () => {
+    const first = compose(layers, content)
+
+    for (let run = 1; run < 20; run += 1) {
+      expect(compose(layers, content)).toBe(first)
+    }
+  })
+})
+
+describe('Сборка без логотипа и без иконок остаётся корректной (K-3)', () => {
+  const layers: Layer[] = [
+    {
+      id: 'logo',
+      type: 'asset',
+      z: 1,
+      box: { x: 0.8, y: 0.02, w: 0.15, h: 0.08 },
+      fit: 'contain',
+      bind: { kind: 'logo' },
+    },
+    {
+      id: 'module',
+      type: 'group',
+      z: 2,
+      box: { x: 0.1, y: 0.5, w: 0.5, h: 0.1 },
+      children: [
+        {
+          id: 'module-icon',
+          type: 'asset',
+          z: 1,
+          box: { x: 0, y: 0, w: 0.2, h: 1 },
+          fit: 'contain',
+          bind: { kind: 'prop', index: 0, part: 'icon' },
+        },
+        {
+          id: 'module-label',
+          type: 'text',
+          z: 2,
+          box: { x: 0.25, y: 0, w: 0.75, h: 1 },
+          bind: { kind: 'prop', index: 0, part: 'label' },
+          style: {
+            role: 'label',
+            size: 0.03,
+            weight: 500,
+            color: '#111111',
+            align: 'left',
+            valign: 'middle',
+            lineHeight: 1.1,
+          },
+        },
+      ],
+    },
+  ]
+  const layout: CardLayout = {
+    id: 'test',
+    title: 'Тестовый макет',
+    canvas: { aspectW: 3, aspectH: 4, background: { kind: 'solid', color: '#ffffff' } },
+    layers,
+  }
+  const content: CardContent = {
+    texts: {},
+    props: [{ label: 'Водоотталкивающая пропитка' }],
+    swatches: [],
+  }
+
+  it('SVG корректен как XML, снятые слои названы, остальное нарисовано', () => {
+    const { svg, dropped } = composeSvg(layout, content, SIZE, FONTS)
+
+    const parsed = new DOMParser().parseFromString(svg, 'image/svg+xml')
+    expect(parsed.getElementsByTagName('parsererror')).toHaveLength(0)
+    expect(parsed.documentElement.tagName).toBe('svg')
+
+    expect(dropped.map((drop) => drop.id).sort()).toEqual(['logo', 'module-icon'])
+    expect(svg).not.toContain('<image')
+    expect(svg).toContain('Водоотталкивающая пропитка')
+  })
+})

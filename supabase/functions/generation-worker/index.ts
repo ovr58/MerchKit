@@ -42,6 +42,7 @@ import { cardFilling, imageBytes, imageRef, storedContent } from '../_shared/car
 import { renderCard } from '../_shared/card-layout/render.ts'
 import { layoutSnapshot, selectCardLayout, type LayoutCandidate } from '../_shared/card-layout/selection.ts'
 import type { FontFamilies } from '../_shared/card-layout/svg.ts'
+import { textMismatches } from '../_shared/card-layout/text-check.ts'
 import type { CardContent, CardLayout, FontRole } from '../_shared/card-layout/types.ts'
 import type { GenerationKind } from '../_shared/pricing.ts'
 
@@ -356,6 +357,13 @@ async function assembleCard(
   })
 
   const rendered = await renderCard(layout, content, { width: profile.width, height: profile.height }, fonts)
+
+  // Механическая приёмка (C1): заголовок и описание в кадре — те же слова, что вернул
+  // провайдер. Сверка с `card`, а не с `content`: обрезка при наполнении иначе невидима.
+  const mismatched = textMismatches(layout, content, { title: [card.title], body: [card.description] })
+  if (mismatched.length > 0) {
+    throw new Error(`В кадре не дословны тексты карточки: ${mismatched.join(', ')}`)
+  }
 
   if (cut.length > 0 || rendered.dropped.length > 0) {
     console.info('Генерация', generation.id, 'макет', layout.id, 'не вместил свойств:', cut.length,
