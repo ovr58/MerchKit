@@ -23,6 +23,7 @@ export default defineConfig({
     include: [
       'src/**/*.test.{ts,tsx}',
       'supabase/functions/_shared/**/*.test.ts',
+      'supabase/functions/card-rebuild/**/*.test.ts',
       'tools/**/*.test.ts',
     ],
   },

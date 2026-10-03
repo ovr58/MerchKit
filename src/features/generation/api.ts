@@ -224,6 +224,101 @@ export async function previewCard(input: CardPreviewInput): Promise<CardPreview 
   return data
 }
 
+/* ------------------------------------------ правка готовой карточки (B7.5, B7.6) */
+
+/** Гарнитура по роли шрифта: `display`, `heading`, `body`, `label`, `accent`. */
+export type CardFontMap = Record<string, string>
+
+/** Всё, чем наполняется форма правки: тексты, свойства, шрифты и из чего выбирать. */
+export type CardEdit = {
+  /** `false` — карточка собрана до появления пересборки: собирать её заново не из чего. */
+  rebuildable: boolean
+  texts: { title: string; description: string }
+  properties: ProductProperty[]
+  layoutTitle: string
+  /** Сколько характеристик умеет показать макет: хвост сверх этого в кадр не попадёт. */
+  capacity: number
+  fontMap: CardFontMap
+  fontOptions: Record<string, string[]>
+}
+
+export type CardRebuildInput = {
+  generationId: string
+  texts: { title: string; description: string }
+  properties: ProductProperty[]
+  fontMap: CardFontMap
+}
+
+export type CardRebuild = {
+  /** Файл результата заменён на месте: адрес прежний, ссылку на него нужно подписать заново. */
+  storagePath: string
+  layoutTitle: string
+  capacity: number
+  cut: { label: string; value: string }[]
+  overflows: CardPreviewOverflow[]
+}
+
+export type CardRebuildOutcome =
+  | { ok: true; rebuild: CardRebuild }
+  | { ok: false; message: string }
+
+/**
+ * Читает у `card-rebuild` то, из чего строится форма правки. К таблицам шрифтов клиент не
+ * ходит: у них политик нет (RLS без политик), список гарнитур отдаёт сервер.
+ */
+export async function readCardEdit(generationId: string): Promise<CardEdit | null> {
+  const { data, error } = await supabase.functions.invoke<Omit<CardEdit, 'properties'> & { properties?: unknown }>(
+    'card-rebuild',
+    { body: { generationId } },
+  )
+
+  if (error || !data) {
+    logger.warn('Данные для правки карточки не получены', { reason: error?.message })
+    return null
+  }
+
+  return { ...data, properties: normalizeProductProperties(data.properties) }
+}
+
+/**
+ * Пересобирает карточку с новыми текстами и шрифтами. Бесплатно: ни баллов, ни вендора — кадр
+ * и вырез берутся из уже сохранённого. Причину отказа отдаёт сервер человеческим текстом
+ * (потолок на сутки, гарнитура не из списка), поэтому показывается как есть.
+ */
+export async function rebuildCard(input: CardRebuildInput): Promise<CardRebuildOutcome> {
+  const { data, error } = await supabase.functions.invoke<CardRebuild>('card-rebuild', {
+    body: {
+      generationId: input.generationId,
+      texts: input.texts,
+      properties: productPropertiesPayload(input.properties),
+      fontMap: input.fontMap,
+    },
+  })
+
+  if (error || !data) {
+    const failure = await failureBody(error)
+    logger.warn('Карточка не пересобрана', { reason: error?.message })
+    return { ok: false, message: failure.message ?? 'Не удалось пересобрать карточку. Попробуйте ещё раз' }
+  }
+
+  return { ok: true, rebuild: data }
+}
+
+/**
+ * Данные формы правки. Читаются при каждом открытии формы и не живут после закрытия
+ * (`gcTime: 0`): иначе повторное открытие после пересборки показало бы тексты «до».
+ * Пока форма открыта, не перечитываются — в её полях уже то, что человек правит.
+ */
+export function useCardEdit(generationId: string | undefined): UseQueryResult<CardEdit | null> {
+  return useQuery({
+    queryKey: ['card-edit', generationId],
+    enabled: generationId !== undefined,
+    gcTime: 0,
+    staleTime: Infinity,
+    queryFn: () => readCardEdit(generationId!),
+  })
+}
+
 /* --------------------------------------------------------------- запуск заявки (US-01) */
 
 export type LaunchInput = {

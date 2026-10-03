@@ -1,12 +1,15 @@
-import { useCallback, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { useCallback, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 
 import { AppLayout, Panel, PanelTitle } from '@/components/AppLayout'
 import { AlertTriangleIcon, CheckIcon, DownloadIcon } from '@/components/icons'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import {
   Notice,
   OutputParams,
+  ProductPropertyList,
   SignedImage,
   StatusPill,
   SummaryRow,
@@ -15,12 +18,18 @@ import { useSession } from '@/features/auth'
 import { useBalance } from '@/features/billing'
 import {
   downloadResult,
+  rebuildCard,
   restoreDraftFrom,
   signedResultUrl,
+  useCardEdit,
   useGeneration,
+  type CardEdit,
+  type CardRebuild,
   type Generation as GenerationRow,
+  type ProductProperty,
 } from '@/features/generation'
 import { profileOf, titleOf, useTaxonomy } from '@/features/taxonomy'
+import { plural } from '@/lib/plural'
 import { cn } from '@/lib/utils'
 
 /**
@@ -85,6 +94,203 @@ function TextBlock({ label, value }: { label: string; value: string }) {
   )
 }
 
+/** Роли шрифта — словами, а не именами из макета: продавец не знает, что такое `display`. */
+const FONT_ROLE_LABELS: Record<string, string> = {
+  display: 'Крупная надпись поверх кадра',
+  heading: 'Заголовок модуля',
+  body: 'Описание и абзацы',
+  label: 'Подписи в плашках',
+  accent: 'Рукописный акцент',
+}
+
+/**
+ * Правка готовой карточки (B7.6): тексты, свойства и шрифты, пересборка без баллов.
+ *
+ * Форма наполняется ответом `card-rebuild` в режиме чтения — к таблицам шрифтов клиент не
+ * ходит. Монтируется только открытой: закрытая не тратит запрос на каждый показ экрана, а
+ * при повторном открытии данные читаются заново.
+ */
+function CardEditor({ generationId, onRebuilt }: { generationId: string; onRebuilt: () => void }) {
+  const edit = useCardEdit(generationId)
+
+  if (edit.isLoading) {
+    return (
+      <p aria-busy="true" className="text-muted-foreground text-sm">
+        Читаем тексты карточки…
+      </p>
+    )
+  }
+
+  if (!edit.data) {
+    return (
+      <Notice tone="error">
+        <span>Не удалось открыть правку. Закройте её и откройте ещё раз.</span>
+      </Notice>
+    )
+  }
+
+  if (!edit.data.rebuildable) {
+    return (
+      <Notice tone="info">
+        <span>Эту карточку собрали до появления правки — изменить её текст нельзя.</span>
+      </Notice>
+    )
+  }
+
+  return <CardEditForm edit={edit.data} generationId={generationId} onRebuilt={onRebuilt} />
+}
+
+function CardEditForm({
+  edit,
+  generationId,
+  onRebuilt,
+}: {
+  edit: CardEdit
+  generationId: string
+  onRebuilt: () => void
+}) {
+  const [title, setTitle] = useState(edit.texts.title)
+  const [description, setDescription] = useState(edit.texts.description)
+  const [properties, setProperties] = useState<ProductProperty[]>(edit.properties)
+  const [fontMap, setFontMap] = useState(edit.fontMap)
+  const [rebuilding, setRebuilding] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [rebuilt, setRebuilt] = useState<CardRebuild | null>(null)
+
+  async function submit(event: FormEvent) {
+    event.preventDefault()
+    setRebuilding(true)
+    setError(null)
+
+    const outcome = await rebuildCard({
+      generationId,
+      texts: { title, description },
+      properties,
+      fontMap,
+    })
+
+    setRebuilding(false)
+
+    if (!outcome.ok) {
+      setError(outcome.message)
+      return
+    }
+
+    setRebuilt(outcome.rebuild)
+    onRebuilt()
+  }
+
+  // Роли — в порядке словаря, а не в порядке ответа: он идёт по алфавиту.
+  const roles = Object.keys(FONT_ROLE_LABELS).filter((role) => edit.fontOptions[role] !== undefined)
+
+  return (
+    <form className="flex flex-col gap-4" onSubmit={(event) => void submit(event)}>
+      <label className="flex flex-col gap-1.5">
+        <span className="text-sm font-medium">Заголовок карточки</span>
+        <Input onChange={(event) => setTitle(event.target.value)} required value={title} />
+      </label>
+
+      <label className="flex flex-col gap-1.5">
+        <span className="text-sm font-medium">Описание</span>
+        <textarea
+          // Кегль 16 px на мобильном — против автомасштаба iOS Safari, см. `ui/input.tsx`.
+          className="border-input bg-background focus-visible:border-ring focus-visible:ring-ring/50 min-h-24 w-full rounded-md border px-3 py-2 text-base outline-none focus-visible:ring-[3px] sm:text-sm"
+          onChange={(event) => setDescription(event.target.value)}
+          required
+          rows={4}
+          value={description}
+        />
+      </label>
+
+      <div className="flex flex-col gap-1">
+        <h3 className="text-sm font-medium">Свойства товара</h3>
+        <p className="text-muted-foreground text-[13px] leading-[18px]">
+          Порядок задаёт важность: в кадр попадают первые {edit.capacity}.
+        </p>
+      </div>
+
+      <ProductPropertyList capacity={edit.capacity} onChange={setProperties} properties={properties} />
+
+      <fieldset className="flex flex-col gap-3">
+        <legend className="text-sm font-medium">Шрифты</legend>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {roles.map((role) => (
+            <label className="flex flex-col gap-1.5" key={role}>
+              <span className="text-[13px]">{FONT_ROLE_LABELS[role]}</span>
+              <select
+                className="border-input bg-background focus-visible:border-brand focus-visible:ring-brand/25 h-10 w-full rounded-md border px-3 text-base outline-none focus-visible:ring-[3px] sm:text-sm"
+                onChange={(event) => setFontMap({ ...fontMap, [role]: event.target.value })}
+                value={fontMap[role]}
+              >
+                {edit.fontOptions[role].map((family) => (
+                  <option key={family} value={family}>
+                    {family}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      {error !== null && (
+        <Notice tone="error">
+          <span>{error}</span>
+        </Notice>
+      )}
+
+      {rebuilt !== null && <RebuildReport rebuilt={rebuilt} />}
+
+      <Button className="w-full sm:w-fit" disabled={rebuilding} size="lg" type="submit">
+        {rebuilding ? 'Пересобираем…' : 'Пересобрать'}
+      </Button>
+      <p className="text-muted-foreground text-[13px] leading-[18px]">
+        Бесплатно: баллы не списываются, картинка собирается заново из уже готового кадра.
+      </p>
+    </form>
+  )
+}
+
+/** Что вышло после пересборки — тем же языком, что превью в мастере. */
+function RebuildReport({ rebuilt }: { rebuilt: CardRebuild }) {
+  return (
+    <>
+      <Notice tone="success">
+        <span>Карточка пересобрана — картинка выше обновлена.</span>
+      </Notice>
+
+      {rebuilt.cut.length > 0 && (
+        <Notice tone="error">
+          <span>
+            В кадр {plural(rebuilt.cut.length, 'не попало', 'не попали', 'не попали')}{' '}
+            <b>
+              {rebuilt.cut.length} {plural(rebuilt.cut.length, 'свойство', 'свойства', 'свойств')}
+            </b>
+            : {rebuilt.cut.map((property) => property.label || property.value).join(', ')}.
+          </span>
+          <span>
+            Причина — ёмкость макета «{rebuilt.layoutTitle}»: {rebuilt.capacity}{' '}
+            {plural(rebuilt.capacity, 'модуль', 'модуля', 'модулей')}. Отбрасывается хвост списка,
+            а порядок задаёте вы — поднимите наверх то, что важнее.
+          </span>
+        </Notice>
+      )}
+
+      {rebuilt.overflows.length > 0 && (
+        <Notice tone="error">
+          <span>Не помещается в свой модуль — текст обрежется краем плашки:</span>
+          <span>
+            {rebuilt.overflows
+              .map((overflow) => `«${overflow.text}» — на ${Math.round(overflow.over * 100)}% длиннее`)
+              .join('; ')}
+            .
+          </span>
+        </Notice>
+      )}
+    </>
+  )
+}
+
 export default function Generation() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -95,6 +301,11 @@ export default function Generation() {
   // Прочерк, а не ноль, пока баланс едет: «0 баллов» читается как «баллы кончились».
   const balanceLabel = balance.isSuccess ? `${balance.data} баллов` : '— баллов'
   const generation = useGeneration(id)
+  const queryClient = useQueryClient()
+  const [editing, setEditing] = useState(false)
+  // Файл заменяется на месте, адрес прежний: новая «версия» перемонтирует картинку, а та
+  // заново подписывает ссылку и показывает уже пересобранный файл.
+  const [imageVersion, setImageVersion] = useState(0)
   const [downloadFailed, setDownloadFailed] = useState(false)
   const [retrying, setRetrying] = useState(false)
 
@@ -237,14 +448,43 @@ export default function Generation() {
           {row?.status === 'done' && (
             <>
               <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
-                {row.assets[0] && (
-                  <SignedImage
-                    alt={row.title ?? row.productTitle}
-                    className="border-border w-full max-w-[288px] flex-none border"
-                    resolve={resolve}
-                    storagePath={row.assets[0].storagePath}
-                  />
-                )}
+                <div className="flex w-full max-w-[288px] flex-none flex-col gap-3">
+                  {row.assets[0] && (
+                    <SignedImage
+                      alt={row.title ?? row.productTitle}
+                      className="border-border w-full border"
+                      key={imageVersion}
+                      resolve={resolve}
+                      storagePath={row.assets[0].storagePath}
+                    />
+                  )}
+
+                  {row.kind === 'card' && (
+                    <>
+                      <Button
+                        aria-controls="card-editor"
+                        aria-expanded={editing}
+                        onClick={() => setEditing((open) => !open)}
+                        type="button"
+                        variant="outline"
+                      >
+                        Изменить текст
+                      </Button>
+                      <Button
+                        aria-describedby="card-editor-later"
+                        disabled
+                        title="Редактор появится позже"
+                        type="button"
+                        variant="outline"
+                      >
+                        Редактировать
+                      </Button>
+                      <span className="text-muted-foreground text-[13px] leading-[18px]" id="card-editor-later">
+                        Редактор появится позже
+                      </span>
+                    </>
+                  )}
+                </div>
 
                 <div className="flex flex-1 flex-col gap-4">
                   {row.cardTitle && <TextBlock label="Заголовок карточки" value={row.cardTitle} />}
@@ -284,6 +524,26 @@ export default function Generation() {
                   </div>
                 </div>
               </div>
+
+              {editing && (
+                <section
+                  aria-labelledby="card-editor-title"
+                  className="border-border flex flex-col gap-4 rounded-lg border p-4"
+                  id="card-editor"
+                >
+                  <h2 className="text-sm font-medium" id="card-editor-title">
+                    Изменить текст карточки
+                  </h2>
+                  <CardEditor
+                    generationId={row.id}
+                    onRebuilt={() => {
+                      setImageVersion((version) => version + 1)
+                      void queryClient.invalidateQueries({ queryKey: ['generation', row.id] })
+                      void queryClient.invalidateQueries({ queryKey: ['catalog'] })
+                    }}
+                  />
+                </section>
+              )}
 
               {profile && (
                 <OutputParams
