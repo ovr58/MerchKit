@@ -1,6 +1,6 @@
 # Конвейер сборки карточки слоями — веха M7
 
-Status: ACTIVE (с 2026-08-31) · фаза A и шаги B0–B4, B6 исполнены; открыты B5, B7, фаза C · аудит `/validate-plan` 2026-10-03, находки внесены
+Status: ACTIVE (с 2026-08-31) · фаза A, шаги B0–B4, B6, B7.1–B7.4, B5.0, B5.1 исполнены; открыты B7.5–B7.7, B5.2–B5.11, фаза C · аудит `/validate-plan` 2026-10-03
 
 > Закон дробления — `AGENTS.md` «Изоморфное дробление» и
 > [ADR-T0011](../../docs/adr/T0011-isomorphic-fragmentation-of-plans.md); рубрика модели —
@@ -80,9 +80,9 @@ M7 меняет.
 
 ### Блок B7 — сборка карточки в воркере
 
-- [ ] **B7.1. Порядок операций карточки в воркере — НЕДЕЛИМ (Opus): шов между модулями
+- [x] **B7.1. Порядок операций карточки в воркере — НЕДЕЛИМ (Opus): шов между модулями
   (провайдер ↔ сборщик ↔ проверка профиля ↔ хранилище); три правки обязаны лечь одним
-  изменением, иначе текст в кадре пропадает или удваивается.**
+  изменением, иначе текст в кадре пропадает или удваивается.** Исполнено и сведено 2026-10-03 (`2f64bc1`).
   - **Целевой файл(ы):** `supabase/functions/generation-worker/index.ts`.
   - **Файлы-контракты (читать, не править):** `card-layout/render.ts` — `renderCard(layout,
     content, size, fonts)` возвращает PNG и список снятых слоёв · `card-layout/cutout.ts` —
@@ -121,7 +121,7 @@ M7 меняет.
     `generation_cards.content` гнездо `title` равно `title_of_card`. `npm test`, `npm run lint`,
     `npm run test:db` — каждая командой отдельно, зелёные.
 
-- [ ] **B7.2. Наполнение макета реальным содержимым — чистая функция.**
+- [x] **B7.2. Наполнение макета реальным содержимым — чистая функция.** Исполнено и сведено 2026-10-03 (`2f64bc1`).
   - **Целевой файл(ы):** `supabase/functions/_shared/card-layout/filling.ts` (новый),
     `filling.test.ts` (новый).
   - **Файлы-контракты:** `card-layout/preview.ts` — `previewFilling` как образец формы (тот же
@@ -147,28 +147,26 @@ M7 меняет.
     `fromStored(storedContent(x, paths), подменная загрузка)` восстанавливает `x`. Мутационная
     проверка по контракту исполнителя.
 
-- [ ] **B7.3. Долги ADR-0012: вендор рисует сцену без текста, профиль — точное совпадение.**
-  - **Целевой файл(ы):** `supabase/functions/_shared/ai-provider/aitunnel.ts`,
-    `aitunnel.test.ts`, `supabase/functions/_shared/ai-provider/types.ts`,
-    `supabase/functions/_shared/ai-provider/stub.ts`, `supabase/functions/_shared/output-profile.ts`
-    и его тест, вызов `generateImages` в `generation-worker/index.ts`.
-  - **Файлы-контракты:** [ADR-0012](../../docs/adr/0012-card-layout-is-ours-not-vendors.md) —
-    раздел о долгах · миграция `20260829140000_output_profile_requirements.sql` — почему допуск
-    был ослаблен.
-  - **Границы:** промпт фото-генерации не менять; модель и резерв (ADR-0011) не трогать.
-  - **Задача:** удалить `cardLayoutLine` и `cardReferenceParts`; промпт карточки просит сцену
-    по сценарию показа **без какого-либо текста, плашек и надписей**, с товаром по правилам
-    фото-генерации. Поле `card` из входа `generateImages` (`types.ts`) удаляется — оно
-    существовало только ради текста в кадре; заглушка и вызов в воркере перестают его
-    передавать, комментарий о порядке «тексты ДО изображения» в воркере переписывается
-    (тексты нужны полям карточки, а не кадру). `describeProfileMismatch` сверяет ширину и
-    высоту с профилем на равенство; `ASPECT_TOLERANCE` удаляется вместе с ветками, которые им
-    пользовались.
-  - **Критерий приёмки:** `grep -rn "cardLayoutLine\|cardReferenceParts\|ASPECT_TOLERANCE"
-    supabase/` пуст; у `generateImages` во входе нет `card`; тест профиля: 1440×1920 при профиле 1440×1920 — `null`, 1440×1921 —
-    сообщение; `npm test` зелёный.
+- [x] **B7.3. Долги ADR-0012: вендор рисует сцену без текста, собранная карточка — точно в размер
+  профиля.** Исполнено и сведено 2026-10-03 (`2f64bc1`).
+  - **Целевой файл(ы):** `supabase/functions/_shared/ai-provider/aitunnel.ts`, `aitunnel.test.ts`,
+    `types.ts`, `stub.ts`, `supabase/functions/_shared/output-profile.ts` и его тест, вызов
+    `generateImages` и проверка профиля в `generation-worker/index.ts`.
+  - **Файлы-контракты:** [ADR-0012](../../docs/adr/0012-card-layout-is-ours-not-vendors.md) — раздел
+    о долгах · миграция `20260829140000_output_profile_requirements.sql` — решение вехи M5: кадр
+    вендора сверяется порогом и допуском, точный размер вендору недостижим, ресэмплер не пишем.
+  - **Границы:** промпт и проверку фото-генерации не менять; модель и резерв (ADR-0011) не трогать.
+  - **Задача:** удалить `cardLayoutLine` и `cardReferenceParts`; промпт карточки просит сцену без
+    текста, плашек и надписей. Поле `card` из входа `generateImages` удаляется; заглушка вёрстку не
+    рисует. `describeProfileMismatch(bytes, profile, { exact })`: без `exact` — прежние порог и
+    `ASPECT_TOLERANCE` (кадр вендора, фото); `exact: true` — ширина и высота равны профилю; его
+    включает только воркер для собранной карточки.
+  - **Критерий приёмки:** `grep -rn "cardLayoutLine\|cardReferenceParts" supabase/` пуст; у
+    `generateImages` во входе нет `card`; тесты профиля: фото 1536×2048 при профиле 896×1200
+    проходит, карточка 896×1201 и 897×1200 с `exact` — отказ; `npm test` зелёный.
 
-- [ ] **B7.4. Запись содержимого сборки в `generation_cards`.**
+- [x] **B7.4. Запись содержимого сборки в `generation_cards`.** Исполнено и сведено 2026-10-03 (`2f64bc1`). Миграция
+  `20261003100000_record_card_assembly.sql`.
   - **Целевой файл(ы):** новая миграция `supabase/migrations/<метка>_record_card_assembly.sql`,
     тест `supabase/tests/database/record_card_assembly.test.sql`, вызов в воркере (место — пункт
     7 шага B7.1).
@@ -252,8 +250,12 @@ M7 меняет.
 
 ### Блок B5 — арт-директор
 
-- [ ] **B5.0. Контракт арт-директора — НЕДЕЛИМ (Opus): необратимое решение (новая платная
+- [x] **B5.0. Контракт арт-директора — НЕДЕЛИМ (Opus): необратимое решение (новая платная
   операция провайдера и её цена) + шов между репозиториями (откуда берётся карта занятости).**
+  - **Итог:** [ADR-0018](../../docs/adr/0018-art-director-layout-patch.md) принят владельцем 2026-10-03
+    по всем девяти пунктам; два — после доработки: правка принимается по частям, негодное —
+    бесплатный сдвиг голого текста, и бесплатная предпроверка перед вызовом. Ветка
+    `claude/m7-art-director-contract` ждёт мёрджа. Шаги B5.2–B5.11 — ниже.
   - **Целевой файл(ы):** новый ADR `docs/adr/0018-<slug>.md` (следующий свободный номер —
     проверить `ls docs/adr/`), строка в `docs/adr/README.md`, термины в `CONTEXT.md`. Тексты
     шагов B5.2… — в отчёте; план правит супервизор.
@@ -301,7 +303,332 @@ M7 меняет.
     `focus` у края; `contain` даёт свободные поля; прямой и обратный пересчёт бокса — тождество
     в пределах 0,01.
 
-- B5.2… — пишутся сессией B5.0 и переносятся сюда супервизором; до этого исполнять нечего.
+- [ ] **B5.2. Раннер маски — сэмплы альфы от сервиса выреза.**
+  - **Целевой файл(ы):** `supabase/functions/_shared/card-layout/cutout.ts`, `cutout.test.ts`.
+  - **Файлы-контракты:** [ADR-0018](../../docs/adr/0018-art-director-layout-patch.md), п. 4 — контракт
+    `POST /mask` · `card-layout/occupancy.ts` — тип `MaskSamples` · `createCutoutRunner` в том же
+    файле — образец формы, журнала и отказов.
+  - **Границы:** `createCutoutRunner`, его таймаут и `occupancy.ts` не менять. Декодер PNG не
+    заводить. Воркер не трогать.
+  - **Задача:** `export type MaskRunner = (frame: ImageRef) => Promise<MaskSamples | null>` и
+    `createMaskRunner(config: CutoutServiceConfig): MaskRunner`.
+    - Запрос как у выреза: `POST config.endpoint`, тело — байты кадра из data-URI
+      (`decodeDataUri`), `content-type` — его mime, `authorization: Bearer <secret>`,
+      `AbortSignal.timeout` (по умолчанию `DEFAULT_TIMEOUT_MS`).
+    - `204` → `null` без журнала.
+    - `200` → прочитать `x-mask-width` и `x-mask-height` как целые больше нуля, тело как
+      `Uint8Array`. Если длина тела ≠ `width × height`, или `max(width, height) ≠ 256`, или
+      `|width/height − frame.width/frame.height| > 1/height` → журнал `Маска: …` и `null`. Иначе —
+      `{ width, height, alpha }`.
+    - Любой другой статус или исключение → журнал `Маска: …` и `null`.
+  - **Критерий приёмки:** тесты на подменном `fetch`, по одному на ветку: `204`, `500`, исключение
+    `fetch`, тело короче заявленного, длинная сторона не 256, пропорция не кадра, корректный ответ
+    192×256 для кадра 1440×1920 (`occupancyOf` от результата не бросает); запрос несёт
+    `authorization` и тело-кадр. `npm test` и `npm run lint` — каждая отдельной командой.
+    Мутационная проверка по контракту исполнителя.
+
+- [ ] **B5.3. (Репозиторий `ovr58/cutout_runner`) Операция `POST /mask`.**
+  - **Целевой файл(ы):** обработчик операций сервиса и его тесты — тот же модуль, где живёт
+    `POST /cutout`.
+  - **Файлы-контракты:** ADR-0018 этого репозитория, п. 4 — контракт целиком · ADR-0016 — граница
+    доверия (тот же секрет, сравнение по постоянному времени, лимиты nginx).
+  - **Границы:** `POST /cutout`, модель и очередь «один инференс за раз» не менять. Деплой на
+    коробку — только командой владельца; коробка на паузе с 2026-10-03, включение — отдельным
+    запросом владельцу.
+  - **Задача:** те же вход, авторизация и очередь, что у `/cutout`. Если для кадра `/cutout`
+    ответил бы `204`, ответить `204` — общим кодом, а не копией условия. Иначе взять альфу маски в
+    размере кадра (до наложения на кадр), уменьшить до длинной стороны 256 в пропорции кадра
+    (короткая — `round(256 × короткая / длинная)`) усреднением по площади, без порога. Ответ:
+    `200`, `application/octet-stream`, `x-mask-width`, `x-mask-height`, тело — байты построчно
+    сверху вниз.
+  - **Критерий приёмки:** тест — кадр 1440×1920 даёт 192×256 и тело длиной 49 152; есть хотя бы
+    один полутон (не только 0 и 255); без секрета — `401`; кадр без товара — `204`. Готовый блок
+    команды деплоя — владельцу. После деплоя: один вызов на коробке, время в отчёт (открытое
+    условие ADR-0018).
+
+- [ ] **B5.4. Правка арт-директора: форма, предпроверка, постановка, применение — чистые функции.**
+  - **Целевой файл(ы):** `supabase/functions/_shared/card-layout/direction.ts` (новый),
+    `direction.test.ts` (новый).
+  - **Файлы-контракты:** ADR-0018, п. 1, п. 2 (проверки 1–2) и п. 5 · `card-layout/types.ts` —
+    `CardLayout`, `Layer`, `Box`, `CardContent`, `ImageRef` · `card-layout/features.ts` —
+    `boundTextSlots`, `flattenLayers` · `card-layout/occupancy.ts` — `OccupancyMap`,
+    `occupancyOfBox` · `card-layout/validate.ts` — `resolveLayout`, `PlacedLayer`.
+  - **Границы:** без ввода-вывода. `types.ts`, `validate.ts`, `occupancy.ts` не менять.
+    Переполнение, налегание и сборку итога не делать — это B5.5.
+  - **Задача:**
+    1. Тип `CardDirection` — дословно из ADR-0018, п. 1. `DIRECTED_SLOTS = ['subtitle', 'kicker',
+       'brand'] as const`, `EDITABLE_TYPES = ['text', 'asset', 'group', 'shape'] as const`,
+       `BARE_TEXT_LIMIT = 0.15`, `PLAQUE_COVER = 0.9`.
+    2. `iconProps(layout): number[]` — отсортированные уникальные `index` у слоёв (через
+       `flattenLayers`) с `bind.kind === 'prop' && bind.part === 'icon'`.
+    3. `bareTextLayers(placed: PlacedLayer[]): PlacedLayer[]` — текстовые слои, для которых нет
+       `shape` с меньшим `z`, у которого площадь пересечения боксов ≥ `PLAQUE_COVER` × площади бокса
+       текста.
+    4. `behindCutout(placed, text, hasCutout): boolean` — `hasCutout` и среди `placed` есть
+       `cutout` с `z` больше, чем у `text`.
+    5. `topLevelOf(layout, layerId): string` — `id` слоя верхнего уровня, внутри которого (или
+       которым) лежит слой. Обход `layout.layers` с детьми групп.
+    6. `textsOnProduct(layout, content, canvasMap, hasCutout): { layerId: string; topId: string;
+       occupancy: number }[]` — по `resolveLayout(layout, content).layers`: голые, не за вырезом, с
+       `occupancyOfBox(canvasMap, box) > BARE_TEXT_LIMIT`.
+    7. `directionNeed({ layout, content, canvasMap: OccupancyMap | null, hasCutout }): 'full' |
+       'content' | 'none'`: `'full'`, если `canvasMap !== null` и `textsOnProduct(...)` не пуст;
+       иначе `'content'`, если `boundTextSlots(layout)` пересекается с `DIRECTED_SLOTS` или
+       `iconProps(layout)` не пуст; иначе `'none'`.
+    8. `directorBrief(input)`, где `input = { mode: 'full' | 'content', layout, texts: { title, body
+       }, properties: {label, value}[], wishes, canvasMap: OccupancyMap | null, icons: { name,
+       description }[], fillSlots: TextSlot[], iconPropsAsked: number[], complaints: string[] }`.
+       Всегда: `mode`, `texts`, `properties`, `wishes`, `fillSlots`, `iconProps: iconPropsAsked`,
+       `icons`, `complaints`. Только при `mode === 'full'`: `canvas: {aspectW, aspectH}`; `layers` —
+       верхний уровень в порядке `layout.layers`: `{ id, type, z, box, bind?, editable, role?,
+       size?, lineCount?, contains? }` (`editable` — тип из `EDITABLE_TYPES`; `role`/`size`/
+       `lineCount` — у text; `contains` — у group: привязки детей через `flattenLayers`);
+       `map: canvasMap`.
+    9. `parseDirection(raw: unknown, ctx) → { parts: DirectionParts; complaints: string[] }`, где
+       `ctx = { layout, mode, propertyCount, iconNames: string[], source: string[] }` и
+       `DirectionParts = CardDirection`. В `parts` — только части, прошедшие проверки 1–2
+       ADR-0018, п. 2: форма — по каждой части; слова — по каждому гнезду (нормализация: нижний
+       регистр, `ё → е`; слова — `\p{L}+`, числа — `\d+`). Бокс разрешён только при `mode ===
+       'full'`. Повтор `id` отвергает все боксы этого `id`. Ответ не объект → пустые `parts` и одно
+       возражение. Каждое возражение — строка по-русски с адресом части, например `бокс «title»:
+       выходит за правый край (x + w = 1.08)` или `гнездо «kicker»: слова «хит» нет в описании`.
+    10. `applyDirection(layout, direction): CardLayout` — новый объект, у слоёв верхнего уровня из
+        `boxes` заменён `box`. Вход не мутирует.
+    11. `directedContent(content, direction, iconRefs: Record<string, ImageRef>): CardContent` —
+        `texts` дополнены строками из `direction.texts`; у `props[prop]` стоит `icon =
+        iconRefs[name]`, если имя не `null` и есть в `iconRefs`.
+  - **Критерий приёмки:** тесты, каждый отдельно:
+    - `directionNeed`: `'full'` при голом заголовке на занятой половине карты; `'content'` при том
+      же макете без карты; `'content'` при карте, где заголовок на плашке ≥ 90%; `'content'` при
+      тексте с `z` ниже `cutout` и `hasCutout`; `'none'` для макета без гнёзд и иконок и без текста
+      на товаре;
+    - `directorBrief` в режиме `'content'` не содержит `layers` и `map`;
+    - `parseDirection` в одном ответе принимает годную иконку и гнездо и отвергает бокс `frame` —
+      `parts` содержит иконку и гнездо, `complaints` — одну строку про `frame`;
+    - `parseDirection` отвергает по отдельности: бокс вложенного слоя, повтор `id`, выход за
+      холст, сжатие до 0,4, бокс в режиме `'content'`, гнездо, не привязанное в макете, четвёртую
+      строку, строку в 61 знак, число, которого нет в источнике, слово «хит» без него в источнике,
+      иконку не из списка, индекс без слоя иконки;
+    - `parseDirection` принимает «мужская» при источнике «мужской» и `{}`;
+    - `applyDirection` не мутирует вход; `directedContent` ставит иконку и строки.
+
+    `npm test`, `npm run lint` — каждая отдельной командой. Мутационная проверка.
+
+- [ ] **B5.5. Сборка итога правки по частям — чистая функция.**
+  - **Целевой файл(ы):** `supabase/functions/_shared/card-layout/direction-check.ts` (новый),
+    `direction-check.test.ts` (новый).
+  - **Файлы-контракты:** ADR-0018, п. 2 (проверки 3–6 и «Сборка итога») · `direction.ts` (B5.4) ·
+    `validate.ts` — `validateLayout`, `resolveLayout` · `svg.ts` — `textProbes`, `overflowsOf`,
+    `Overflow` · `occupancy.ts` — `occupancyOfBox`.
+  - **Границы:** без растеризатора — обмерщик приходит параметром. `svg.ts`, `validate.ts`,
+    `occupancy.ts` не менять.
+  - **Задача:** `OVERLAP_SLACK = 0.05`. `overlapShare(a: Box, b: Box)` — площадь пересечения,
+    делённая на площадь меньшего из двух. `combineDirection(input) → { direction: CardDirection;
+    rejected: { part: string; reason: string }[] }`, где `input = { library, libraryContent,
+    parts: CardDirection, size, fonts, measure, canvasMap: OccupancyMap | null, hasCutout,
+    iconRefs: Record<string, ImageRef> }`. Порядок:
+    1. **Переполнение, один обмер.** `A = overflowsOf(textProbes(library, libraryContent, …),
+       measure)`. `B` — то же для `applyDirection(library, parts)` с `directedContent(libraryContent,
+       parts, iconRefs)`. Для каждой записи `B`, у которой в `A` нет записи с тем же `layerId` и
+       `kind` и `over` ≥ её `over`: отвергнуть бокс `topLevelOf(library, layerId)`, если он есть в
+       `parts.boxes`; если слой привязан к гнезду из `DIRECTED_SLOTS`, отвергнуть строки этого
+       гнезда. Причина — `строка «…» шире бокса на N%` или `блок выше бокса на N%`.
+    2. **Круг сочетания.** Пока что-то меняется: `current = applyDirection(library, принятые
+       боксы)`;
+       (а) при `canvasMap !== null` для каждой записи `textsOnProduct(current, directedContent(...),
+       canvasMap, hasCutout)`: предел — `max(BARE_TEXT_LIMIT, то же число у слоя в библиотеке)`
+       (в библиотеке слой не на товаре — предел `BARE_TEXT_LIMIT`); при превышении отвергнуть
+       принятые боксы `topId` этого слоя и всех `shape` верхнего уровня, бывших под ним в
+       библиотеке (плашки, уехавшей из-под текста);
+       (б) для каждой пары слоёв верхнего уровня, кроме `frame`, `cutout` и боксов `{0,0,1,1}`:
+       `overlapShare(current) > max(OVERLAP_SLACK, overlapShare(library))` — отвергнуть из пары
+       принятые боксы (если принят только один — его).
+       Причины — `текст «…» лежит на товаре на N% (допустимо M%)` или `«a» налегает на «b» на N%
+       (в библиотеке M%)`.
+    3. **Валидатор.** `validateLayout(current)` не пуст → для каждого принятого бокса
+       `validateLayout(applyDirection(library, {boxes:[этот], texts:{}, icons:[]}))`; непустой —
+       бокс отвергнуть. Если итог всё ещё не валиден — отвергнуть все боксы.
+    4. Вернуть принятые боксы, гнёзда и иконки (иконки отвергаются только формой — в B5.4) и
+       список `rejected`.
+  - **Критерий приёмки:** тесты на фикстурах с подменным `measure` (ширина = длина строки ×
+    константа): ответ без изменений — пусто в `rejected`; сужение бокса до переполнения отвергает
+    только этот бокс, иконка и гнездо остаются; переполнение, которое было и у библиотеки, не
+    отвергается; не влезающее гнездо отвергает строки гнезда; голый заголовок, перенесённый на
+    товар, отвергается, а сдвиг модуля в том же ответе принят; уезжающая из-под заголовка плашка,
+    после которой заголовок голый на товаре, отвергается; заголовок, наехавший на модуль,
+    отвергается по налеганию; текст с `z` ниже `cutout` при `hasCutout` не проверяется на товар;
+    без карты занятость не проверяется. `npm test`, `npm run lint` — отдельно. Мутационная
+    проверка.
+
+- [ ] **B5.11. Сдвиг голого текста в свободную зону — чистая функция.**
+  - **Целевой файл(ы):** `supabase/functions/_shared/card-layout/direction-shift.ts` (новый),
+    `direction-shift.test.ts` (новый).
+  - **Файлы-контракты:** ADR-0018, п. 3 («Сдвиг без ИИ») · `direction.ts` — `textsOnProduct`,
+    `applyDirection`, `topLevelOf` · `direction-check.ts` — `overlapShare`, `OVERLAP_SLACK`.
+  - **Границы:** без растеризатора и без ИИ. Размер бокса не менять.
+  - **Задача:** `SHIFT_LIMIT = 0.25`. `shiftBareText({ library, layout: текущий, content,
+    canvasMap, hasCutout }) → { boxes: { layerId: string; box: Box }[] }`.
+    - Для каждого уникального `topId` из `textsOnProduct(layout, content, canvasMap, hasCutout)`
+      в порядке `layout.layers`: бокс `b` этого слоя верхнего уровня.
+    - Для каждой зоны `z` из `canvasMap.free` по порядку, если `z.w ≥ b.w` и `z.h ≥ b.h`:
+      `x' = clamp(b.x, z.x, z.x + z.w − b.w)`, `y'` — так же; смещение `|x' − b.x| + |y' − b.y|`.
+    - Годно, если смещение ≤ `SHIFT_LIMIT`, все голые тексты этого слоя после сдвига имеют
+      `occupancyOfBox ≤ BARE_TEXT_LIMIT`, и `overlapShare` с каждым другим слоем верхнего уровня
+      (кроме `frame`, `cutout`, боксов `{0,0,1,1}`) ≤ `max(OVERLAP_SLACK, overlapShare в library)`.
+    - Из годных — наименьшее смещение, при равенстве — первая зона. Сдвиг применяется к `layout`
+      сразу, до следующего слоя, чтобы соседи видели новое положение.
+    - `canvasMap === null` → пусто.
+  - **Критерий приёмки:** тесты: заголовок на товаре со свободной зоной рядом сдвигается в
+    ближайшую точку зоны; зона дальше 0,25 не используется; зона уже бокса не используется; сдвиг,
+    наезжающий на модуль, не выбирается — берётся следующая зона; два слоя на товаре: второй
+    учитывает новое положение первого; без карты — пусто. `npm test`, `npm run lint` — отдельно.
+    Мутационная проверка.
+
+- [ ] **B5.6. Операция провайдера `directCard`.**
+  - **Целевой файл(ы):** `supabase/functions/_shared/ai-provider/types.ts`, `aitunnel.ts`,
+    `aitunnel.test.ts`, `stub.ts`, новая миграция
+    `supabase/migrations/<метка>_generation_costs_direct_card.sql`, тест
+    `supabase/tests/database/generation_costs_direct_card.test.sql`.
+  - **Файлы-контракты:** ADR-0018, п. 1 · ADR-0005 · `20260830000000_generation_costs.sql` —
+    проверка `operation` · `direction.ts` — `DirectorBrief`, `CardDirection`.
+  - **Границы:** промпты остальных операций, модель изображений и резерв не трогать. Ответ в
+    провайдере не разбирать — разбор только в `parseDirection`.
+  - **Задача:**
+    1. В `AiProvider` — `directCard(input: { brief: DirectorBrief }): Promise<Record<string,
+       unknown>>`. В `ProviderUsage['operation']` — `'directCard'`.
+    2. В `aitunnel.ts` — `chatJson(config, DIRECT_CARD_SYSTEM, JSON.stringify(input.brief), {
+       operation: 'directCard', onUsage })`. Один системный промпт на оба режима, по-русски, по
+       пунктам: роль — арт-директор готового макета; поле `mode`: при `'content'` вернуть только
+       `texts` и `icons`, при `'full'` ещё и `boxes`; координаты — доли холста, `map.cells` —
+       занятость ячеек товаром 0…1, `map.free` — свободные места; двигать только слои с
+       `editable: true`, бокс внутри [0, 1], размер 0,5–1,5 исходного; голый текст не класть на
+       занятые ячейки, кроме слоёв за `cutout`; блоки не накладывать друг на друга; гнёзда из
+       `fillSlots` — только словами из `texts`, `properties`, `wishes`, 1–3 строки до 60 знаков,
+       ничего не придумывать; иконки — только имена из `icons` для индексов из `iconProps`,
+       `null`, если ни одна не подходит; при непустом `complaints` — исправить перечисленное и
+       вернуть только запрошенные части; ответ — строго JSON `{"boxes":[{"layerId":"…","box":{"x":…,
+       "y":…,"w":…,"h":…}}],"texts":{…},"icons":[{"prop":0,"icon":"…"}]}`.
+    3. Заглушка возвращает `{}`.
+    4. Миграция: пересоздать проверку `generation_costs.operation` с добавленным `'directCard'`.
+  - **Критерий приёмки:** `aitunnel.test.ts` на подменном `fetch`: текстовая модель,
+    `response_format: json_object`, тело пользователя — `JSON.stringify(brief)`, `onUsage` с
+    `operation: 'directCard'`. pgTAP: `'directCard'` вставляется, `'foo'` отвергается. `npm test`,
+    `npm run lint`, `npm run test:db` — каждая отдельно.
+
+- [ ] **B5.7. Цикл арт-директора по ступеням — чистая функция с внедрёнными зависимостями.**
+  - **Целевой файл(ы):** `supabase/functions/_shared/card-layout/director-run.ts` (новый),
+    `director-run.test.ts` (новый).
+  - **Файлы-контракты:** ADR-0018, пп. 2, 3, 5 · `direction.ts`, `direction-check.ts`,
+    `direction-shift.ts` · `frame-space.ts` (B5.1) — `frameToCanvas(map, frameLayer, canvas,
+    frame)`, где `canvas` и `frame` — `{width, height}` в пикселях.
+  - **Границы:** без сети и базы — всё приходит параметрами. Воркер не трогать. `radius` и
+    `rotate` слоя `frame` пересчёт не учитывает (известное ограничение B5.1, не чинить).
+    `canvasBoxToFrame` и `frameBoxToCanvas` не нужны: занятость — только `occupancyOfBox(canvasMap,
+    box)` в долях холста.
+  - **Задача:** `DIRECTOR_ATTEMPTS = 2`. `runDirector(input) → Promise<{ stage: 1 | 2 | 3 | 4; mode:
+    'full' | 'content' | 'none'; calls: number; direction: CardDirection | null; layout:
+    CardLayout; content: CardContent; rejected: { part, reason }[]; shifted: number; reason?:
+    string }>`, где `input = { layout, content, texts, properties, wishes, frameMask: OccupancyMap |
+    null, frame: ImageRef, size: {width, height}, hasCutout, icons: {name, description}[],
+    loadIcons: (names) => Promise<Record<string, ImageRef>>, ask: (brief) => Promise<Record<string,
+    unknown>>, fonts, measure }`. Шаги:
+    1. `frameLayer` — первый слой `frame` верхнего уровня. `canvasMap = frameMask && frameLayer ?
+       frameToCanvas(frameMask, frameLayer, size, { width: frame.width, height: frame.height }) :
+       null`.
+    2. `mode = directionNeed(...)`. При `'none'` → ступень 4, `direction: null`, `calls: 0`.
+    3. Попытка 1: `directorBrief({ mode, fillSlots: привязанные DIRECTED_SLOTS, iconPropsAsked:
+       iconProps(layout), complaints: [] })` → `ask`. Исключение → ступень 4, `reason: 'провайдер:
+       …'`, без повтора. Затем `parseDirection` → `loadIcons(имена)` → `combineDirection` →
+       принятое.
+    4. Повтор (не больше одного) — только если после попытки 1 при `mode === 'full'`
+       `textsOnProduct(applyDirection(layout, принятое))` не пуст, или отвергнуто хотя бы одно
+       гнездо. Режим повтора: `'full'`, если остался текст на товаре, иначе `'content'`. `fillSlots`
+       — только отвергнутые гнёзда, `iconPropsAsked` — `[]`, `complaints` — возражения попытки 1.
+       Принятое из повтора докладывается к принятому, боксы проходят `combineDirection` заново
+       вместе с принятыми.
+    5. Если `canvasMap !== null`, вызывается `shiftBareText({ library: layout, layout:
+       applyDirection(layout, принятое), … })`, его боксы добавляются к `direction.boxes`.
+    6. Ступень: 1 — всё запрошенное принято и сдвигов нет; 2 — принято что-то, но не всё; 3 —
+       ИИ-боксов нет, а сдвиги есть (ступень по боксам, итог в `rejected`); 4 — патч пуст,
+       `direction: null`.
+    7. `layout` и `content` на выходе — `applyDirection(layout, direction)` и
+       `directedContent(...)`, при ступени 4 — входные.
+  - **Критерий приёмки:** тесты с подменным `ask`: `'none'` — ноль вызовов, ступень 4; годный
+    ответ — один вызов, ступень 1; ответ с годной иконкой и негодным боксом заголовка, повтор годен
+    — два вызова, второй `brief.complaints` непуст, ступень 1 или 2 по итогу; два негодных ответа
+    по боксу, сдвиг находит зону — ступень 3, `shifted = 1`; `ask` бросает — один вызов, ступень 4;
+    кадр 1024×1024 в макете 3:4 с `fit: 'cover'` — в `brief.map` карта холста (`frameToCanvas`
+    вызван с размером кадра, а не холста); без маски — режим `'content'` при гнёздах в макете.
+    `npm test`, `npm run lint` — отдельно. Мутационная проверка.
+
+- [ ] **B5.8. Арт-директор в воркере и запись патча.**
+  - **Целевой файл(ы):** `supabase/functions/generation-worker/index.ts`,
+    `supabase/functions/_shared/card-layout/render.ts`, новая миграция
+    `supabase/migrations/<метка>_generation_cards_direction.sql`, тест
+    `supabase/tests/database/generation_cards_direction.test.sql`.
+  - **Файлы-контракты:** ADR-0018, пп. 3–5 · `director-run.ts` (B5.7) · `cutout.ts` —
+    `createMaskRunner` (B5.2), `createCutoutRunner` · `render.ts` — `renderPreview` (обмер
+    `withResvg(...).getBBox()`) · `20260901120000_card_layouts.sql` — `generation_cards` и RLS ·
+    `20261003100000_record_card_assembly.sql` — `record_card_assembly` как образец.
+  - **Границы:** порядок B7.1 сохраняется: арт-директор встаёт между содержимым (пункт 3 B7.1) и
+    `renderCard` (пункт 4). Снимок `layout` не перезаписывать. Превью не трогать. Таймауты выреза и
+    маски не менять. Генерация на любой ступени не падает.
+  - **Задача:**
+    1. `render.ts`: экспорт `measureText(): Promise<(svg: string) => number>`; `renderPreview`
+       пользуется им, поведение не меняется.
+    2. Миграция: `generation_cards.direction jsonb null` (комментарий: «итоговый патч арт-директора
+       и сдвига, ADR-0018; null — ступень 4») и `record_card_direction(target_generation uuid,
+       card_direction jsonb)` — `security definer`, `execute` только `service_role`, пишет только
+       `direction`.
+    3. Воркер при `CARD_DIRECTOR === 'on'`: маска и вырез — `Promise.all`; маска при заданных
+       `CUTOUT_MASK_ENDPOINT` и `CUTOUT_SECRET`, иначе `null`; результат → `occupancyOf` или
+       `null`; иконки — `card_icons` `name, description` при `status = 'готово'` (service-role),
+       `loadIcons` по именам → `data:image/svg+xml;base64,…`; `runDirector({…, frame: images[0] как
+       ImageRef, size: { width: profile.width, height: profile.height }, ask: (brief) =>
+       provider.directCard({ brief }), measure: await measureText() })`; сборка —
+       `renderCard(result.layout, result.content, …)`; журнал одной строкой: `Арт-директор: ступень
+       ${stage} · постановка ${mode} · вызовов ${calls} · боксы a/b · гнёзда c/d · иконки e/f ·
+       сдвинуто ${shifted} · отвергнуто: ${rejected.map(r => r.part + ' — ' + r.reason).join('; ')}`;
+       при `direction !== null` после записи сборки (B7.4) — `record_card_direction`.
+       При `CARD_DIRECTOR` не `on` — без маски, без вызова, сборка как раньше.
+  - **Критерий приёмки:** pgTAP: service-role пишет `direction`; `authenticated` получает отказ;
+    `layout` не изменился. Локальный стенд, заглушка (`{}`), `CARD_DIRECTOR=on`, секретов маски
+    нет, макет с привязанным `subtitle`: `done`, в журнале `постановка content · вызовов 1`,
+    `direction` — `null` (ступень 4). Без `CARD_DIRECTOR` — `direction` `null`, результат побайтово
+    как без арт-директора. `npm test`, `npm run lint`, `npm run test:db` — каждая отдельно.
+
+- [ ] **B5.9. Пересборка применяет правку арт-директора.**
+  - **Целевой файл(ы):** `supabase/functions/card-rebuild/index.ts` и его тест.
+  - **Файлы-контракты:** ADR-0018, п. 3 · `direction.ts` — `applyDirection`, `directedContent` ·
+    B7.5 — режимы чтения и пересборки.
+  - **Границы:** квоту, баланс, `ledger` и снимок не трогать. Вендора не звать. Арт-директора при
+    пересборке не звать.
+  - **Задача:** при непустом `generation_cards.direction`: макет сборки и обмера =
+    `applyDirection(снимок, direction)`; содержимое = `directedContent(cardFilling(…), direction,
+    иконки из card_icons по именам из direction)`; `direction` не перезаписывается; `null` —
+    поведение B7.5 без изменений.
+  - **Критерий приёмки:** тест: генерация с `direction`, сдвигающим бокс заголовка, пересобирается
+    с тем же сдвигом (бокс заголовка в `resolveLayout` равен боксу из `direction`); повтор даёт
+    побайтово тот же PNG; генерация с `direction = null` — как раньше. `npm test`, `npm run lint` —
+    отдельно.
+
+- [ ] **B5.10. ⚠️ Платно. Пробный прогон арт-директора, доля полной постановки и цена в модели.**
+  - **Целевой файл(ы):** каталог прогона `bench/runs/director-<дата>/`, страница сравнения
+    «библиотека / с правкой», строка в `planning/reference/UNIT_ECONOMICS.md` §10.
+  - **Файлы-контракты:** ADR-0018, п. 5 · `bench/README.md` · `generation_costs` по `operation =
+    'directCard'` · журнал функции — строки `Арт-директор: …` (доступ — analytics API, как к
+    `function_logs`).
+  - **Границы:** бюджет разрешён владельцем 2026-10-03 (10 карточек, 4–10 ₽ за арт-директора
+    поверх генераций); запуск — по его слову, когда B5.3 задеплоена. Логи вендора включить **до**
+    прогона. Продуктовый код не менять. `CARD_DIRECTOR` в стейдже включает владелец.
+  - **Задача:** прогнать 10 карточек разных категорий при включённом арт-директоре и задеплоенной
+    `/mask`; по каждой: постановка, ступень, вызовов, сумма `cost_rub`, PNG с патчем и PNG
+    библиотеки на том же кадре (пересборка с `direction = null` в оснастке); страница сравнения для
+    владельца; в `UNIT_ECONOMICS.md` §10 — строка «арт-директор»: доля полной постановки `p`, доля
+    повторов, средняя фактическая цена на карточку, пересчитанная себестоимость.
+  - **Критерий приёмки:** таблица «карточка · постановка · ступень · вызовов · ₽»; `p` и средняя
+    цена против оценки ADR (30–60%, 0,19–0,29 ₽); вердикт владельца на странице; решение о
+    `CARD_DIRECTOR=on` в стейдже записано в план.
 
 ### Фаза C — приёмка и наполнение
 
@@ -389,13 +716,19 @@ M7 меняет.
 
 | Сессия | Шаги | Модель · эффорт | Полоса | Ветка | Зависит от | Параллельно с |
 | --- | --- | --- | --- | --- | --- | --- |
-| M7-1 | B7.1 (НЕДЕЛИМ, головной), B7.2, B7.3, B7.4 | Opus · high | доверенная | `claude/m7-card-assembly` | — | M7-2, M7-3 |
-| M7-2 | B5.0 (НЕДЕЛИМ) | Opus · high | доверенная | `claude/m7-art-director-contract` | — | M7-1, M7-3 |
+| M7-1 ✓ сведена 2026-10-03 | B7.1 (НЕДЕЛИМ, головной), B7.2, B7.3, B7.4 | Opus · high | доверенная | `claude/m7-card-assembly` | — | M7-2, M7-3 |
+| M7-2 ✓ ADR принят 2026-10-03, ветка ждёт мёрджа | B5.0 (НЕДЕЛИМ) | Opus · high | доверенная | `claude/m7-art-director-contract` | — | M7-1, M7-3 |
 | M7-3 ✓ сведена 2026-10-03 | B5.1 | Sonnet · medium | консервативная | `feature/m7-frame-space` | — | M7-1, M7-2 |
 | M7-4 | B7.5, B7.6 | Sonnet · high | консервативная | `feature/m7-card-rebuild` | M7-1 сведена; B18 (BACKLOG) сведена | M7-5 |
 | M7-5 | C1 | Sonnet · high | консервативная | `feature/m7-mechanical-acceptance` | M7-1 сведена | M7-4 |
 | M7-6 | B7.7 | Sonnet · high | консервативная | `feature/m7-edge-heavy` | M7-1 сведена; держит стенд (bench, test:db) | M7-4; с M7-5 и B18 — по времени (воркер, стенд) |
-| M7-7 | B5.2… | по тексту шагов из B5.0 | — | — | M7-1, M7-2, M7-3 сведены; ADR-0018 принят | — |
-| M7-8 | C2 | Sonnet · high | консервативная | `feature/m7-hands-measure` | M7-6, M7-7 сведены; разрешение владельца на платный прогон | C3 |
+| M7-7a | B5.2 | Sonnet · medium | консервативная | `feature/m7-mask-runner` | M7-2 сведена | M7-7b, M7-7m, M7-7c |
+| M7-7m | B5.3 (репозиторий `cutout_runner`) | Sonnet · medium | консервативная | `feature/mask-samples` (в `cutout_runner`) | M7-2 сведена; деплой и включение коробки — владелец | M7-7a, M7-7b, M7-7c |
+| M7-7b | B5.4, B5.5, B5.11 | Sonnet · high | консервативная | `feature/m7-director-core` | M7-2 сведена | M7-7a, M7-7m, M7-7c |
+| M7-7c | B5.6 | Sonnet · high | консервативная | `feature/m7-director-provider` | M7-2 сведена; держит стенд (`test:db`) | M7-7a, M7-7b, M7-7m; со стендом — по времени |
+| M7-7d | B5.7, B5.8 | Sonnet · high | консервативная | `feature/m7-director-worker` | M7-7a, M7-7b, M7-7c сведены; держит стенд | — |
+| M7-7e | B5.9 | Sonnet · medium | консервативная | `feature/m7-director-rebuild` | M7-4 и M7-7d сведены | M7-7f |
+| M7-7f | B5.10 | Sonnet · high | консервативная | `feature/m7-director-probe` | M7-7d сведена; M7-7m задеплоена; слово владельца на запуск (бюджет разрешён) | M7-7e |
+| M7-8 | C2 | Sonnet · high | консервативная | `feature/m7-hands-measure` | M7-6, M7-7f сведены; разрешение владельца на платный прогон | C3 |
 | M7-9 | C3 | Sonnet · medium | консервативная | `feature/m7-library-ozon-ym` | образцы владельца в `bench/samples/`; разрешение на Batch API | C2 |
 | M7-10 | C4 | Opus · medium | доверенная | `claude/m7-blind-acceptance` | всё выше сведено | — |
