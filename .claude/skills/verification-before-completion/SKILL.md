@@ -34,8 +34,31 @@ without observing it, is the most common way a session ships a broken change.
    ушло и с теми свойствами», проверенное **в dev**. Инструментирование одинаково во всех
    окружениях именно ради этой проверки; пропустив её, дыру в данных обнаруживают в проде через
    неделю, когда залить её уже нечем (`instrumenting-analytics`, `docs/ANALYTICS.md`).
-6. **Don't** re-read files you just edited to "confirm" — Edit/Write would have errored on
+6. **Run lint on the changed files too.** A test runner does not run the linter; a branch green
+   on tests and red on lint is still red. Each check its own command and exit code — not
+   `A && B | tail`, which hides the second half.
+7. **Don't** re-read files you just edited to "confirm" — Edit/Write would have errored on
    failure.
+
+## Checks that lie green
+
+Each of these was paid for by a branch in a donor project. They pass while the defect stays.
+
+- **A check keyed on the same feature as the action proves only itself.** Removal by a name
+  pattern, verified by the same pattern, is an honest zero on the wrong sample. Verify through a
+  **different** carrier.
+- **A generated file is checked against its source.** Edit the source of a generated artifact
+  (contract → client, tokens → theme) and the generator runs and its output is committed in the
+  same change; otherwise the output silently lags until someone builds.
+- **Two carriers of one value are read side by side,** not each on its own: each alone looks
+  plausible, together they name different numbers.
+- **A report names the state AFTER itself.** "Headers differed, the repeat came after the edit"
+  reads cold as "no repeat now". A record of an edit describes the edit, not the state — the state
+  is learned by opening the carrier.
+- **Two correct edits can add up to a wrong result.** Recompute the total, don't just re-check
+  the last edit.
+- **An acceptance criterion is a command you ran once** before writing it down. A criterion that
+  can't run (`node --test <directory>` on Windows) makes "green" mean anything.
 
 ## Common Mistakes
 

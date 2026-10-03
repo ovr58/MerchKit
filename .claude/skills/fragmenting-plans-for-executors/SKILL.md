@@ -147,7 +147,7 @@ are the session's steps and its «модель · полоса · ветка», 
   deserve a session of its own; past five, the session you were keeping short re-inflates.
 - **The row's model is the highest demand among its steps**, taken from the rubric in
   `docs/SPEC.md`. The lane follows from the model (ADR-0002), and the branch prefix follows from
-  the lane: `claude/<slug>` for Opus, `feature/<slug>` · `fix/<slug>` · `exp/<slug>` otherwise.
+  the lane: `claude/<slug>` for Opus or Fable (ADR-T0013), `feature/<slug>` · `fix/<slug>` · `exp/<slug>` otherwise.
   Never average the steps down to a cheaper row.
 - **`НЕДЕЛИМ` steps sit in a planner-model row**, first in their block. Two indivisible steps
   share a row only when both are trusted-lane and belong to the same block.
