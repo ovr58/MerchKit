@@ -20,6 +20,7 @@ import { cardFilling, fromStored, storedContent, type StoredContent } from '../_
 import type { DownloadFile } from '../_shared/card-layout/renderer-assets.ts'
 import type { PreviewRenderResult } from '../_shared/card-layout/render.ts'
 import type { FontFamilies } from '../_shared/card-layout/svg.ts'
+import { textMismatches } from '../_shared/card-layout/text-check.ts'
 import { FONT_ROLES, type CardLayout, type FontRole } from '../_shared/card-layout/types.ts'
 
 export type RebuildDeps = {
@@ -171,6 +172,19 @@ async function handle(deps: RebuildDeps, request: Request): Promise<Response> {
     cutout: restored.cutout ?? null,
     logo: restored.logo ?? null,
   })
+
+  // Механическая приёмка (C1) на каждой сборке, и пересборка — сборка: заголовок и описание в
+  // кадре — ровно те слова, что прислал человек. До любой записи: при расхождении файл, снимок
+  // и тексты остаются прежними. Статус 500, а не 400: ввод был годным, слова потеряла наша
+  // сборка, и повтор того же запроса этого не лечит. Квота уже списана — как у неудачного превью.
+  const mismatched = textMismatches(card.layout, filling.content, {
+    title: [texts.title],
+    body: [texts.description],
+  })
+  if (mismatched.length > 0) {
+    console.error('Пересборка', generationId, 'потеряла слова в гнёздах:', mismatched)
+    throw new Reject('Карточка не собралась без потерь: текст в кадре расходится с введённым. Изменения не сохранены', 500)
+  }
 
   // Размер — у файла, который заменяем: сборка обязана вернуть то же, что площадка уже приняла.
   const rendered = await deps.render(card.layout, filling.content, { width: asset.width, height: asset.height }, fontMap)

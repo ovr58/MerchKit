@@ -1,4 +1,24 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+// Обрезка заголовка в наполнении — для проверки механической приёмки (C1). Включается флагом
+// на один тест; без него `cardFilling` настоящий.
+const sabotage = vi.hoisted(() => ({ truncateTitle: false }))
+
+vi.mock('../_shared/card-layout/filling.ts', async (importOriginal) => {
+  const original = await importOriginal<typeof import('../_shared/card-layout/filling.ts')>()
+  return {
+    ...original,
+    cardFilling: (...args: Parameters<typeof original.cardFilling>) => {
+      const filling = original.cardFilling(...args)
+      if (!sabotage.truncateTitle) return filling
+      const [title = ''] = filling.content.texts.title ?? []
+      return {
+        ...filling,
+        content: { ...filling.content, texts: { ...filling.content.texts, title: [title.slice(0, 3)] } },
+      }
+    },
+  }
+})
 
 import { imageRef, storedContent, type StoredContent } from '../_shared/card-layout/filling.ts'
 import { composeSvg } from '../_shared/card-layout/svg.ts'
@@ -373,6 +393,27 @@ describe('card-rebuild — режим пересборки (B7.5)', () => {
 
     expect(response.status).toBe(400)
     expect(state.quotaKeys).toEqual([])
+  })
+
+  it('заголовок в кадре расходится с введённым — 500, ни файла, ни снимка, ни текстов', async () => {
+    const state = world()
+    const before = state.files.size
+    sabotage.truncateTitle = true
+    try {
+      const response = await handlerFor(state)(post(EDIT))
+      const body = await response.json()
+
+      expect(response.status).toBe(500)
+      expect(body.error).toMatch(/Изменения не сохранены/)
+    } finally {
+      sabotage.truncateTitle = false
+    }
+
+    expect(state.files.size).toBe(before)
+    expect(state.files.has(`results/${RESULT_PATH}`)).toBe(false)
+    expect(state.recorded).toEqual([])
+    expect(state.updates).toEqual([])
+    expect(state.rendered).toEqual([])
   })
 
   it('сбой хранилища — 503 с человеческим текстом, устройство сервера не светится', async () => {
