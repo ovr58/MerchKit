@@ -25,7 +25,7 @@
 | ADR | Дата | Статус | Решение |
 | --- | --- | --- | --- |
 | [0001](0001-agents-md-canon-without-ai-layer.md) | 2026-08-26 | Accepted | Канон кросс-AI правил — `AGENTS.md` + host-neutral `.claude/`; слой `.ai/` не заводим |
-| [0002](0002-trust-lane-by-model-not-host.md) | 2026-08-26 | Accepted | Полоса доверия (self-review / fast-merge) определяется моделью (Opus), а не хостом |
+| [0002](0002-trust-lane-by-model-not-host.md) | 2026-08-26 | Accepted · дополнен [T0013](T0013-fable-joins-trusted-lane.md) | Полоса доверия (self-review / fast-merge) определяется моделью (Opus), а не хостом |
 | [0003](0003-spec-first-initialization.md) | 2026-08-26 | Accepted | Инициализация spec-first: три входа интейка → `docs/TZ.md` + `SPEC.md` + `VISUALS.md`, обязательный handoff с паузой на смену модели |
 | [0004](0004-single-visual-artifact.md) | 2026-08-26 | Accepted | Визуальный слой — один `docs/VISUALS.md` со стабильными ID `V-NN`, переписывается на месте; ТЗ и спека ссылаются, а не копируют |
 | [0005](0005-ai-provider-abstraction.md) | 2026-08-26 | Accepted | AI-провайдер за интерфейсом `ai-provider` из четырёх операций; выбор вендора отложен, для `local` — заглушка |
@@ -48,3 +48,4 @@
 | [T0009](T0009-one-way-design-sync-and-reconciliation.md) | 2026-09-05 | Accepted · partially superseded by ADR-0012 темплейта (не привезён) | Токены и ассеты едут дизайн → код односторонне; проверка дрейфа — уведомление, расхождение решается согласованием, а не автооткатом |
 | [T0010](T0010-methodology-profile-and-opt-out.md) | 2026-09-27 | Accepted | Переносимая методика — модулями: состав и дефолт по стековому профилю в таблице `INIT.md` шаг 4б, выключение только по подтверждению владельца; хук снимается записью в `settings.json`, ADR модуля после инициализации supersede-ится, а не удаляется |
 | [T0011](T0011-isomorphic-fragmentation-of-plans.md) | 2026-09-28 | Accepted | Шаг плана дробится, пока не выполним холодной сессией моделью ниже планировщика; предел — два прохода, иначе вердикт `НЕДЕЛИМ` головным в блоке; план обязан нести раздел «Порядок исполнения» |
+| [T0013](T0013-fable-joins-trusted-lane.md) | 2026-10-03 | Accepted | Fable входит в доверенную полосу наравне с Opus; консервативная — любая модель, кроме Opus и Fable; следующая модель — новым ADR |

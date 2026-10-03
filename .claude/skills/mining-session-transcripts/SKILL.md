@@ -39,7 +39,10 @@ millions of tokens for a worse answer: the model summarizes impressions, the par
    directory is non-empty before promising an answer. A project worked from more than one
    working directory (worktrees, renamed folders) leaves its transcripts scattered across
    **several** `~/.claude/projects/<…>` directories — list all of them before deciding the
-   corpus is one folder.
+   corpus is one folder. The directory follows the session's **launch** directory, not where it
+   worked: a session that `cd`-ed into a worktree stays under the main clone's directory (its
+   `cwd`/`gitBranch` fields say so too), while one that entered via `EnterWorktree` **moves** to
+   the worktree's own slug directory and gains `relocated` / `worktree-state` records.
 
 2. **Pick the filter, and pick it narrow.** Two shapes of topic:
    - **A tool** (an MCP server, `Bash`, `Edit`) → filter on tool name. Cleanest signal: calls,
