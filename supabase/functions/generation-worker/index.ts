@@ -40,7 +40,7 @@ import { createCutoutRunner } from '../_shared/card-layout/cutout.ts'
 import { usesCutout } from '../_shared/card-layout/features.ts'
 import { cardFilling, imageBytes, imageRef, storedContent } from '../_shared/card-layout/filling.ts'
 import { renderCard } from '../_shared/card-layout/render.ts'
-import { layoutSnapshot, selectCardLayout, type LayoutCandidate } from '../_shared/card-layout/selection.ts'
+import { layoutQueries, layoutSnapshot, selectCardLayout, type LayoutCandidate } from '../_shared/card-layout/selection.ts'
 import type { FontFamilies } from '../_shared/card-layout/svg.ts'
 import { textMismatches } from '../_shared/card-layout/text-check.ts'
 import type { CardContent, CardLayout, FontRole } from '../_shared/card-layout/types.ts'
@@ -420,15 +420,10 @@ function readProperties(value: unknown[]): { label: string; value: string }[] {
 }
 
 async function selectLayout(generation: GenerationRow, profile: OutputProfile) {
+  const queries = layoutQueries(generation.category_id)
   const [layouts, fallbacks] = await Promise.all([
-    selectFromDatabase(
-      `card_layouts?category_id=eq.${encodeURIComponent(generation.category_id)}` +
-        '&select=id,layout,category_id,marketplace_id,preset_id,is_fallback',
-    ),
-    selectFromDatabase(
-      'card_layouts?is_fallback=is.true&select=id,layout,category_id,marketplace_id,preset_id,is_fallback' +
-        '&order=id&limit=1',
-    ),
+    selectFromDatabase(queries.candidates),
+    selectFromDatabase(queries.fallback),
   ])
 
   const fallback = (fallbacks as LayoutRow[])[0]

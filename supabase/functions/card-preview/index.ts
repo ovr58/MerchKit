@@ -20,6 +20,7 @@ import { callDatabase, callerId, CORS_HEADERS, failure, json, selectFromDatabase
 import { previewFilling, type PreviewProperty } from '../_shared/card-layout/preview.ts'
 import { renderPreview } from '../_shared/card-layout/render.ts'
 import {
+  layoutQueries,
   selectCardLayout,
   type LayoutCandidate,
   type LayoutSelectionInput,
@@ -182,10 +183,10 @@ async function readFonts(): Promise<FontFamilies> {
  * оплаты, обязан совпасть с тем, который соберётся после неё.
  */
 async function selectLayout(input: LayoutSelectionInput): Promise<LayoutCandidate & { title: string }> {
-  const columns = 'select=id,title,layout,category_id,marketplace_id,preset_id,is_fallback'
+  const queries = layoutQueries(input.categoryId)
   const [layouts, fallbacks] = await Promise.all([
-    selectFromDatabase(`card_layouts?category_id=eq.${encodeURIComponent(input.categoryId)}&${columns}`),
-    selectFromDatabase(`card_layouts?is_fallback=is.true&${columns}&order=id&limit=1`),
+    selectFromDatabase(queries.candidates),
+    selectFromDatabase(queries.fallback),
   ])
 
   const fallback = (fallbacks as LayoutRow[])[0]

@@ -1,6 +1,9 @@
+import { readFileSync } from 'node:fs'
+
 import { describe, expect, it } from 'vitest'
 
 import {
+  layoutQueries,
   layoutSnapshot,
   selectCardLayout,
   type LayoutCandidate,
@@ -218,5 +221,24 @@ describe('Server-side card-layout selection (M7 B2)', () => {
       layoutId: 'chosen',
       layout: expect.objectContaining({ id: 'chosen', title: 'chosen' }),
     })
+  })
+})
+
+describe('Selection queries keep heavy layouts out of the library read (M7 B7.7)', () => {
+  it('filters edge-heavy layouts out of both the candidates and the fallback query', () => {
+    const { candidates, fallback } = layoutQueries('clothing')
+
+    expect(candidates).toContain('edge_heavy=is.false')
+    expect(fallback).toContain('edge_heavy=is.false')
+    expect(candidates).toContain('category_id=eq.clothing')
+    expect(fallback).toContain('is_fallback=is.true')
+  })
+
+  it('leaves the worker and the preview no query of their own, so one filter governs both', () => {
+    for (const file of ['../../generation-worker/index.ts', '../../card-preview/index.ts']) {
+      const source = readFileSync(new URL(file, import.meta.url), 'utf8')
+      expect(source, file).not.toContain('card_layouts?')
+      expect(source, file).toContain('layoutQueries(')
+    }
   })
 })

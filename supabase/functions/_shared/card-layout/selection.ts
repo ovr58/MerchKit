@@ -24,6 +24,26 @@ export type SelectedCardLayout = LayoutCandidate & { score: number }
 
 const ASPECT_TOLERANCE = 0.02
 
+/** Столбцы библиотеки для подбора; `title` нужен превью, воркеру он безвреден. */
+const LAYOUT_COLUMNS = 'id,title,layout,category_id,marketplace_id,preset_id,is_fallback'
+
+/**
+ * Запросы подбора к библиотеке — единственное место, где они строятся (шаг B7.7).
+ *
+ * Тяжёлые макеты (`edge_heavy`) не успевают собраться в Edge Function в размере профиля и
+ * убивают изолят, поэтому до переезда сборки на коробку (ADR-0015) вне подбора. Воркер и
+ * превью берут запросы отсюда: у каждого свой фильтр означал бы, что превью обещает макет,
+ * которого платный прогон не выберет. Универсальный макет тяжёлым быть не может
+ * (`check` в миграции), так что фильтр в запросе за ним ничего не прячет.
+ */
+export function layoutQueries(categoryId: string): { candidates: string; fallback: string } {
+  const common = `edge_heavy=is.false&select=${LAYOUT_COLUMNS}`
+  return {
+    candidates: `card_layouts?category_id=eq.${encodeURIComponent(categoryId)}&${common}`,
+    fallback: `card_layouts?is_fallback=is.true&${common}&order=id&limit=1`,
+  }
+}
+
 /**
  * Selects from the server-owned layout library. Capacity, logo use, and aspect ratio are
  * deliberately calculated from the layout snapshot, never from duplicating database columns.
