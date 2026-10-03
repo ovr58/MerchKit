@@ -51,5 +51,5 @@ to spawn. This skill gates the decision; it does **not** encourage delegation by
 ## Cross-references
 
 - REQUIRED BACKGROUND: cost-discipline — `docs/WORKING_RULES.md` §2 (and the
-  `subagent-cost-discipline` long-term memory, where present).
+  `working-rules-limit-discipline` long-term memory fact, where present).
 - SUB-SKILL: dispatching-parallel-agents

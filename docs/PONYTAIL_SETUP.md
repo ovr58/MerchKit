@@ -4,10 +4,11 @@
 («ленивый сеньор»: YAGNI → reuse → stdlib → native → dep → one-liner → минимум кода) в шаблон
 проекта так, чтобы он работал сразу после клонирования — без ручных команд.
 
-**Промпт для применения к шаблону (один):**
-> «Сделай ponytail работающим из коробки по `docs/PONYTAIL_SETUP.md`: добавь project-level
-> `.claude/settings.json` (Claude Code) и `.github/instructions/ponytail.instructions.md`
-> (Copilot Chat), затем закоммить в main (`--no-verify`).»
+**В шаблоне это уже сделано:** оба носителя в репозитории —
+`.claude/settings.json` (Claude Code) и `.github/instructions/ponytail.instructions.md`
+(Copilot Chat). Этот файл нужен, чтобы повторить установку в другом шаблоне или проверить
+существующую. Коммит — как любой другой: боковая ветка, никаких обходов pre-commit-хука
+(хард-правило канона «никаких прямых коммитов в `main`»).
 
 ---
 
@@ -28,9 +29,11 @@
 
 Если в репо уже есть `.claude/settings.json` — **слить** эти ключи, не перезаписывать файл.
 
-Что приедет: 6 скилов (`ponytail`, `-audit`, `-debt`, `-gain`, `-help`, `-review`) + 3 хука
+Что приедет (состав **внешнего** плагина, сверено 2026-09-29 — при расхождении верен плагин, не
+этот файл): 6 скилов (`ponytail`, `-audit`, `-debt`, `-gain`, `-help`, `-review`) + 3 хука
 (SessionStart/SubagentStart/UserPromptSubmit), ~983 tok always-on на сессию. Режим по умолчанию
-`full`; переключение в чате — `/ponytail lite|full|ultra`, стоп — «stop ponytail».
+`full`; переключение в чате — `/ponytail lite|full|ultra`, стоп — «stop ponytail». Состав задаёт
+автор плагина и меняет без предупреждения — проверять `claude plugin list`, а не эту строку.
 
 Альтернатива (разовая, user-scope, не для шаблона):
 `claude plugin marketplace add DietrichGebert/ponytail` → `claude plugin install ponytail@ponytail`.
@@ -45,24 +48,14 @@ Copilot Chat плагины-маркетплейсы ponytail не умеет; �
 на `.github/instructions/general-code.instructions.md`, а не продублированы. При переносе в другой
 шаблон проверь, что одноимённый general-файл существует, иначе перенеси нужные пункты внутрь.
 
-## 3. Коммит в шаблон
-
-Прямой коммит в `main` блокируется pre-commit-хуком проекта (заготовка — `githooks/pre-commit`).
-Обход — `--no-verify`:
-
-```bash
-git add .claude/settings.json .github/instructions/ponytail.instructions.md
-git commit --no-verify -m "feat: ponytail out-of-the-box (Claude Code plugin + Copilot Chat)"
-```
-
-## 4. Проверка
+## 3. Проверка
 
 - Claude Code: `claude plugin list` → `ponytail@ponytail … enabled`. В шаблоне — открыть новую
   сессию в склонированном репо и убедиться, что плагин подхватился без ручных команд.
 - Copilot Chat: открыть репо в VS Code, в чате спросить «which instructions apply?» — должен
   учитывать ponytail-лестницу; или просто проверить, что правки стали минимальнее/без лишних абстракций.
 
-## 5. Заметка про конфликты (правило проекта)
+## 4. Заметка про конфликты (правило проекта)
 
 Любое противоречие ponytail существующим правилам/решениям проекта — решать через владельца, не
 тихо переписывать curated-инструкции. Стартовый режим `full` строже формулировок проекта по

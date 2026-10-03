@@ -30,7 +30,11 @@ without observing it, is the most common way a session ships a broken change.
    - Verified and passing → state it plainly, no hedging.
    - Failing → report immediately, with the actual output.
    - Skipped/couldn't verify → say so explicitly and why (e.g. "needs a target VM").
-5. **Don't** re-read files you just edited to "confirm" — Edit/Write would have errored on
+5. **If the change adds or alters a user-facing step, verify its event too** — «событие `E-NN`
+   ушло и с теми свойствами», проверенное **в dev**. Инструментирование одинаково во всех
+   окружениях именно ради этой проверки; пропустив её, дыру в данных обнаруживают в проде через
+   неделю, когда залить её уже нечем (`instrumenting-analytics`, `docs/ANALYTICS.md`).
+6. **Don't** re-read files you just edited to "confirm" — Edit/Write would have errored on
    failure.
 
 ## Common Mistakes
@@ -42,4 +46,5 @@ without observing it, is the most common way a session ships a broken change.
 ## Cross-references
 
 - REQUIRED BACKGROUND: test-driven-development, systematic-debugging
+- Events of a changed user flow: `instrumenting-analytics` (verify in dev, not in prod).
 - Honest-reporting rule: `docs/WORKING_RULES.md` §6.

@@ -1,6 +1,6 @@
 ---
 name: codebase-design
-description: Use when designing a new module or reworking one — to shape deep modules (a small, stable interface hiding real complexity) at clean seams, using the shared vocabulary module/interface/depth/seam/adapter/leverage/locality. Complements ponytail: depth must remove complexity, not add gold-plating.
+description: Use when designing a new module or reworking one, or when two modules must be worked on independently across a boundary — to shape deep modules (a small, stable interface hiding real complexity) at clean seams, and to freeze a contract with test doubles and a contract test so neither side waits for the other. Vocabulary: module/interface/depth/seam/adapter/leverage/locality. Complements ponytail: depth must remove complexity, not add gold-plating.
 ---
 
 # Codebase Design
@@ -28,7 +28,9 @@ at clean seams is what keeps future changes local.
 **module** · **interface** (the surface callers see) · **depth** (functionality-behind-interface
 ÷ interface-width — maximize it) · **seam** (a clean boundary you can cut/substitute at) ·
 **adapter** (thin translation at a seam) · **leverage** (how much a change here buys you) ·
-**locality** (a concept understood in one place, not scattered).
+**locality** (a concept understood in one place, not scattered) · **contract freeze** (the
+moment the interface stops moving) · **test double** (a stand-in for the other side of a seam) ·
+**contract test** (the check that both sides still agree).
 
 ## Process / Quick Reference
 
@@ -40,6 +42,32 @@ at clean seams is what keeps future changes local.
    interface, or just move around? Only the former earns the module.
 5. **Prefer one deep module** over three shallow ones extracted only to be testable — test
    through the real seam.
+
+## Freezing a contract so a seam can be worked from both ends
+
+A seam that only *exists* still makes the consumer wait for the provider. Three things turn it
+into a boundary two people (or two sessions) can work across:
+
+1. **Freeze the interface before either side starts** — not after the provider is done. The
+   frozen thing is the small surface from step 2 above: names, shapes, errors, ordering
+   guarantees. Freezing is cheap precisely because the interface is narrow; if freezing feels
+   expensive, the interface is too wide and the module isn't deep yet.
+2. **Give each side a test double of the other** — a stand-in it can run and test against
+   without the real counterpart. Cheapest first (ponytail): a hand-written implementation of
+   the frozen interface, living next to the consumer's tests. Reach for codegen from a schema
+   or a Pact-style tool only once the hand-written double starts drifting from the provider.
+3. **Cover the seam with a contract test** — one check both sides run, asserting they still
+   agree. Its whole job is to make a mismatch fail *at the seam*, early and locally, instead of
+   at integration when everything lands at once.
+
+Record the state of each seam (frozen? double? contract test?) in `docs/SPEC.md` §3 — "no" is a
+legitimate answer there, and means the two sides are being done sequentially.
+
+**A contract separates modules; a network boundary does not follow from it.** Independent work
+across a seam never requires splitting into separate apps, services or deployments — that's an
+expensive decision with its own justification (release cadence, scaling, failure isolation) and
+its own ADR. "Split it so we can parallelize" is not that justification. Do not reach for a
+double you don't need either: a seam nobody is about to cross doesn't need freezing.
 
 ## Complements ponytail (not a contradiction)
 
@@ -58,5 +86,7 @@ fails YAGNI and shouldn't be built.
 ## Cross-references
 
 - Uses `CONTEXT.md` vocabulary (see domain-modeling).
+- Seam state lives in `docs/SPEC.md` §3; which milestone freezes which contract — `docs/SPEC.md` §12.
+- Writing the contract test first is `test-driven-development` applied at the seam.
 - Complements the ponytail plugin (YAGNI/reuse) — see `CLAUDE.md` and `docs/PONYTAIL_SETUP.md`.
 - improve-codebase-architecture scans for shallow modules to deepen using this vocabulary.

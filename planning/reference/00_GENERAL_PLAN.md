@@ -8,7 +8,7 @@ Status: REFERENCE
 >
 > Построен из [`docs/TZ.md`](../../docs/TZ.md) (что и зачем), [`docs/SPEC.md`](../../docs/SPEC.md)
 > (как) и [`docs/VISUALS.md`](../../docs/VISUALS.md) (схемы) по протоколу handoff
-> ([`SPEC.md`](../../docs/SPEC.md) §11). Составлен 2026-08-27, Claude Opus 5 — доверенная
+> ([`SPEC.md`](../../docs/SPEC.md) §12). Составлен 2026-08-27, Claude Opus 5 — доверенная
 > полоса ([ADR-0002](../../docs/adr/0002-trust-lane-by-model-not-host.md)).
 
 ## Цель проекта

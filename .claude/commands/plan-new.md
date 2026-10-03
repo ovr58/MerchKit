@@ -35,6 +35,14 @@ markdown.
 
    ## Verification
    - …
+
+   ## Порядок исполнения
+   <!-- Семантика (сборка в пачки, выбор модели строки, место НЕДЕЛИМ, параллельность) —
+        скил fragmenting-plans-for-executors, не здесь. Пример строки:
+        | 1 | A-1, A-2 | Sonnet 5, high · консервативная · feature/<slug> | независима | -->
+
+   | Сессия | Шаги | Модель · полоса · ветка | Зависимость · параллельность |
+   | --- | --- | --- | --- |
    ```
 
 3. Добавить ОДНУ строку в таблицу `## active/` файла `planning/INDEX.md`:
@@ -43,4 +51,4 @@ markdown.
 4. Не запускать долгие процессы и не спавнить агентов. Сообщить путь созданного файла.
 
 > Lifecycle: Draft (`~/.claude/plans/`) → ACTIVE (`planning/active/`) → DONE → ARCHIVED
-> (`planning/archive/plans/`). См. раздел «Навигация по planning/» в `CLAUDE.md`.
+> (`planning/archive/plans/`). Карта папок и правило «одна строка в `planning/INDEX.md` в том же изменении» — канон `AGENTS.md`, раздел «Планы: lifecycle и навигация».

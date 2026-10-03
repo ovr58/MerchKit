@@ -1,9 +1,16 @@
 {
   "_comment": "Project-level Claude Code settings. Generic, safe defaults. Расширь allow под реальные команды проекта (тесты, линтер, БД-клиент). Локальные/машинные override клади в .claude/settings.local.json (он в .gitignore).",
   "extraKnownMarketplaces": {
-    "ponytail": { "source": { "source": "github", "repo": "DietrichGebert/ponytail" } }
+    "ponytail": {
+      "source": {
+        "source": "github",
+        "repo": "DietrichGebert/ponytail"
+      }
+    }
   },
-  "enabledPlugins": { "ponytail@ponytail": true },
+  "enabledPlugins": {
+    "ponytail@ponytail": true
+  },
   "permissions": {
     "allow": [
       "Read(./**)",
@@ -24,30 +31,66 @@
       "Read(./.env)",
       "Read(./secrets.*)",
       "Read(./credentials.json)",
-      "Read(./**/*.key)"
+      "Read(./**/*.key)",
+      "Read(**/.env)",
+      "Read(**/*.pem)",
+      "Read(**/id_rsa*)"
     ],
     "additionalDirectories": [
       "C:/Users/B7E3~1/AppData/Local/Temp/claude/d--AppBusters-projects-MK"
     ]
   },
-
-  "_hooks_note": "Раскомментируй блок ниже (переименуй _hooks -> hooks) и впиши свои команды, если нужны автодействия. Hooks исполняет харнесс, НЕ Claude — именно так реализуются правила вида «каждый раз при X». Формат: matcher по имени тула + список команд. См. /help или claude-code-guide. SessionStart-пример ниже — OPT-IN bootstrap скилов (подмешивает карту .claude/skills/INDEX.md в контекст каждой сессии); по умолчанию consult-first держится правилом в CLAUDE.md, хук не обязателен. ВАЖНО: хуки стадий «до вызова тула» и «запрос разрешения» нельзя класть в _hooks даже как пример — харнесс ищет эти два ключа по всему файлу и, найдя их вне рабочего блока, отказывается применять settings.json целиком (плашка Settings file failed to parse при каждом старте). Нужен такой хук — пиши его сразу в рабочий блок.",
-  "_hooks": {
+  "_hooks_note": "Hooks исполняет харнесс, НЕ Claude — именно так реализуются правила вида «каждый раз при X». Шаблон с примерами намеренно НЕ хранится в этом файле: загрузчик настроек распознаёт имена событий хуков как подстроку ключа (даже в закомментированном виде вроде подчёркивания-префикса) и из-за этого помечает весь файл невалидным, отключая permissions. Шаблон — docs/HOOKS_TEMPLATE.md, копировать оттуда под настоящий ключ hooks, когда автодействия реально нужны. Ключ hooks в этом файле — рабочий контур, а не пример. protect-irreplaceable стоит первым в PreToolUse и ни к какому модулю не относится (см. _guard_note); остальные записи принадлежат модулям методического профиля (docs/METHODOLOGY.md) и снимаются вместе со своим модулем. Карта «событие → матчер → хук → модуль → зачем» — таблица «Что стоит сейчас» в docs/HOOKS_TEMPLATE.md; здесь она не пересказывается, чтобы две копии не разошлись, и там же примеры прочих событий.",
+  "hooks": {
     "SessionStart": [
       {
-        "matcher": "",
         "hooks": [
-          { "type": "command", "command": "cat .claude/skills/INDEX.md" }
+          {
+            "type": "command",
+            "command": "node .claude/hooks/session-start.mjs",
+            "timeout": 10
+          }
         ]
       }
     ],
-    "Stop": [
+    "PreToolUse": [
       {
-        "matcher": "",
+        "matcher": "Bash|PowerShell",
         "hooks": [
-          { "type": "command", "command": "echo example: автоформат/линтер по завершении хода" }
+          {
+            "type": "command",
+            "command": "node .claude/hooks/protect-irreplaceable.js",
+            "timeout": 10
+          },
+          {
+            "type": "command",
+            "command": "node .claude/hooks/contour-own-worktree.js",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/pre-commit-reminder.js",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Edit(docs/ANALYTICS.md)",
+            "command": "node .claude/hooks/analytics-registry.js",
+            "timeout": 10
+          }
         ]
       }
     ]
-  }
+  },
+  "_guard_note": "Боевой предохранитель protect-irreplaceable.js стоит первым в PreToolUse и ЗАПРЕЩАЕТ (exit 2) удаление и перезапись того, чего нет в git: .env и прочих секретов, томов Docker, git clean -x. Заведён 2026-09-18 после потери .env со всеми ключами: команда Remove-Item .env отработала раньше Push-Location в worktree и снесла файл в основном клоне. Ветки и деревья неотслеживаемые файлы не защищают в принципе. Предикат намеренно не «всё из .gitignore»: node_modules и dist удаляют законно, а хук, падающий на рутине, обходят. Проверка правил — node .claude/hooks/protect-irreplaceable.js с JSON на stdin."
 }
