@@ -32,6 +32,7 @@
  */
 
 import { mimeOf, readImageInfo } from '../image.ts'
+import type { MaskSamples } from './occupancy.ts'
 import type { ImageRef } from './types.ts'
 
 export type CutoutRunner = (frame: ImageRef) => Promise<ImageRef | null>
@@ -104,6 +105,79 @@ export function createCutoutRunner(config: CutoutServiceConfig): CutoutRunner {
       }
     } catch (error) {
       console.error('Вырез: сервис не ответил', error)
+      return null
+    }
+  }
+}
+
+/** Длинная сторона сэмплов маски — контракт `POST /mask`, ADR-0018 п. 4. */
+const MASK_LONG_SIDE = 256
+
+export type MaskRunner = (frame: ImageRef) => Promise<MaskSamples | null>
+
+/**
+ * Сырые сэмплы альфы от `POST /mask` сервиса выреза — шаг B5.2 плана, контракт в
+ * [ADR-0018](../../../../docs/adr/0018-art-director-layout-patch.md), п. 4. Карту занятости из них
+ * считает `occupancyOf`; декодера PNG в изоляте нет и не будет.
+ *
+ * Отказы те же, что у выреза: `null` и причина в журнале, исключение наружу не уходит. Ответ
+ * проверяется целиком — сэмплы чужой длины или чужой пропорции молча исказили бы карту, а
+ * `occupancyOf` на них бросает, и сборка потеряла бы карточку из-за коробки.
+ */
+export function createMaskRunner(config: CutoutServiceConfig): MaskRunner {
+  const call = config.fetch ?? globalThis.fetch
+  const timeoutMs = config.timeoutMs ?? DEFAULT_TIMEOUT_MS
+
+  return async (frame: ImageRef): Promise<MaskSamples | null> => {
+    const source = decodeDataUri(frame.dataUri)
+    if (source === null) {
+      console.error('Маска: кадр не в форме data-URI, запрос не отправлен')
+      return null
+    }
+
+    try {
+      const response = await call(config.endpoint, {
+        method: 'POST',
+        headers: { authorization: `Bearer ${config.secret}`, 'content-type': source.mime },
+        body: source.bytes,
+        signal: AbortSignal.timeout(timeoutMs),
+      })
+
+      // Сервис сам решил, что товара на кадре нет. Это не ошибка и в журнал не идёт.
+      if (response.status === 204) return null
+
+      if (!response.ok) {
+        console.error(`Маска: сервис ответил ${response.status}`)
+        return null
+      }
+
+      const width = Number(response.headers.get('x-mask-width'))
+      const height = Number(response.headers.get('x-mask-height'))
+      const alpha = new Uint8Array(await response.arrayBuffer())
+
+      if (!Number.isInteger(width) || !Number.isInteger(height) || width <= 0 || height <= 0) {
+        console.error(
+          `Маска: размер в заголовках не целое положительное: ` +
+            `${response.headers.get('x-mask-width')}×${response.headers.get('x-mask-height')}`,
+        )
+        return null
+      }
+      if (alpha.length !== width * height) {
+        console.error(`Маска: ${width}×${height} заявлено, тело ${alpha.length} байт`)
+        return null
+      }
+      if (Math.max(width, height) !== MASK_LONG_SIDE) {
+        console.error(`Маска: длинная сторона ${Math.max(width, height)}, ожидалось ${MASK_LONG_SIDE}`)
+        return null
+      }
+      if (Math.abs(width / height - frame.width / frame.height) > 1 / height) {
+        console.error(`Маска: ${width}×${height} не в пропорции кадра ${frame.width}×${frame.height}`)
+        return null
+      }
+
+      return { width, height, alpha }
+    } catch (error) {
+      console.error('Маска: сервис не ответил', error)
       return null
     }
   }
