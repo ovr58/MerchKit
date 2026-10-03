@@ -16,9 +16,10 @@
  * подтвердилось: шлюз принимает не пиксели, а *бакеты* разрешения (`512`/`1K`/`2K`/`4K`)
  * плюс соотношение сторон, и точного `width`×`height` не даст никакая его модель. Формат
  * он выбирает сам — на семи одинаковых запросах вернул JPEG трижды и PNG четырежды.
- * Решение принято не здесь, а в профиле площадки: он теперь описан порогом и допустимыми
- * форматами, как их формулируют сами площадки (миграция `20260829140000`), а сверка вынесена
- * в общий `output-profile.ts` — одно правило на провайдера и воркер.
+ * Решение принято не здесь, а в профиле площадки: он описан порогом и допустимыми форматами,
+ * как их формулируют сами площадки (миграция `20260829140000`). Сверку с профилем делает
+ * воркер по файлу, который отдаёт пользователю (`output-profile.ts`): у карточки это собранный
+ * нами кадр точного размера, а кадр вендора — только сырьё для сборки (ADR-0012).
  *
  * **Уточнено ADR-0011: бакеты — не свойство шлюза, а свойство модели.** Модели OpenAI на том
  * же шлюзе бакетов не принимают вовсе и требуют размер в пикселях (`size`); у `gpt-image-2`
@@ -29,7 +30,6 @@
  */
 
 import { mimeOf, readImageInfo } from '../image.ts'
-import { ASPECT_TOLERANCE, describeProfileMismatch } from '../output-profile.ts'
 import type { GenerationKind } from '../pricing.ts'
 import { CATEGORY_IDS, CATEGORY_TITLES } from './categories.ts'
 import type {
@@ -149,47 +149,6 @@ function imageContentParts(photos: Uint8Array[]): unknown[] {
   return photos.map((photo) => ({ type: 'image_url', image_url: { url: inputDataUri(photo) } }))
 }
 
-/**
- * Референсные карточки (`docs/assets/cardsforsysprompt/`) — эксперимент шага 2 плана вехи M5,
- * до сих пор не проверенный: даёт ли модели картинку-пример дизайна лучший результат, чем
- * словесное описание в `imagePrompt`. Выключено по умолчанию — карточка без них уже стоит
- * денег, а эффект не подтверждён; включается `AI_PROVIDER_CARD_REFERENCES=true` вручную на
- * время сравнения, не автоматикой самого стенда.
- *
- * Путь — модуль-относительный (`import.meta.url`), не от рабочей директории процесса: у
- * `Deno.readFile` со строкой это была бы CWD, а она не гарантирована при разных способах
- * запуска функции. Каталог лежит вне `supabase/functions/` — для локального
- * `functions serve` это нормально (полный доступ к репозиторию), в реальный деплой эти файлы
- * сейчас не попадают: решение, копировать ли их в границу деплоя, — только если эксперимент
- * подтвердит эффект (шаг 2), не раньше.
- */
-const CARD_REFERENCE_DIR = new URL('../../../../docs/assets/cardsforsysprompt/', import.meta.url)
-
-let cardReferenceCache: unknown[] | null = null
-
-async function cardReferenceParts(): Promise<unknown[]> {
-  if (Deno.env.get('AI_PROVIDER_CARD_REFERENCES') !== 'true') return []
-  if (cardReferenceCache !== null) return cardReferenceCache
-
-  const parts: unknown[] = []
-
-  try {
-    for await (const entry of Deno.readDir(CARD_REFERENCE_DIR)) {
-      if (!entry.isFile || !entry.name.toLowerCase().endsWith('.png')) continue
-      const bytes = await Deno.readFile(new URL(entry.name, CARD_REFERENCE_DIR))
-      parts.push({ type: 'image_url', image_url: { url: `data:image/png;base64,${toBase64(bytes)}` } })
-    }
-  } catch (error) {
-    // Не найдены — едем без них, а не роняем генерацию: это необязательный эксперимент,
-    // а не часть контракта.
-    console.error('AITunnel: референсные карточки не прочитаны', error)
-    return []
-  }
-
-  cardReferenceCache = parts
-  return parts
-}
-
 /** Модель иногда оборачивает JSON в ```-заборы, несмотря на `response_format`. */
 function parseJsonObject(text: string): Record<string, unknown> {
   const stripped = text.trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '')
@@ -264,8 +223,8 @@ export function isContentRefusal(error: unknown): boolean {
  * бакетная и форму запроса менять не надо.
  *
  * Выбирается **самый дешёвый подходящий**: у моделей OpenAI цена кадра растёт с площадью,
- * а профиль площадки требует не конкретного размера, а порога и соотношения (FR-25,
- * `output-profile.ts`). Список размеров — из окружения; ошибку в нём лучше поймать здесь и
+ * а от кадра вендора нужны порог и соотношение площадки (FR-25): точный размер профиля
+ * задаёт сборщик карточки (ADR-0012). Список размеров — из окружения; ошибку в нём лучше поймать здесь и
  * с внятным текстом, чем получить от шлюза 400 на каждой генерации.
  */
 export function imageSizeParam(profile: OutputProfile, sizes: string[]): string | null {
@@ -283,9 +242,11 @@ export function imageSizeParam(profile: OutputProfile, sizes: string[]): string 
     return { size, width: Number(match[1]), height: Number(match[2]) }
   })
 
-  const wanted = profile.aspectW / profile.aspectH
+  // Соотношение — ровно то, что объявила площадка: список размеров — наша конфигурация, а не
+  // выход вендора, и требовать от неё точности можно. Сравнение перекрёстным умножением, чтобы
+  // не ловить погрешность деления.
   const sameAspect = parsed.filter(
-    (candidate) => Math.abs(candidate.width / candidate.height - wanted) / wanted <= ASPECT_TOLERANCE,
+    (candidate) => candidate.width * profile.aspectH === candidate.height * profile.aspectW,
   )
 
   if (sameAspect.length === 0) {
@@ -471,71 +432,24 @@ function resolutionParam(profile: OutputProfile): string {
   return '4K'
 }
 
-/**
- * Задание на текстовый блок карточки.
- *
- * Слова «карточка маркетплейса» и «обложка карточки товара» убраны намеренно: по ним модель
- * доставала из обучающих данных не «текстовый блок вообще», а чужую карточку целиком — с её
- * лейблами полей («PRODUCT:», «Категория: …»), оборванными подстановками и чужим водяным
- * знаком.
- *
- * Слова «название» и «краткое описание» убраны следом и по той же причине: убрав чужой
- * шаблон, промпт стал сам себе шаблоном — модель приняла эти слова за подписи полей и
- * нарисовала «Название:» и «Краткое описание:» прямо в кадре (перезамер 2026-08-30, 2 кадра
- * из 10). Поэтому строки диктуются готовыми, а не заказываются по имени.
- */
-function cardLayoutLine(product: ProductBrief, card: CardTexts | null): string {
-  if (card === null) {
-    // Тексты не пришли — просить их у модели изображений всё равно нечем, кроме описания
-    // задачи. Ветка остаётся ради контракта: `card` объявлен nullable, а рисовать при
-    // kind === 'card' кадр вовсе без блока нельзя (FR-07).
-    return `На изображении, помимо товара, нужен аккуратный текстовый блок с заголовком ` +
-      `«${product.title}» — рядом с товаром, не поверх него. Никакого другого текста в ` +
-      'кадре: ни дополнительных полей и характеристик, ни подписей в квадратных скобках, ни ' +
-      'шаблонных заготовок, которые надо заполнять. Никаких логотипов, водяных знаков и ' +
-      'названий магазинов, которых нет на фото товара. Весь текст блока — на русском языке, ' +
-      'даже если сам товар и надписи на упаковке англоязычные.'
-  }
-
-  // **Обе строки в кадре — это требование FR-07, а не настройка.** На шаге 6 здесь недолго
-  // стоял вариант с одним заголовком: у `gpt-image-2` весь брак замера пришёлся на длинную
-  // строку описания (1 кадр из 7), а короткая строка вышла дословной 13 раз из 13. Соблазн
-  // понятен, но сужение кадра — продуктовое решение, а его принимает не адаптер провайдера.
-  // Возвращено решением пользователя 2026-08-31: карточке нужны и описание, и параметры.
-  // Остаточный риск ~1 кадр из 7 принят сознательно и записан в план шага 6.
-  return `В кадре, помимо товара, нужен аккуратный текстовый блок — рядом с товаром, не ` +
-    `поверх него. Крупной строкой: «${card.title}». Под ней, помельче: «${card.description}». ` +
-    'Воспроизвести эти две строки дословно, слово в слово, ничего не добавляя и не сокращая. ' +
-    'Никакого другого текста в кадре: ни подписей к этим строкам, ни дополнительных полей и ' +
-    'характеристик, ни логотипов, водяных знаков и названий магазинов, которых нет на фото ' +
-    'товара.'
-}
-
 function imagePrompt(
   product: ProductBrief,
   profile: OutputProfile,
   kind: GenerationKind,
-  card: CardTexts | null,
-  referenceCount: number,
 ): string {
   const scenario = product.presetPrompt ?? product.wishes.trim()
   const scenarioLine = scenario === ''
     ? 'Сцена показа — на усмотрение, товар должен быть виден полностью и чётко.'
     : `Сценарий показа: ${scenario}.`
 
+  // У карточки модель рисует только сцену: заголовок, характеристики, плашки и знак ставит наш
+  // сборщик поверх кадра (ADR-0012). Текст, нарисованный моделью, оказался бы в карточке
+  // дважды — её и наш.
   const layoutLine = kind === 'card'
-    ? cardLayoutLine(product, card)
+    ? 'Нужна только сцена с товаром — без какого-либо текста, плашек, надписей, подписей, ' +
+      'водяных знаков и логотипов магазина поверх кадра. Надписи, которые есть на самом товаре, ' +
+      'не убирать.'
     : 'Это витринное фото без текста и вёрстки — ничего, кроме товара на фоне, не рисовать.'
-
-  // Без этой оговорки риск в том, что модель перенесёт с референса не оформление, а сам товар,
-  // человека или бренд — референсные PNG в docs/assets/cardsforsysprompt/ это готовые
-  // лайфстайл-карточки, не пустые шаблоны.
-  const referenceLine = referenceCount === 0
-    ? ''
-    : `Первые изображения — фото вашего товара, сохранить точно. Последние ${referenceCount} — ` +
-      'только референс СТИЛЯ оформления карточки: цветовые акценты, типографика, расположение ' +
-      'текстового блока. Товар, человека и бренд с этих референсов не копировать и не ' +
-      'использовать — они не про то, что нарисовать, а про то, как оформить текст.'
 
   return [
     `Товар: ${product.title} (категория «${product.categoryTitle}»).`,
@@ -553,7 +467,6 @@ function imagePrompt(
       'оттенки, что на фото, не подгонять под канонические цвета флагов или брендов.',
     `Кадр строго ${aspectRatioParam(profile)}, фон ${profile.backgroundTitle} ` +
       `(${profile.backgroundHex}), товар не обрезан по краю кадра.`,
-    referenceLine,
   ].filter((line) => line !== '').join(' ')
 }
 
@@ -621,16 +534,12 @@ export function createAitunnelProvider(
       return properties
     },
 
-    async generateImages({ photos, product, profile, kind, card, objects }): Promise<GeneratedImage[]> {
+    async generateImages({ photos, product, profile, kind, objects }): Promise<GeneratedImage[]> {
       const config = requireConfig(providerProfile)
       const images: GeneratedImage[] = []
 
-      // Только для карточки: витринному фото ("photo") дизайн-референс не про что применять —
-      // там самого текстового блока нет (шаг 3 плана, ветка kind === 'photo' в imagePrompt).
-      const references = kind === 'card' ? await cardReferenceParts() : []
-
-      const prompt = imagePrompt(product, profile, kind, card, references.length)
-      const inputReferences = [...imageContentParts(photos), ...references]
+      const prompt = imagePrompt(product, profile, kind)
+      const inputReferences = imageContentParts(photos)
 
       for (let index = 0; index < objects; index++) {
         let result: any = null
@@ -696,12 +605,12 @@ export function createAitunnelProvider(
           'получено', info === null ? '?' : `${info.width}×${info.height} ${info.format}`,
         )
 
-        // Правило одно на провайдера и воркер (`output-profile.ts`): здесь оно срабатывает
-        // раньше и с именем вендора в сообщении, чтобы в логах было видно, чей выход не подошёл.
-        const mismatch = describeProfileMismatch(bytes, profile)
-
-        if (mismatch !== null || info === null) {
-          throw new Error(`AITunnel: ${mismatch ?? 'формат готового файла не распознан'}`)
+        // С профилем площадки кадр здесь не сверяется: у карточки он сырьё, которое сборщик
+        // вписывает в точный размер профиля, и сверяется уже собранный файл (ADR-0012); у фото
+        // сверку делает воркер тем же правилом (`output-profile.ts`). Нераспознанный файл —
+        // отказ уже здесь: ни собрать, ни отдать его нельзя.
+        if (info === null) {
+          throw new Error('AITunnel: формат готового файла не распознан')
         }
 
         images.push({

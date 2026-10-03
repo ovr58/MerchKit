@@ -19,6 +19,7 @@
 
 import {
   createProvider,
+  type CardTexts,
   type OutputProfile,
   type ProductBrief,
   type ProviderUsage,
@@ -33,10 +34,15 @@ import {
   selectFromDatabase,
   uploadFile,
 } from '../_shared/edge.ts'
-import { readImageInfo } from '../_shared/image.ts'
+import { mimeOf, readImageInfo } from '../_shared/image.ts'
 import { describeProfileMismatch } from '../_shared/output-profile.ts'
+import { createCutoutRunner } from '../_shared/card-layout/cutout.ts'
+import { usesCutout } from '../_shared/card-layout/features.ts'
+import { cardFilling, imageBytes, imageRef, storedContent } from '../_shared/card-layout/filling.ts'
+import { renderCard } from '../_shared/card-layout/render.ts'
 import { layoutSnapshot, selectCardLayout, type LayoutCandidate } from '../_shared/card-layout/selection.ts'
-import type { CardLayout } from '../_shared/card-layout/types.ts'
+import type { FontFamilies } from '../_shared/card-layout/svg.ts'
+import type { CardContent, CardLayout, FontRole } from '../_shared/card-layout/types.ts'
 import type { GenerationKind } from '../_shared/pricing.ts'
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -75,6 +81,8 @@ type ProfileRow = {
   background_hex: string
   background_title: string
 }
+
+type FontRoleRow = { role: FontRole; family: string }
 
 type LayoutRow = {
   id: string
@@ -200,6 +208,8 @@ async function run(generation: GenerationRow, usage: ProviderUsage[]): Promise<s
     backgroundTitle: profileRow.background_title,
   }
 
+  let layout: CardLayout | null = null
+
   if (generation.kind === 'card') {
     const selection = await selectLayout(generation, profile)
     const snapshot = layoutSnapshot(generation.id, selection)
@@ -208,6 +218,7 @@ async function run(generation: GenerationRow, usage: ProviderUsage[]): Promise<s
       selected_layout: snapshot.layoutId,
       selected_snapshot: snapshot.layout,
     })
+    layout = snapshot.layout
   }
 
   const product: ProductBrief = {
@@ -226,11 +237,10 @@ async function run(generation: GenerationRow, usage: ProviderUsage[]): Promise<s
   const provider = createProvider(undefined, (entry) => usage.push(entry))
 
   // Тексты карточки — вторая независимая операция, и её отказ равносилен отказу целиком
-  // (US-E4). Идут ПЕРВЫМИ, потому что их же и нужно нарисовать в кадре (FR-07): модель
-  // изображений получает готовый текст вместо задания «придумай», иначе она сочиняет
-  // содержимое сама — выдуманные характеристики и подписи полей вместо текста (замер
-  // 2026-08-30, план card-text-block). Побочно: отказ текстов больше не стоит уже
-  // оплаченной генерации изображения.
+  // (US-E4). Нужны дважды: в поля `title_of_card` / `description_of_card` (FR-07 требует их
+  // и отдельно от изображения) и в гнёзда макета на сборке. Модели изображений они не
+  // передаются — сцену она рисует без текста (ADR-0012). Идут ДО изображения, потому что их
+  // отказ так не стоит уже оплаченного кадра.
   const card = generation.kind === 'card'
     ? await provider.composeCard({ product, profile })
     : null
@@ -244,7 +254,6 @@ async function run(generation: GenerationRow, usage: ProviderUsage[]): Promise<s
     product,
     profile,
     kind: generation.kind,
-    card,
     objects: generation.objects_count,
   })
 
@@ -252,11 +261,17 @@ async function run(generation: GenerationRow, usage: ProviderUsage[]): Promise<s
     throw new Error('Провайдер не вернул ни одного изображения')
   }
 
+  // У карточки пользователю уходит не кадр вендора, а собранный по макету файл; у фото —
+  // кадр как есть. Сверка с профилем — по тому, что уходит.
+  const assembly = layout !== null && card !== null
+    ? await assembleCard(generation, layout, card, images[0].bytes, profile)
+    : null
+  const results = assembly !== null ? [assembly.bytes] : images.map((image) => image.bytes)
+
   // Профиль уходил В запрос, но верить на слово нельзя: файл не по требованиям площадки —
-  // это файл, за который пользователь заплатил зря (FR-25). На M5 это останется
-  // единственной проверкой между настоящим вендором и карточкой, которую не примут.
-  for (const image of images) {
-    const mismatch = describeProfileMismatch(image.bytes, profile)
+  // это файл, за который пользователь заплатил зря (FR-25).
+  for (const bytes of results) {
+    const mismatch = describeProfileMismatch(bytes, profile)
 
     if (mismatch !== null) {
       throw new Error(`Изображение не подходит профилю площадки: ${mismatch}`)
@@ -266,16 +281,18 @@ async function run(generation: GenerationRow, usage: ProviderUsage[]): Promise<s
   const title = await provider.nameGeneration({ product })
 
   const assets = await Promise.all(
-    images.map(async (image, index) => {
+    results.map(async (bytes, index) => {
       // Формат берётся из самого файла, а не из профиля: профиль перечисляет, что площадка
       // ПРИНИМАЕТ, а вендор выбирает из этого списка сам. Записать сюда `profile.formats[0]`
       // значило бы положить в каталог PNG под именем `.jpg` и с записью «jpeg» в базе.
-      const info = readImageInfo(image.bytes)!
+      const info = readImageInfo(bytes)!
       const path = `${generation.user_id}/${generation.id}/result-${index + 1}.${info.format}`
-      await uploadFile('results', path, image.bytes, image.contentType)
+      await uploadFile('results', path, bytes, mimeOf(info.format))
       return { storage_path: path, width: info.width, height: info.height, format: info.format }
     }),
   )
+
+  if (assembly !== null) await storeAssembly(generation, assembly)
 
   await callDatabase('finish_generation', {
     target_generation: generation.id,
@@ -287,6 +304,110 @@ async function run(generation: GenerationRow, usage: ProviderUsage[]): Promise<s
 
   console.info('Генерация', generation.id, 'завершена')
   return 'done'
+}
+
+type Assembly = {
+  /** Собранная карточка, PNG ровно в размер профиля. */
+  bytes: Uint8Array
+  /** Исходники пересборки (B7.5): кадр вендора и вырез, если он есть. */
+  frame: Uint8Array
+  cutout: Uint8Array | null
+  content: CardContent
+  fonts: FontFamilies
+}
+
+/**
+ * Сборка карточки по снимку макета (шаг B7.1): кадр вендора → вырез → содержимое → растр.
+ *
+ * Сверка с профилем — у вызывающего, по собранным байтам: тем же правилом, что и у фото.
+ */
+async function assembleCard(
+  generation: GenerationRow,
+  layout: CardLayout,
+  card: CardTexts,
+  frameBytes: Uint8Array,
+  profile: OutputProfile,
+): Promise<Assembly> {
+  // Вендор отдаёт один кадр; слои второго кадра снимаются правилом K-3.
+  const frame = imageRef(frameBytes)
+
+  // Вырез — только если макет его использует и сервис настроен. Секретов нет — карточка
+  // собирается без выреза, слой снимается K-3; любой отказ сервиса раннер сам превращает в
+  // `null` (ADR-0016), генерация из-за коробки не теряется.
+  const endpoint = Deno.env.get('CUTOUT_ENDPOINT')
+  const secret = Deno.env.get('CUTOUT_SECRET')
+  const cutout = usesCutout(layout) && endpoint && secret
+    ? await createCutoutRunner({ endpoint, secret })(frame)
+    : null
+
+  const [logo, fonts] = await Promise.all([
+    generation.logo_path === null ? null : downloadFile('uploads', generation.logo_path).then(imageRef),
+    readFonts(),
+  ])
+
+  const { content, cut } = cardFilling(layout, {
+    title: card.title,
+    description: card.description,
+    properties: readProperties(generation.product_properties),
+    frame,
+    cutout,
+    logo,
+  })
+
+  const rendered = await renderCard(layout, content, { width: profile.width, height: profile.height }, fonts)
+
+  if (cut.length > 0 || rendered.dropped.length > 0) {
+    console.info('Генерация', generation.id, 'макет', layout.id, 'не вместил свойств:', cut.length,
+      'снятые слои:', rendered.dropped)
+  }
+
+  return {
+    bytes: rendered.bytes,
+    frame: frameBytes,
+    cutout: cutout === null ? null : imageBytes(cutout),
+    content,
+    fonts,
+  }
+}
+
+/** Исходники пересборки — в `results` рядом с карточкой, содержимое — в снимок (B7.4). */
+async function storeAssembly(generation: GenerationRow, assembly: Assembly): Promise<void> {
+  const folder = `${generation.user_id}/${generation.id}`
+  const upload = async (name: string, bytes: Uint8Array): Promise<string> => {
+    const info = readImageInfo(bytes)!
+    const path = `${folder}/${name}.${info.format}`
+    await uploadFile('results', path, bytes, mimeOf(info.format))
+    return path
+  }
+
+  const [framePath, cutoutPath] = await Promise.all([
+    upload('frame-1', assembly.frame),
+    assembly.cutout === null ? undefined : upload('cutout-1', assembly.cutout),
+  ])
+
+  await callDatabase('record_card_assembly', {
+    target_generation: generation.id,
+    assembled_content: storedContent(assembly.content, {
+      frames: [framePath],
+      cutout: cutoutPath,
+      logo: generation.logo_path ?? undefined,
+    }),
+    assembled_font_map: assembly.fonts,
+  })
+}
+
+/** Карта «роль → гарнитура» — тем же запросом, что у превью (`card-preview`). */
+async function readFonts(): Promise<FontFamilies> {
+  const rows = (await selectFromDatabase('card_font_roles?select=role,family')) as FontRoleRow[]
+  return Object.fromEntries(rows.map((row) => [row.role, row.family])) as FontFamilies
+}
+
+/** Свойства из B1 хранятся `jsonb`-массивом `{label, value}`; чужую форму не пускаем в макет. */
+function readProperties(value: unknown[]): { label: string; value: string }[] {
+  return value.flatMap((entry) => {
+    const { label, value: propertyValue } = (entry ?? {}) as { label?: unknown; value?: unknown }
+    return typeof label === 'string' && typeof propertyValue === 'string' ? [{ label, value: propertyValue }] : []
+  })
 }
 
 async function selectLayout(generation: GenerationRow, profile: OutputProfile) {

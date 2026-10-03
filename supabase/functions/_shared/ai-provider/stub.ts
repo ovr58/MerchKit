@@ -139,11 +139,12 @@ function propertiesFromText(description: string, wishes: string): ProductPropert
 }
 
 /**
- * Рисует плейсхолдер: фон профиля, силуэт товара и — для карточки — вёрстку поверх фото,
- * как на референсах V-10. Координаты нормированы, поэтому одна и та же композиция ложится
- * и на вертикальный кадр 3 : 4, и на квадрат Ozon Fresh.
+ * Рисует плейсхолдер: фон профиля и силуэт товара. Вёрстки нет и у карточки — как и
+ * настоящий вендор, заглушка рисует только сцену, а текст ставит сборщик (ADR-0012).
+ * Координаты нормированы, поэтому одна и та же композиция ложится и на вертикальный кадр
+ * 3 : 4, и на квадрат Ozon Fresh.
  */
-function paint(profile: OutputProfile, seed: number, withLayout: boolean): Uint8Array {
+function paint(profile: OutputProfile, seed: number): Uint8Array {
   const background = parseHex(profile.backgroundHex)
   const ink: Rgb = [24, 24, 27]
   // Цвет товара — от наименования: разные товары обязаны выглядеть по-разному, иначе
@@ -160,16 +161,6 @@ function paint(profile: OutputProfile, seed: number, withLayout: boolean): Uint8
   return encodeBlockJpeg(profile.width, profile.height, (bx, by) => {
     const u = bx / wide
     const v = by / high
-
-    // Вёрстка карточки: левая колонка с заголовком, выносами и размерным рядом.
-    if (withLayout && u < 0.52) {
-      if (v > 0.06 && v < 0.14 && u > 0.06 && u < 0.46) return ink
-      if (v > 0.16 && v < 0.20 && u > 0.06 && u < 0.34) return mix(ink, background, 0.45)
-      for (const line of [0.30, 0.38, 0.46]) {
-        if (v > line && v < line + 0.03 && u > 0.06 && u < 0.40) return mix(ink, background, 0.25)
-      }
-      if (v > 0.86 && v < 0.92 && u > 0.06 && u < 0.42) return mix(ink, background, 0.6)
-    }
 
     // Силуэт товара: скруглённый прямоугольник в правой половине кадра.
     const insideX = u > 0.40 && u < 0.86
@@ -234,7 +225,7 @@ export function createStubProvider(onUsage?: (usage: ProviderUsage) => void): Ai
       return propertiesFromText(description, wishes)
     },
 
-    async generateImages({ product, profile, kind, objects }): Promise<GeneratedImage[]> {
+    async generateImages({ product, profile, objects }): Promise<GeneratedImage[]> {
       const failure = requestedFailure(product)
       const seed = hash(`${product.title}|${product.presetPrompt ?? product.wishes}`)
 
@@ -250,7 +241,7 @@ export function createStubProvider(onUsage?: (usage: ProviderUsage) => void): Ai
 
         recordZeroCost(onUsage, 'generateImages', Date.now() - started)
         images.push({
-          bytes: paint(profile, seed + index * 7919, kind === 'card'),
+          bytes: paint(profile, seed + index * 7919),
           contentType: 'image/jpeg',
           width: profile.width,
           height: profile.height,
