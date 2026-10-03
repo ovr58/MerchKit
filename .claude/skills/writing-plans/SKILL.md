@@ -32,12 +32,20 @@ assumptions while they are cheap and lets work survive a context reset or a hand
    - **Context** — why this exists, expected outcome.
    - **Critical files** — what gets created/edited (paths).
    - **Steps** — ordered, checkbox list, each one verifiable.
+   - **«Порядок исполнения»** — **mandatory, not optional** (`AGENTS.md`): one row per *session*,
+     columns «шаги · модель · полоса · ветка» plus dependency and parallelism. A plan without it
+     is `БРАК` under `/validate-plan`, whoever wrote it. How the rows are batched, how a row's
+     model is picked and where a `НЕДЕЛИМ` step sits — `fragmenting-plans-for-executors`; the
+     empty skeleton — `/plan-new`. Do not restate either here or in the plan.
    - **Verification** — concrete checks proving "done" (commands, greps, observed behavior).
    - **Open questions** — anything still unresolved.
 4. **Register it**: add exactly one row to the `## active/` table in `planning/INDEX.md` in
    the *same* change.
-5. **Don't execute in the same session the plan is approved** if project convention forbids
-   it — leave a note that steps await a separate session.
+5. **Never execute in the same session the plan is approved** — this is project policy
+   (`AGENTS.md`, "Исполнение — новая сессия и новая ветка"), not a preference. Before handing
+   off: write into the plan everything that already cost calls or money (external-system state,
+   ids, remaining budget) so the cold session doesn't pay for it twice, create the execution
+   branch in your trust lane, mark the first step "starts in a new session", and stop.
 
 ## Common Mistakes
 
@@ -49,5 +57,5 @@ assumptions while they are cheap and lets work survive a context reset or a hand
 
 - REQUIRED BACKGROUND: brainstorming
 - SUB-SKILL: executing-plans   <!-- once approved -->
-- See the "Навигация по planning/" section in `CLAUDE.md` for the full lifecycle.
+- Lifecycle and the `planning/` map: `AGENTS.md`, section «Планы: lifecycle и навигация».
 - Forks worth a *future* plan (not now) → queue in `planning/BACKLOG.md` (`docs/WORKING_RULES.md` §8).

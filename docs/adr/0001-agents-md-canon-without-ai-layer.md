@@ -2,8 +2,8 @@
 
 - **Status:** Accepted
 - **Date:** 2026-08-26
-- **Related:** `planning/active/cross-ai-rule-enforcement-harvi-opus_2026-08-26.md` (Р1);
-  отвергнутая альтернатива — `planning/active/cross-ai-template-upgrade_2026-08-26.md` §2
+- **Related:** `planning/archive/plans/cross-ai-rule-enforcement-harvi-opus_2026-08-26.md` (Р1);
+  отвергнутая альтернатива — `planning/archive/plans/cross-ai-template-upgrade_2026-08-26.md` §2
 
 ## Context
 

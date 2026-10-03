@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-08-26
-- **Related:** `planning/active/cross-ai-rule-enforcement-harvi-opus_2026-08-26.md` (Р2, Р3);
+- **Related:** `planning/archive/plans/cross-ai-rule-enforcement-harvi-opus_2026-08-26.md` (Р2, Р3);
   ADR-0001
 
 ## Context

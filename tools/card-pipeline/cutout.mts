@@ -9,6 +9,7 @@
  *   npm run cards:cutout node               время инференса, wasm в один поток
  *   npm run cards:cutout native             то же нативным ORT + кромка на настоящих кадрах
  *   npm run cards:cutout browser            то же в Chromium + маски на настоящих кадрах
+ *   npm run cards:cutout occupancy          карта занятости по маскам прошлого прогона
  *
  * **Лицензия проверяется по первоисточнику и живёт рядом с файлом модели** — правило ADR-0014,
  * пункт 4, и тот же приём, что у гарнитур в `card_font_families`. Поэтому таблица кандидатов
@@ -21,6 +22,10 @@ import { deflateSync } from 'node:zlib'
 import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises'
 import { extname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+
+import { readImageInfo } from '../../supabase/functions/_shared/image.ts'
+import { occupancyOf } from '../../supabase/functions/_shared/card-layout/occupancy.ts'
+import type { OccupancyMap } from '../../supabase/functions/_shared/card-layout/occupancy.ts'
 
 const here = fileURLToPath(new URL('.', import.meta.url))
 const MODELS = join(here, 'models')
@@ -58,12 +63,15 @@ const CANDIDATES: Record<string, Candidate> = {
   u2netp: {
     url: 'https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2netp.onnx',
     side: 320,
-    license: 'код — Apache-2.0; веса — лицензия не объявлена',
+    license: 'код — Apache-2.0; веса — предварительное согласие авторов (2026-09-06)',
     licenseUrl: 'https://github.com/xuebinqin/U-2-Net/blob/master/LICENSE',
     note:
-      'LICENSE в репозитории покрывает код. Веса лежат на Google Drive вне репозитория, ' +
-      'и README отправляет за разрешением к авторам письмом — то есть по правилу ADR-0014 ' +
-      'лицензия НЕ подтверждена первоисточником.',
+      'LICENSE в репозитории покрывает код. Веса лежат на Google Drive вне репозитория, и ' +
+      'README отправляет за разрешением к авторам письмом. Владелец написал и получил ' +
+      'ПРЕДВАРИТЕЛЬНОЕ согласие на коммерческое использование; детали оговариваются при ' +
+      'коммерческом запуске. Этого хватило, чтобы выбрать модель (решение 2026-09-06), но ' +
+      'риск отложен, а не закрыт: до коммерческого запуска лицензию надо урегулировать — ' +
+      'условие висит на записи B7 в planning/BACKLOG.md и на ADR-0017.',
   },
   silueta: {
     url: 'https://github.com/danielgatis/rembg/releases/download/v0.0.0/silueta.onnx',
@@ -71,15 +79,6 @@ const CANDIDATES: Record<string, Candidate> = {
     license: 'производная U²-Net; веса — лицензия не объявлена',
     licenseUrl: 'https://github.com/xuebinqin/U-2-Net/blob/master/LICENSE',
     note: 'Уменьшенная сборка U²-Net, наследует ровно ту же неопределённость с весами.',
-  },
-  'isnet-general-use': {
-    url: 'https://github.com/danielgatis/rembg/releases/download/v0.0.0/isnet-general-use.onnx',
-    side: 1024,
-    license: 'код — Apache-2.0; веса обучены на DIS5K с отдельными условиями',
-    licenseUrl: 'https://github.com/xuebinqin/DIS',
-    note:
-      'README отсылает к DIS5K-Dataset-Terms-of-Use.pdf; условия набора данных отдельны от ' +
-      'Apache-2.0 на код и по первоисточнику не прочитаны — считать неподтверждёнными.',
   },
   ormbg: {
     url: 'https://huggingface.co/schirrmacher/ormbg/resolve/main/ormbg.onnx',
@@ -99,14 +98,46 @@ const CANDIDATES: Record<string, Candidate> = {
     note: 'MIT и в репозитории кода, и в карточке модели на Hugging Face.',
     activation: 'sigmoid',
   },
+  'birefnet-general-lite-int8': {
+    // Готового int8-экспорта BiRefNet нет ни на Hugging Face, ни в релизах rembg — там только
+    // fp32 и fp16, а fp16 на x86 ORT разворачивает обратно в fp32 и времени не экономит.
+    // Поэтому файл делается локально и качать его неоткуда.
+    url: '',
+    side: 1024,
+    license: 'MIT — производная от MIT-весов',
+    licenseUrl: 'https://github.com/ZhengPeng7/BiRefNet/blob/main/LICENSE',
+    note:
+      'Динамическое квантование `birefnet-general-lite` в два шага. Сначала свернуть узлы ' +
+      '`Identity` над инициализаторами: в этом экспорте у 28 `MatMul` вес приходит через ' +
+      '`Identity`, а `quantize_dynamic` берёт только те, у кого вес — инициализатор, и молча ' +
+      'пропускает остальные (файл худеет на 10% вместо 4×). Затем ' +
+      '`quantize_dynamic(weight_type=QInt8, reduce_range=True)`. `reduce_range` обязателен: ' +
+      'цель — Zen 3 (EPYC 7763) без VNNI, где u8s8-ядра насыщаются на полном диапазоне весов. ' +
+      'Штатный `onnxruntime.quantization.preprocess` тот же результат даёт только с ' +
+      '`--auto_merge`, а он разруливает конфликты форм «мягким слиянием» — для сравнения ' +
+      'качества кромки это лишняя неопределённость, поэтому взят минимальный путь.',
+    activation: 'sigmoid',
+  },
 }
 
 /**
- * Отвергнута до замера, и причина записана: без этой строки вопрос «а почему не самая
- * точная?» вернётся на следующем шаге. RMBG у BRIA — единственный кандидат, чьи веса прямо
- * запрещены к коммерческому использованию без платного договора.
+ * Отвергнуты до замера, и причина записана: без этих строк вопрос «а почему не самая точная?»
+ * вернётся на следующем шаге. Обе — с прямым запретом коммерческого использования весов,
+ * прочитанным по первоисточнику, а не предположенным.
  */
 const REJECTED = {
+  'isnet-general-use': {
+    license: 'код — Apache-2.0; данные DIS5K — НЕкоммерческие, запрет распространён на производные',
+    licenseUrl: 'https://github.com/xuebinqin/DIS/blob/main/DIS5K-Dataset-Terms-of-Use.pdf',
+    note:
+      'DIS5K Terms of Use, пункт 2 дословно: «The Dataset is available for non-commercial use ' +
+      'in research or educational purpose. Without permission from the original authors, ' +
+      'commercial use of this dataset is prohibited even after copying, editing, processing ' +
+      'or any operations of this database». Пункт 4 запрещает и распространение производных. ' +
+      'Apache-2.0 в README покрывает только «code and evaluation metric»; весам лицензия не ' +
+      'назначена, а обучены они на этих данных. Прочитано по PDF 2026-09-06 — это не ' +
+      '«условия неизвестны», а прямой запрет.',
+  },
   'bria-rmbg': {
     license: 'bria-rmbg — некоммерческая; коммерция по платному договору',
     licenseUrl: 'https://huggingface.co/briaai/RMBG-1.4',
@@ -154,6 +185,13 @@ async function fetchModels(list: string[]): Promise<void> {
     if (already !== null) {
       console.log(`${id}: уже есть, ${(already / 1048576).toFixed(1)} МБ`)
       continue
+    }
+
+    // Пустой `url` — не забытое поле, а «этот файл делается локально». Без явного отказа
+    // сюда прилетел бы `fetch('')`, и молча положить чужие байты под чужим именем — худшее,
+    // что может сделать стенд, чьё единственное назначение — сравнивать модели честно.
+    if (CANDIDATES[id].url === '') {
+      throw new Error(`${id}: качать неоткуда, файл делается локально — ${CANDIDATES[id].note}`)
     }
 
     const response = await fetch(CANDIDATES[id].url, { redirect: 'follow' })
@@ -658,13 +696,149 @@ async function benchNative(
       const raw = output[session.outputNames[0]].data as Float32Array
       const { gray, softShare } = toMask(raw, CANDIDATES[id].activation)
 
-      const stem = frame.split(/[\\/]/).pop()?.replace(/\.[a-z]+$/i, '') ?? 'frame'
-      await writeFile(join(outDir, `${id}--${stem}.png`), grayPng(gray, side))
-      console.log(`  кромка ${stem}: полутон на ${(softShare * 100).toFixed(1)}% пикселей`)
+      // Имя каталога входит в стебель не для красоты: в `bench/samples/` каждый набор зовёт
+      // свой снимок `photo-1.jpg`, и по одному имени файла семь масок легли бы друг на друга,
+      // оставив от прогона одну последнюю.
+      const parts = frame.split(/[\\/]/)
+      const leaf = parts.at(-1)?.replace(/\.[a-z]+$/i, '') ?? 'frame'
+      const stem = parts.length > 1 ? `${parts.at(-2)}--${leaf}` : leaf
+      await writeFile(join(outDir, `${id}__${stem}.png`), grayPng(gray, side))
+      // Два знака, а не один: у кандидатов этого класса полутон живёт в десятых долях
+      // процента, и на одном знаке 0,24% и 0,35% сливаются в неразличимые «0,2» и «0,4».
+      console.log(`  кромка ${stem}: полутон на ${(softShare * 100).toFixed(2)}% пикселей`)
     }
   }
 
   if (frames.length > 0) console.log(`\nМаски: ${outDir}`)
+}
+
+/**
+ * Карта занятости на настоящих масках — проверка того обещания шага B4, ради которого карта и
+ * считается по долям кадра, а не по пикселям: **смена модели выреза не должна переделывать B5.**
+ *
+ * Инференса здесь нет и не нужно: маски прошлого прогона `native` уже лежат на диске, и по
+ * одним и тем же кадрам их считали разные модели. Прогон бесплатный и берёт секунды.
+ *
+ *   npm run cards:cutout occupancy -- --masks bench/runs/cutout-native-… [--grid]
+ *
+ * Последняя строка на кадр и есть замер: сколько ячеек разошлось вердиктом «занято» между
+ * моделями. Разойдётся много — форма карты зависит от модели, и это брак проектирования, а не
+ * повод подкрутить порог.
+ */
+async function reportOccupancy(rest: string[], showGrid: boolean): Promise<void> {
+  const dir = rest.includes('--masks')
+    ? rest[rest.indexOf('--masks') + 1]
+    : await latestMaskRun()
+
+  const byFrame = new Map<string, { model: string; map: OccupancyMap }[]>()
+
+  for (const name of (await readdir(dir)).filter((file) => file.toLowerCase().endsWith('.png')).sort()) {
+    const path = join(dir, name)
+    const info = readImageInfo(new Uint8Array(await readFile(path)))
+    if (info === null) {
+      console.log(`${name}: не распознано как изображение — пропуск`)
+      continue
+    }
+
+    // Растеризатор оснастки тянет картинку к квадрату (`preserveAspectRatio="none"`), поэтому
+    // не-квадратную маску он молча исказил бы, а карта отчиталась бы о чужой геометрии.
+    if (info.width !== info.height) {
+      console.log(`${name}: маска ${info.width}×${info.height} не квадратная — пропуск`)
+      continue
+    }
+
+    const rgba = await framePixels(path, info.width)
+    // Маска серая: её яркость и есть непрозрачность, поэтому хватает одного канала.
+    const alpha = new Uint8Array(info.width * info.height)
+    for (let index = 0; index < alpha.length; index += 1) alpha[index] = rgba[index * 4]
+
+    const [model, stem] = splitMaskName(name)
+    byFrame.set(stem, [
+      ...(byFrame.get(stem) ?? []),
+      { model, map: occupancyOf({ width: info.width, height: info.height, alpha }) },
+    ])
+  }
+
+  console.log(`\n## Карта занятости — ${dir}`)
+
+  for (const [stem, taken] of [...byFrame].sort(([left], [right]) => left.localeCompare(right))) {
+    console.log(`\n${stem}`)
+
+    for (const { model, map } of taken) {
+      const places = map.free.slice(0, 2).map(boxText).join(' · ')
+      console.log(
+        `  ${model.padEnd(30)} занято ${map.coverage.toFixed(2)}  ` +
+          `габарит ${boxText(map.bounds)}  места ${places === '' ? '—' : places}`,
+      )
+      if (showGrid) for (const row of gridRows(map)) console.log(`    ${row}`)
+    }
+
+    for (let index = 1; index < taken.length; index += 1) {
+      const first = taken[0]
+      const other = taken[index]
+      const apart = cellsApart(first.map, other.map)
+      const sameZone = boxText(first.map.free[0] ?? null) === boxText(other.map.free[0] ?? null)
+      console.log(
+        `  ${first.model} ↔ ${other.model}: вердиктом врозь ${apart.verdicts} ячеек из ` +
+          `${first.map.cells.length}, максимум расхождения ${apart.max.toFixed(2)}, ` +
+          `лучшее место ${sameZone ? 'то же' : 'другое'}`,
+      )
+    }
+  }
+}
+
+async function latestMaskRun(): Promise<string> {
+  const root = join(here, '..', '..', 'bench', 'runs')
+  const runs = (await readdir(root, { withFileTypes: true }))
+    .filter((entry) => entry.isDirectory() && entry.name.startsWith(`${RUN_PREFIX}native-`))
+    .map((entry) => entry.name)
+    .sort()
+
+  if (runs.length === 0) throw new Error('Масок на диске нет — сначала `npm run cards:cutout native`')
+  return join(root, runs[runs.length - 1])
+}
+
+/** Имена масок пишет `native`: `модель__набор--кадр.png`. У прогонов до 2026-09-05 разделитель
+ *  был один и тот же (`--`), поэтому разбор пробует оба, а не падает на старом каталоге. */
+function splitMaskName(name: string): [string, string] {
+  const stem = name.replace(/\.png$/i, '')
+  const at = stem.includes('__') ? stem.indexOf('__') : stem.indexOf('--')
+  return at === -1 ? ['?', stem] : [stem.slice(0, at), stem.slice(at + 2)]
+}
+
+/** Расхождение двух карт: сколько ячеек разошлись вердиктом «занято» и насколько далеко
+ *  разошлась сама доля. Первое решает, разъедется ли вёрстка; второе — насколько близко. */
+function cellsApart(left: OccupancyMap, right: OccupancyMap): { verdicts: number; max: number } {
+  if (left.cols !== right.cols || left.rows !== right.rows) {
+    return { verdicts: left.cells.length, max: 1 }
+  }
+
+  let verdicts = 0
+  let max = 0
+  for (let index = 0; index < left.cells.length; index += 1) {
+    const a = left.cells[index]
+    const b = right.cells[index]
+    if ((a >= 0.5) !== (b >= 0.5)) verdicts += 1
+    max = Math.max(max, Math.abs(a - b))
+  }
+
+  return { verdicts, max }
+}
+
+function boxText(box: { x: number; y: number; w: number; h: number } | null): string {
+  return box === null
+    ? 'нет'
+    : `${box.x.toFixed(2)},${box.y.toFixed(2)} ${box.w.toFixed(2)}×${box.h.toFixed(2)}`
+}
+
+/** Сетка глазами: цифра на ячейку, 0 — фон, 9 — товар. */
+function gridRows(map: OccupancyMap): string[] {
+  const rows: string[] = []
+  for (let row = 0; row < map.rows; row += 1) {
+    const cells = map.cells.slice(row * map.cols, (row + 1) * map.cols)
+    rows.push(cells.map((share) => Math.round(share * 9)).join(''))
+  }
+  return rows
 }
 
 function licenceTable(): void {
@@ -694,7 +868,12 @@ async function main(): Promise<void> {
   else if (mode === 'node') await benchNode(ids(rest), runs)
   else if (mode === 'native') await benchNative(ids(rest), runs, framesRoot, frameLimit)
   else if (mode === 'browser') await benchBrowser(ids(rest), runs, framesRoot, frameLimit, threads)
-  else throw new Error(`Неизвестный режим «${mode}». Есть: licenses, fetch, node, native, browser`)
+  else if (mode === 'occupancy') await reportOccupancy(rest, rest.includes('--grid'))
+  else {
+    throw new Error(
+      `Неизвестный режим «${mode}». Есть: licenses, fetch, node, native, browser, occupancy`,
+    )
+  }
 }
 
 main().catch((error: unknown) => {

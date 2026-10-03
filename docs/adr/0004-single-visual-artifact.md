@@ -3,7 +3,7 @@
 - **Status:** Accepted
 - **Date:** 2026-08-26
 - **Related:** ADR-0003; `planning/reference/SPEC_INTAKE_RESEARCH.md` §5;
-  `planning/active/stack-agnostic-init-questionnaire_2026-08-26.md`
+  `planning/archive/plans/stack-agnostic-init-questionnaire_2026-08-26.md`
 
 ## Context
 

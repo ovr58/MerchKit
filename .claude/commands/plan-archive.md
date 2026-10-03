@@ -20,9 +20,20 @@ allowed-tools: Read, Edit, Glob, Bash(git mv:*), Bash(mv:*)
 2. Переместить файл: `planning/active/<slug>.md` → `planning/archive/plans/<slug>.md`
    (если репозиторий под git — `git mv`; иначе обычный move).
 
-3. В `planning/INDEX.md`: удалить строку плана из таблицы `## active/` и добавить её в
+3. **Пересчитать ссылки — перенос сменил глубину файла.** Это отдельный шаг, а не мелочь:
+   `active/` лежит на два уровня от корня, `archive/plans/` — на три.
+   - **Внутри плана:** каждая относительная ссылка получает ещё один `../`
+     (`](../../docs/TZ.md)` → `](../../../docs/TZ.md)`, `](../BACKLOG.md)` → `](../../BACKLOG.md)`).
+     Якоря внутри файла (`#раздел`) не меняются.
+   - **Ссылки НА план:** переписать `active/<slug>` на `archive/plans/<slug>` там, где на него
+     ссылаются живые файлы — `planning/BACKLOG.md` (в том числе строки «→ заведён план»),
+     `planning/reference/*`, строки `Related:` в `docs/adr/*`.
+   - **Проверка:** `grep -rn "active/<slug>" --include=*.md .` — пусто, и каждая правленая ссылка
+     открывается.
+
+4. В `planning/INDEX.md`: удалить строку плана из таблицы `## active/` и добавить её в
    `## archive/plans/` со статусом `ARCHIVED`.
 
-4. Не удалять файл (archive-never-delete). Сообщить новый путь.
+5. Не удалять файл (archive-never-delete). Сообщить новый путь и число правленых ссылок.
 
 > Lifecycle: ACTIVE → DONE → ARCHIVED. Обновление INDEX — обязательная часть того же изменения.

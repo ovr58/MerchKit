@@ -27,8 +27,14 @@ orphaned branches. A short closing checklist prevents shipping a half-finished c
    block and update `planning/INDEX.md` in the same change.
 4. **Commit/push only when the user asks.** If on the default branch, branch first. Follow
    the project's commit-message convention (e.g. trailer).
-5. **Open the PR / merge** per project norms. PR body: what + why + how verified.
-6. **Tidy up:** delete the merged branch; `git worktree remove` any worktree
+5. **What does this branch's parent template need?** A fix for a trap that any project grown
+   from the template would hit — a tool, a hook, an OS, a harness gotcha, not something specific
+   to this project — is proposed to the owner, one case at a time: what breaks, where, why any
+   project hits it, and the fix. Only on their "yes" does it go to a branch in the template repo
+   (no merge, no push); where the template lives — `docs/METHODOLOGY.md` (`AGENTS.md`, «общий
+   грабль предлагается шаблону»). Do this before opening the PR / merging, not after.
+6. **Open the PR / merge** per project norms. PR body: what + why + how verified.
+7. **Tidy up:** delete the merged branch; `git worktree remove` any worktree
    (`using-git-worktrees`); `git worktree prune`.
 
 ## Common Mistakes
