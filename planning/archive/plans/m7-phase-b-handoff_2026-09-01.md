@@ -1,8 +1,10 @@
 # M7, фаза B — наряд на исполнение в Harvi Code
 
-Status: ACTIVE (с 2026-09-01)
+Status: ARCHIVED (2026-10-03)
 
-> **Это наряд, а не план.** План — [`card-assembly-pipeline_2026-08-31.md`](card-assembly-pipeline_2026-08-31.md),
+> **Исчерпан.** Шаги B0–B4 и B6, ради которых наряд писался, исполнены. Оставшиеся долги ADR-0012 перенесены в шаг B7.3 плана [`card-assembly-pipeline_2026-08-31.md`](../../active/card-assembly-pipeline_2026-08-31.md), решения — в его таблицу «Решения владельца». Ниже — текст наряда как был.
+
+> **Это наряд, а не план.** План — [`card-assembly-pipeline_2026-08-31.md`](../../active/card-assembly-pipeline_2026-08-31.md),
 > он остаётся источником правды по шагам и открытым вопросам. Здесь — то, чего в плане нет:
 > что уже решено и переоткрывать не надо, что прочитать перед первой правкой, какая форма у
 > схемы и контрактов, и чем проверяется каждый шаг.
@@ -13,10 +15,10 @@ Status: ACTIVE (с 2026-09-01)
 ## Первое действие сессии
 
 1. **Объявить активную модель.** От неё зависит полоса доверия — правило в `AGENTS.md`,
-   обоснование в [ADR-0002](../../docs/adr/0002-trust-lane-by-model-not-host.md).
+   обоснование в [ADR-0002](../../../docs/adr/0002-trust-lane-by-model-not-host.md).
    Не Opus → консервативная полоса: ветки `feature/<slug>`, self-approve запрещён, в конце
    готовится review-handoff и ждётся ревью Opus плюс явный апрув пользователя.
-2. **Открыть карту скилов** [`.claude/skills/INDEX.md`](../../.claude/skills/INDEX.md) —
+2. **Открыть карту скилов** [`.claude/skills/INDEX.md`](../../../.claude/skills/INDEX.md) —
    в Harvi Code автообнаружения скилов нет, файл открывается по пути. Для этой работы
    пригодятся `executing-plans`, `test-driven-development`, `verification-before-completion`,
    `research` (шаг B4.0).
@@ -24,12 +26,12 @@ Status: ACTIVE (с 2026-09-01)
 
    | Файл | Зачем |
    | --- | --- |
-   | [`AGENTS.md`](../../AGENTS.md) | канон правил; автозагружается, но убедиться, что прочитан |
-   | [`card-assembly-pipeline_2026-08-31.md`](card-assembly-pipeline_2026-08-31.md) | шаги B0–B7, коррекции K-1…K-4, открытые вопросы |
-   | [ADR-0012](../../docs/adr/0012-card-layout-is-ours-not-vendors.md) · [ADR-0013](../../docs/adr/0013-layout-library-in-database.md) · [ADR-0014](../../docs/adr/0014-cutout-runner-onnx-behind-interface.md) | три решения, на которых стоит вся фаза |
+   | [`AGENTS.md`](../../../AGENTS.md) | канон правил; автозагружается, но убедиться, что прочитан |
+   | [`card-assembly-pipeline_2026-08-31.md`](../../active/card-assembly-pipeline_2026-08-31.md) | шаги B0–B7, коррекции K-1…K-4, открытые вопросы |
+   | [ADR-0012](../../../docs/adr/0012-card-layout-is-ours-not-vendors.md) · [ADR-0013](../../../docs/adr/0013-layout-library-in-database.md) · [ADR-0014](../../../docs/adr/0014-cutout-runner-onnx-behind-interface.md) | три решения, на которых стоит вся фаза |
    | `supabase/functions/_shared/card-layout/types.ts` | язык макета целиком; читать до кода, а не по ходу |
    | `supabase/migrations/20260831120000_card_assets.sql` | образец того, как в этом проекте пишется миграция справочника |
-   | [`CONTEXT.md`](../../CONTEXT.md), раздел «Домен Merch Kit» | термины: библиотека макетов, снимок макета, ёмкость модулей, карта шрифтов, маска выреза |
+   | [`CONTEXT.md`](../../../CONTEXT.md), раздел «Домен Merch Kit» | термины: библиотека макетов, снимок макета, ёмкость модулей, карта шрифтов, маска выреза |
 
 ## Что уже решено — не переоткрывать
 
@@ -162,5 +164,5 @@ K-3, карточка собирается без него. Реализации
 - **Пересборка воспроизводима:** правка макета в библиотеке не меняет того, что соберётся у
   старой генерации.
 - Каждый закрытый шаг отмечается в плане `card-assembly-pipeline_2026-08-31.md` в том же
-  изменении; строка в [`planning/INDEX.md`](../INDEX.md) обновляется вместе с перемещением
+  изменении; строка в [`planning/INDEX.md`](../../INDEX.md) обновляется вместе с перемещением
   файлов.
