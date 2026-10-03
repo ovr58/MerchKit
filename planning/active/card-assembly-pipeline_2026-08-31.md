@@ -1,6 +1,6 @@
 # Конвейер сборки карточки слоями — веха M7
 
-Status: ACTIVE (с 2026-08-31) · фаза A, шаги B0–B4, B6, B7.1–B7.4, B5.0, B5.1 исполнены; открыты B7.5–B7.7, B5.2–B5.11, фаза C · аудит `/validate-plan` 2026-10-03
+Status: ACTIVE (с 2026-08-31) · фаза A, шаги B0–B4, B6, B7.1–B7.4, B5.0, B5.1, C1 исполнены; открыты B7.5–B7.7, B5.2–B5.11, C2–C4 · аудит `/validate-plan` 2026-10-03
 
 > Закон дробления — `AGENTS.md` «Изоморфное дробление» и
 > [ADR-T0011](../../docs/adr/T0011-isomorphic-fragmentation-of-plans.md); рубрика модели —
@@ -68,13 +68,18 @@ M7 меняет.
 | B6 | Бесплатное превью до оплаты, отсечённые свойства и переполнения названы | `supabase/functions/card-preview/`, `card-layout/preview.ts` |
 | B4.0 | Оснастка замера изолята; вывод — в изолят не помещаются ни сборка в размере площадки (19–21 макет из 34), ни вырез | `supabase/functions/card-bench/`, `tools/card-pipeline/bench.mts`, `cutout.mts` |
 | B4 | Шов `CutoutRunner` + HTTP-реализация к сервису; карта занятости кадра | `card-layout/cutout.ts`, `card-layout/occupancy.ts`; сервис — репозиторий `ovr58/cutout_runner` |
+| B7.1–B7.4 | Сборка карточки в воркере: вендор рисует сцену без текста, сборщик кладёт слои; собранная карточка — точно в размер профиля; содержимое сборки пишется в `generation_cards` | `generation-worker/index.ts` (`assembleCard`), `card-layout/filling.ts`, `output-profile.ts` (`exact`), миграция `20261003100000_record_card_assembly.sql` |
+| B5.0 | Контракт арт-директора | [ADR-0018](../../docs/adr/0018-art-director-layout-patch.md) |
+| B5.1 | Пересчёт долей кадра в доли холста | `card-layout/occupancy.ts` (`frameToCanvas`, `canvasBoxToFrame`) |
+| C1 | Механическая приёмка: заголовок и описание в кадре дословны, иначе генерация падает с возвратом баллов; SVG и PNG сборки детерминированы | `card-layout/text-check.ts`, `svg.test.ts` |
 
 **Состояние воркера на сегодня** (`supabase/functions/generation-worker/index.ts`): у генерации
-карточки подбирается макет и пишется снимок, но **сборщик не вызывается** — текст в кадре
-по-прежнему рисует вендор (`cardLayoutLine`, `cardReferenceParts` в
-`supabase/functions/_shared/ai-provider/aitunnel.ts`), а проверка профиля ослаблена допуском
-`ASPECT_TOLERANCE` (`supabase/functions/_shared/output-profile.ts`). `createCutoutRunner`
-вызывается только из тестов.
+карточки подбирается макет и пишется снимок, вендор рисует сцену без текста, `assembleCard`
+собирает карточку нашим сборщиком (`cardFilling` → `renderCard`) точно в размер профиля; кадр
+вендора сверяется с профилем допуском `ASPECT_TOLERANCE` (`output-profile.ts`). После сборки
+`textMismatches` роняет генерацию, если заголовок или описание легли не дословно. Вырез
+(`createCutoutRunner`) зовётся, только если заведены `CUTOUT_ENDPOINT` и `CUTOUT_SECRET`; их нет —
+воркер собирает без выреза. Сборку не деплоить до B7.7.
 
 ## Шаги
 
@@ -184,7 +189,7 @@ M7 меняет.
 - [ ] **B7.5. Функция пересборки `card-rebuild` — бесплатно, без вендора.**
   - **Целевой файл(ы):** `supabase/functions/card-rebuild/index.ts` (новая), тест рядом.
   - **Файлы-контракты:** `card-preview/index.ts` — авторизация вызывающего, квота бесплатных
-    операций (после B18 — `consume_daily_quota`), `limitFromEnv`, `readFonts` · `filling.ts` —
+    операций (`consume_daily_quota`), `limitFromEnv`, `readFonts` · `filling.ts` —
     `cardFilling`, `fromStored` · `render.ts` — `renderCard`, `renderPreview` (обмер
     переполнений).
   - **Границы:** баланс и `ledger` не трогать; вендора не вызывать; снимок макета не менять.
@@ -632,7 +637,7 @@ M7 меняет.
 
 ### Фаза C — приёмка и наполнение
 
-- [ ] **C1. Механическая приёмка на каждой сборке.**
+- [x] **C1. Механическая приёмка на каждой сборке.** Исполнено и сведено 2026-10-03 (`922bcfb`).
   - **Целевой файл(ы):** `supabase/functions/_shared/card-layout/svg.test.ts` (детерминизм
     SVG, K-3), `supabase/functions/_shared/card-layout/text-check.ts` + тест (новые; проверка
     дословности), `generation-worker/index.ts` (вызов проверки после сборки).
@@ -717,10 +722,10 @@ M7 меняет.
 | Сессия | Шаги | Модель · эффорт | Полоса | Ветка | Зависит от | Параллельно с |
 | --- | --- | --- | --- | --- | --- | --- |
 | M7-1 ✓ сведена 2026-10-03 | B7.1 (НЕДЕЛИМ, головной), B7.2, B7.3, B7.4 | Opus · high | доверенная | `claude/m7-card-assembly` | — | M7-2, M7-3 |
-| M7-2 ✓ ADR принят 2026-10-03, ветка ждёт мёрджа | B5.0 (НЕДЕЛИМ) | Opus · high | доверенная | `claude/m7-art-director-contract` | — | M7-1, M7-3 |
+| M7-2 ✓ сведена 2026-10-03 | B5.0 (НЕДЕЛИМ) | Opus · high | доверенная | `claude/m7-art-director-contract` | — | M7-1, M7-3 |
 | M7-3 ✓ сведена 2026-10-03 | B5.1 | Sonnet · medium | консервативная | `feature/m7-frame-space` | — | M7-1, M7-2 |
 | M7-4 | B7.5, B7.6 | Sonnet · high | консервативная | `feature/m7-card-rebuild` | M7-1 сведена; B18 (BACKLOG) сведена | M7-5 |
-| M7-5 | C1 | Sonnet · high | консервативная | `feature/m7-mechanical-acceptance` | M7-1 сведена | M7-4 |
+| M7-5 ✓ сведена 2026-10-03 | C1 | Sonnet · high | консервативная | `feature/m7-mechanical-acceptance` | M7-1 сведена | M7-4 |
 | M7-6 | B7.7 | Sonnet · high | консервативная | `feature/m7-edge-heavy` | M7-1 сведена; держит стенд (bench, test:db) | M7-4; с M7-5 и B18 — по времени (воркер, стенд) |
 | M7-7a | B5.2 | Sonnet · medium | консервативная | `feature/m7-mask-runner` | M7-2 сведена | M7-7b, M7-7m, M7-7c |
 | M7-7m | B5.3 (репозиторий `cutout_runner`) | Sonnet · medium | консервативная | `feature/mask-samples` (в `cutout_runner`) | M7-2 сведена; деплой и включение коробки — владелец | M7-7a, M7-7b, M7-7c |
