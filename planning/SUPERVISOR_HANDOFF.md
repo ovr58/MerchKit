@@ -24,15 +24,22 @@
 
 ## В работе — волна 2
 
-| Сессия | Шаги | Модель · эффорт | Ветка | Дерево | Стенд |
-| --- | --- | --- | --- | --- | --- |
-| M7-7a | B5.2 | Sonnet · medium | `feature/m7-mask-runner` | `.claude/worktrees/agent-ab3c4552e37e4f726` | нет |
-| M7-7b | B5.4, B5.5, B5.11 | Sonnet · high | `feature/m7-director-core` | `.claude/worktrees/agent-a6f2f4c2700f62d0c` | нет |
-| M7-7c | B5.6 | Sonnet · high | `feature/m7-director-provider` | `.claude/worktrees/agent-a86a2e9ddbc44861c` | **держит** |
-| M7-4 | B7.5, B7.6 | Sonnet · high | `feature/m7-card-rebuild` | `.claude/worktrees/m7-card-rebuild` | нет; живую проверку экрана проводит супервизор, когда стенд свободен |
-| M7-7m | B5.3 | Sonnet · medium | `feature/mask-samples` (репозиторий `cutout_runner`) | `D:/AppBusters/projects/cutout_runner-mask-samples` | нет; коробка на паузе, без деплоя |
+Сведены сверх перечисленного в «Состоянии»: M7-7a / B5.2 (`ee8726f`; на вершине `npm test`
+244/244, `lint`, `build`, серверный oxlint — `test:db` не гонялся, стенд держал M7-6, база не
+задета) и M7-7m / B5.3 в локальный `main` `cutout_runner` (`4312734`, `tsc` и 81/81, не запушен).
 
-Тексты шагов исполнителям отданы файлами-вырезками плана на `922bcfb` (scratchpad сессии).
+| Сессия | Шаги | Модель · эффорт | Ветка | Дерево | Состояние |
+| --- | --- | --- | --- | --- | --- |
+| M7-6 | B7.7 | Sonnet · high | `feature/m7-edge-heavy` | `.claude/worktrees/m7-edge-heavy` | идёт, **держит стенд** |
+| M7-7b | B5.4, B5.5, B5.11 | Sonnet · high | `feature/m7-director-core` | `.claude/worktrees/agent-a6f2f4c2700f62d0c` | вернулась, ревью супервизора |
+| M7-7c | B5.6 | Sonnet · high | `feature/m7-director-provider` | `.claude/worktrees/agent-a86a2e9ddbc44861c` | проверена; сводить после M7-7b (импорт `DirectorBrief`), сверить имена полей промпта с `direction.ts` |
+| M7-4 | B7.5, B7.6 | Sonnet · high | `feature/m7-card-rebuild` | `.claude/worktrees/m7-card-rebuild` | проверена тестами (`d702b2c`); до «мёрдж» — живая проверка супервизором на стенде после M7-6 и снимок экрана владельцу |
+
+Приняты супервизором отступления M7-4 от текста B7.5 (при сведении переписать шаг на месте):
+ответ пересборки — `storagePath`, ссылку подписывает клиент (`SignedImage`); пересборка пишет
+введённый список в `generations.product_properties`; режим чтения отдаёт `rebuildable`;
+колонки — `card_title` / `card_description`; в пересборке вызывается `textMismatches` (отказ 500
+до любой записи).
 
 ## Дальше по очереди
 

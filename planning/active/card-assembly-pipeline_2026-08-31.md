@@ -1,6 +1,6 @@
 # Конвейер сборки карточки слоями — веха M7
 
-Status: ACTIVE (с 2026-08-31) · фаза A, шаги B0–B4, B6, B7.1–B7.4, B5.0, B5.1, C1 исполнены; открыты B7.5–B7.7, B5.2–B5.11, C2–C4 · аудит `/validate-plan` 2026-10-03
+Status: ACTIVE (с 2026-08-31) · фаза A, шаги B0–B4, B6, B7.1–B7.4, B5.0–B5.3, C1 исполнены (B5.3 — код, деплой за владельцем); открыты B7.5–B7.7, B5.4–B5.11, C2–C4 · аудит `/validate-plan` 2026-10-03
 
 > Закон дробления — `AGENTS.md` «Изоморфное дробление» и
 > [ADR-T0011](../../docs/adr/T0011-isomorphic-fragmentation-of-plans.md); рубрика модели —
@@ -308,7 +308,7 @@ M7 меняет.
     `focus` у края; `contain` даёт свободные поля; прямой и обратный пересчёт бокса — тождество
     в пределах 0,01.
 
-- [ ] **B5.2. Раннер маски — сэмплы альфы от сервиса выреза.**
+- [x] **B5.2. Раннер маски — сэмплы альфы от сервиса выреза.** Исполнено и сведено 2026-10-03 (`ee8726f`).
   - **Целевой файл(ы):** `supabase/functions/_shared/card-layout/cutout.ts`, `cutout.test.ts`.
   - **Файлы-контракты:** [ADR-0018](../../docs/adr/0018-art-director-layout-patch.md), п. 4 — контракт
     `POST /mask` · `card-layout/occupancy.ts` — тип `MaskSamples` · `createCutoutRunner` в том же
@@ -332,7 +332,10 @@ M7 меняет.
     `authorization` и тело-кадр. `npm test` и `npm run lint` — каждая отдельной командой.
     Мутационная проверка по контракту исполнителя.
 
-- [ ] **B5.3. (Репозиторий `ovr58/cutout_runner`) Операция `POST /mask`.**
+- [x] **B5.3. (Репозиторий `ovr58/cutout_runner`) Операция `POST /mask`.** Код сведён в локальный
+  `main` `cutout_runner` 2026-10-03 (`4312734`, не запушен): маршрут открыт и в `deploy/nginx.conf`,
+  `/mask` делит с `/cutout` зону `limit_req` и очередь. Деплой, `nginx -t` и замер времени — после
+  включения коробки владельцем (блок команд — `deploy/README.md`, «Включение POST /mask»).
   - **Целевой файл(ы):** обработчик операций сервиса и его тесты — тот же модуль, где живёт
     `POST /cutout`.
   - **Файлы-контракты:** ADR-0018 этого репозитория, п. 4 — контракт целиком · ADR-0016 — граница
@@ -727,8 +730,8 @@ M7 меняет.
 | M7-4 | B7.5, B7.6 | Sonnet · high | консервативная | `feature/m7-card-rebuild` | M7-1 сведена; B18 (BACKLOG) сведена | M7-5 |
 | M7-5 ✓ сведена 2026-10-03 | C1 | Sonnet · high | консервативная | `feature/m7-mechanical-acceptance` | M7-1 сведена | M7-4 |
 | M7-6 | B7.7 | Sonnet · high | консервативная | `feature/m7-edge-heavy` | M7-1 сведена; держит стенд (bench, test:db) | M7-4; с M7-5 и B18 — по времени (воркер, стенд) |
-| M7-7a | B5.2 | Sonnet · medium | консервативная | `feature/m7-mask-runner` | M7-2 сведена | M7-7b, M7-7m, M7-7c |
-| M7-7m | B5.3 (репозиторий `cutout_runner`) | Sonnet · medium | консервативная | `feature/mask-samples` (в `cutout_runner`) | M7-2 сведена; деплой и включение коробки — владелец | M7-7a, M7-7b, M7-7c |
+| M7-7a ✓ сведена 2026-10-03 | B5.2 | Sonnet · medium | консервативная | `feature/m7-mask-runner` | M7-2 сведена | M7-7b, M7-7m, M7-7c |
+| M7-7m ✓ код сведён 2026-10-03, деплой — владелец | B5.3 (репозиторий `cutout_runner`) | Sonnet · medium | консервативная | `feature/mask-samples` (в `cutout_runner`) | M7-2 сведена; деплой и включение коробки — владелец | M7-7a, M7-7b, M7-7c |
 | M7-7b | B5.4, B5.5, B5.11 | Sonnet · high | консервативная | `feature/m7-director-core` | M7-2 сведена | M7-7a, M7-7m, M7-7c |
 | M7-7c | B5.6 | Sonnet · high | консервативная | `feature/m7-director-provider` | M7-2 сведена; держит стенд (`test:db`) | M7-7a, M7-7b, M7-7m; со стендом — по времени |
 | M7-7d | B5.7, B5.8 | Sonnet · high | консервативная | `feature/m7-director-worker` | M7-7a, M7-7b, M7-7c сведены; держит стенд | — |
