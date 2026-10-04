@@ -308,7 +308,8 @@ M7 меняет.
     2. Провайдер: `composeCard(input: { product; profile; titleLimit: number | null })`. В
        `aitunnel.ts` фраза «до 100 символов» из `COMPOSE_CARD_SYSTEM_PROMPT` уходит, а
        `composeCardPrompt` добавляет строку `Заголовок — не длиннее ${titleLimit} символов с
-       пробелами: он стоит одной строкой на карточке.`; при `null` — `Заголовок — до 100
+       пробелами: больше в бокс заголовка на карточке не влезет.` (предел — на все строки бокса,
+       одну или две, B32); при `null` — `Заголовок — до 100
        символов.`. Заглушка вход принимает и не меняет поведение.
     3. Воркер: `cardProfile = { ...profile, ...cardAssemblySize(profile) }` вычисляется до
        `composeCard` (сейчас — после `generateImages`); шрифты (`readFonts`) и `measure = await
