@@ -7,7 +7,7 @@
 BRANCH=$(git branch --show-current)
 if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ]; then
   echo "ERROR: Direct commits to '$BRANCH' are not allowed."
-  echo "Create a side branch: git switch -c feature/<slug>"
+  echo "Create a side branch in its own worktree: git worktree add ../<project>-<slug> -b feature/<slug> main"
   echo "  conservative lane (non-Opus): feature/ fix/ exp/"
   echo "  trusted lane (Opus only):     claude/ harvi/"
   exit 1

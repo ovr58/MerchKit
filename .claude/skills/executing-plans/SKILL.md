@@ -51,8 +51,8 @@ sessions surface divergences instead of quietly absorbing them.
    to be true, what you did. A divergence is the pass's *result*; silence about it is its
    failure.
 4. **Which rung of the ladder won** for each structural decision, and what you rejected.
-5. **How it was verified** — the command and its output, not "all green". Separately: **what you
-   did not check**.
+5. **How it was verified** — the command and its output, not "all green". For a step with code — the **red run**: the test command
+   and its failure output before the first code change. Separately: **what you did not check**.
 6. **What was left undone and why.** Trimming scope is the supervisor's call, not yours.
 7. **Numbers and identifiers taken** — markers, backlog ids, ADRs, migrations. Exactly what
    collides if you stay silent. Sequences often have **two carriers** (repository and, if the
