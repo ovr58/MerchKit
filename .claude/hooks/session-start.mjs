@@ -1,4 +1,6 @@
-// SessionStart: подмешивает в контекст правила, у которых нет иного носителя.
+// SessionStart и SubagentStart: подмешивает в контекст правила, у которых нет иного носителя.
+// Субагент (`Agent`, исполнитель плана) — не сессия: SessionStart на нём не срабатывает, поэтому
+// тот же скрипт стоит и под SubagentStart, а имя события в ответе берётся из входа хука.
 // Почему node: любой инициализированный из шаблона репозиторий — Node/TS, node есть всегда.
 // Почему .mjs, а не .js: расширение `.mjs` — сигнал ESM для Node независимо от поля "type" в
 // package.json конкретного проекта, так что хук не зависит от того, как настроен модульный
@@ -10,6 +12,13 @@ import { onContour } from './contour-own-worktree.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const text = readFileSync(join(here, 'session-start.md'), 'utf8');
+
+// Харнесс требует, чтобы `hookEventName` совпадал с событием, на котором хук вызван. Пустой или
+// битый вход (ручной запуск) — SessionStart, как было до SubagentStart.
+let eventName = 'SessionStart';
+try {
+  eventName = JSON.parse(readFileSync(0, 'utf8')).hook_event_name || eventName;
+} catch {}
 
 // Полоса доверия зависит от модели (ADR-0002), и канон сам признаёт: машинно это не проверяется,
 // держится на самообъявлении сессии. Один случай всё же проверяется — сторонний
@@ -39,6 +48,6 @@ const contourNotice = onContour()
 
 process.stdout.write(
   JSON.stringify({
-    hookSpecificOutput: { hookEventName: 'SessionStart', additionalContext: text + contourNotice },
+    hookSpecificOutput: { hookEventName: eventName, additionalContext: text + contourNotice },
   }),
 );
