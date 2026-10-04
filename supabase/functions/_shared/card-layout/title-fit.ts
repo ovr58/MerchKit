@@ -158,6 +158,24 @@ export function titleFits(
 }
 
 /**
+ * Влезает ли в бокс первое слово заголовка: слово не переносится и не рвётся, поэтому если оно
+ * шире бокса, ни перенос, ни обрезка (`fitTitle` оставит его целиком) не спасут строку. Подбор
+ * макета (`selectCardLayout`) по этому признаку обходит такой макет. У макета без гнезда
+ * `title` и у пустого заголовка влезает всегда.
+ */
+export function firstWordFits(
+  layout: CardLayout,
+  size: Size,
+  fonts: FontFamilies,
+  measure: Measure,
+  title: string,
+): boolean {
+  const word = title.split(/\s+/).find((part) => part !== '')
+
+  return word === undefined || lineFits(layout, size, fonts, measure)(word)
+}
+
+/**
  * Содержимое с заголовком, разложенным на строки бокса: в гнезде `title` лежат строки
  * переноса вместо одной. Идемпотентна: строки склеиваются и переносятся заново, получаются
  * те же. Макет без гнезда `title` и пустой заголовок возвращаются как есть.

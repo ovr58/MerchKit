@@ -18,13 +18,14 @@
 
 import { callDatabase, callerId, CORS_HEADERS, failure, json, selectFromDatabase } from '../_shared/edge.ts'
 import { previewFilling, type PreviewProperty } from '../_shared/card-layout/preview.ts'
-import { renderPreview } from '../_shared/card-layout/render.ts'
+import { measureText, renderPreview } from '../_shared/card-layout/render.ts'
 import {
   layoutQueries,
   selectCardLayout,
   type LayoutCandidate,
   type LayoutSelectionInput,
 } from '../_shared/card-layout/selection.ts'
+import { firstWordFits } from '../_shared/card-layout/title-fit.ts'
 import type { FontFamilies } from '../_shared/card-layout/svg.ts'
 import type { CardLayout, FontRole } from '../_shared/card-layout/types.ts'
 
@@ -113,23 +114,26 @@ Deno.serve(async (request: Request): Promise<Response> => {
 
     const properties = readProperties(body?.properties)
     const hasLogo = body?.hasLogo === true
-    const selected = await selectLayout({
-      categoryId,
-      marketplaceId,
-      presetId: text(body?.presetId) === '' ? null : text(body?.presetId),
-      hasLogo,
-      propertyCount: properties.length,
-      targetAspectW: profile.aspect_w,
-      targetAspectH: profile.aspect_h,
-    })
-
-    const filling = previewFilling(selected.layout, {
-      productTitle: text(body?.productTitle),
-      properties,
-      hasLogo,
-    })
-
+    const productTitle = text(body?.productTitle)
     const size = previewSize(profile)
+    // Макет, куда первое слово заголовка не влезает, подбор обходит (B32). Тот же вопрос задаёт
+    // воркер — превью обязано назвать макет, который соберётся после оплаты.
+    const measure = await measureText()
+    const selected = await selectLayout(
+      {
+        categoryId,
+        marketplaceId,
+        presetId: text(body?.presetId) === '' ? null : text(body?.presetId),
+        hasLogo,
+        propertyCount: properties.length,
+        targetAspectW: profile.aspect_w,
+        targetAspectH: profile.aspect_h,
+      },
+      (layout) => firstWordFits(layout, size, fonts, measure, productTitle),
+    )
+
+    const filling = previewFilling(selected.layout, { productTitle, properties, hasLogo })
+
     const rendered = await renderPreview(selected.layout, filling.content, size, fonts)
 
     return json({
@@ -182,7 +186,10 @@ async function readFonts(): Promise<FontFamilies> {
  * Тот же подбор, что у воркера (шаг B2), и намеренно с тем же вводом: макет, показанный до
  * оплаты, обязан совпасть с тем, который соберётся после неё.
  */
-async function selectLayout(input: LayoutSelectionInput): Promise<LayoutCandidate & { title: string }> {
+async function selectLayout(
+  input: LayoutSelectionInput,
+  accepts: (layout: CardLayout) => boolean,
+): Promise<LayoutCandidate & { title: string }> {
   const queries = layoutQueries(input.categoryId)
   const [layouts, fallbacks] = await Promise.all([
     selectFromDatabase(queries.candidates),
@@ -193,7 +200,7 @@ async function selectLayout(input: LayoutSelectionInput): Promise<LayoutCandidat
   if (fallback === undefined) throw new Error('В библиотеке нет универсального макета')
 
   const titles = new Map([...(layouts as LayoutRow[]), fallback].map((row) => [row.id, row.title]))
-  const selected = selectCardLayout((layouts as LayoutRow[]).map(toCandidate), toCandidate(fallback), input)
+  const selected = selectCardLayout((layouts as LayoutRow[]).map(toCandidate), toCandidate(fallback), input, accepts)
 
   return { ...selected, title: titles.get(selected.id) ?? selected.id }
 }

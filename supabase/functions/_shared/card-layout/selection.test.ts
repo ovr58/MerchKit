@@ -224,6 +224,50 @@ describe('Server-side card-layout selection (M7 B2)', () => {
   })
 })
 
+describe('Selection skips layouts whose title box cannot take the seller title (B32)', () => {
+  const rejects = (...ids: string[]) => (layout: { id: string }) => !ids.includes(layout.id)
+
+  it('drops a rejected layout even when it scores higher than the rest', () => {
+    const library = [candidate('best-but-narrow', { propSlots: 2, presetId: INPUT.presetId }), candidate('plain')]
+
+    expect(selectCardLayout(library, candidate('fallback'), INPUT).id).toBe('best-but-narrow')
+    expect(selectCardLayout(library, candidate('fallback'), INPUT, rejects('best-but-narrow')).id).toBe('plain')
+  })
+
+  it('keeps selecting as before when every category-and-aspect match is rejected', () => {
+    const library = [candidate('a-layout', { propSlots: 2 }), candidate('b-layout')]
+    const everyone = () => false
+
+    const withFilter = selectCardLayout(library, candidate('fallback', { isFallback: true }), INPUT, everyone)
+
+    expect(withFilter).toEqual(selectCardLayout(library, candidate('fallback', { isFallback: true }), INPUT))
+    expect(withFilter.isFallback).toBe(false)
+  })
+
+  it('does not ask about the universal fallback: it answers an empty hard filter, not a rejection', () => {
+    const fallback = candidate('universal-fallback', { categoryId: null, isFallback: true })
+
+    const selected = selectCardLayout([candidate('wrong-category', { categoryId: 'food' })], fallback, INPUT, () => false)
+
+    expect(selected).toMatchObject({ id: 'universal-fallback', isFallback: true })
+  })
+
+  it('gives the preview and the paid run the same layout for the same filter', () => {
+    const library = [candidate('a-layout', { propSlots: 2 }), candidate('b-layout', { propSlots: 2 })]
+    const accepts = rejects('a-layout')
+
+    expect(selectCardLayout(library, candidate('fallback'), INPUT, accepts).id).toBe('b-layout')
+    expect(selectCardLayout([...library].reverse(), candidate('fallback'), INPUT, accepts).id).toBe('b-layout')
+  })
+
+  it('asks the same question in the worker and in the preview', () => {
+    for (const file of ['../../generation-worker/index.ts', '../../card-preview/index.ts']) {
+      const source = readFileSync(new URL(file, import.meta.url), 'utf8')
+      expect(source, file).toContain('firstWordFits(')
+    }
+  })
+})
+
 describe('Selection queries keep heavy layouts out of the library read (M7 B7.7)', () => {
   it('filters edge-heavy layouts out of both the candidates and the fallback query', () => {
     const { candidates, fallback } = layoutQueries('clothing')

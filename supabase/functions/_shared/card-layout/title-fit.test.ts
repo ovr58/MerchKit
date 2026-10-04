@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { textMismatches } from './text-check.ts'
 import {
+  firstWordFits,
   fitTitle,
   titleCharLimit,
   titleFits,
@@ -225,6 +226,32 @@ describe('Влезает ли заголовок в бокс на две стр�
 
     expect(fitTitle(title, titleFits(layoutWithTitleFor(12, 2), SIZE, FONTS, byLength))).toBe('Термокружка стальная')
     expect(fitTitle(title, titleFits(layoutWithTitleFor(12, 1), SIZE, FONTS, byLength))).toBe('Термокружка')
+  })
+})
+
+describe('Влезает ли первое слово заголовка в бокс', () => {
+  const fits = (layout: CardLayout, title: string) => firstWordFits(layout, SIZE, FONTS, byLength, title)
+
+  it('влезает: слово не шире бокса, остальной заголовок не важен', () => {
+    expect(fits(layoutWithTitleFor(12), 'Куртка мужская зимняя тёплая очень длинная')).toBe(true)
+  })
+
+  it('влезает ровно по ширине бокса и не влезает на знак длиннее', () => {
+    expect(fits(layoutWithTitleFor(6), 'Куртка')).toBe(true)
+    expect(fits(layoutWithTitleFor(6), 'Куртки!')).toBe(false)
+  })
+
+  it('не влезает: первое слово шире бокса, даже если бокс на две строки', () => {
+    expect(fits(layoutWithTitleFor(10, 2), 'Электрочайникпрофессиональный 2 л')).toBe(false)
+  })
+
+  it('смотрит только на первое слово, а не на самое длинное', () => {
+    expect(fits(layoutWithTitleFor(10), 'Куртка Электрочайникпрофессиональный')).toBe(true)
+  })
+
+  it('у макета без гнезда заголовка и у пустого заголовка влезает всегда', () => {
+    expect(fits(WITHOUT_TITLE, 'Электрочайникпрофессиональный')).toBe(true)
+    expect(fits(layoutWithTitleFor(6), '   ')).toBe(true)
   })
 })
 

@@ -47,18 +47,27 @@ export function layoutQueries(categoryId: string): { candidates: string; fallbac
 /**
  * Selects from the server-owned layout library. Capacity, logo use, and aspect ratio are
  * deliberately calculated from the layout snapshot, never from duplicating database columns.
+ *
+ * `accepts` drops layouts the seller's content cannot live in (B32: the first word of the title
+ * is wider than the title box). It needs the rasterizer's measurements, so the caller builds it
+ * and this module stays pure. When it rejects every category-and-aspect match, the selection is
+ * the one it would have been without it: a card is never refused over a title.
  */
 export function selectCardLayout(
   candidates: LayoutCandidate[],
   fallback: LayoutCandidate,
   input: LayoutSelectionInput,
+  accepts: (layout: CardLayout) => boolean = () => true,
 ): SelectedCardLayout {
-  const scored = candidates
-    .filter((candidate) =>
-      candidate.categoryId === input.categoryId &&
-      hasMatchingAspect(candidate.layout, input.targetAspectW, input.targetAspectH),
-    )
-    .map((candidate) => ({ ...candidate, score: score(candidate, input) }))
+  const matching = candidates.filter((candidate) =>
+    candidate.categoryId === input.categoryId &&
+    hasMatchingAspect(candidate.layout, input.targetAspectW, input.targetAspectH),
+  )
+  const accepted = matching.filter((candidate) => accepts(candidate.layout))
+  const scored = (accepted.length > 0 ? accepted : matching).map((candidate) => ({
+    ...candidate,
+    score: score(candidate, input),
+  }))
 
   // The universal layout is the answer to an empty filter, not to a zero score: its own aspect
   // ratio is never checked, so any category-and-aspect match beats it even at zero.

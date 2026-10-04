@@ -49,7 +49,7 @@ import { measureText, renderCard } from '../_shared/card-layout/render.ts'
 import { layoutQueries, layoutSnapshot, selectCardLayout, type LayoutCandidate } from '../_shared/card-layout/selection.ts'
 import type { FontFamilies } from '../_shared/card-layout/svg.ts'
 import { textMismatches } from '../_shared/card-layout/text-check.ts'
-import { fitTitle, titleCharLimit, titleFits } from '../_shared/card-layout/title-fit.ts'
+import { firstWordFits, fitTitle, titleCharLimit, titleFits } from '../_shared/card-layout/title-fit.ts'
 import type { CardContent, CardLayout, FontRole, ImageRef } from '../_shared/card-layout/types.ts'
 import type { GenerationKind } from '../_shared/pricing.ts'
 
@@ -218,8 +218,18 @@ async function run(generation: GenerationRow, usage: ProviderUsage[]): Promise<s
 
   let layout: CardLayout | null = null
 
-  if (generation.kind === 'card') {
-    const selection = await selectLayout(generation, profile)
+  // Размер собранной карточки — `cardAssemblySize`: пока сборка в изоляте, большой профиль
+  // (Ozon «Одежда», «Аксессуары») собирается в порог площадки, а не в целевой кадр. Снять
+  // при переезде сборки на коробку (ADR-0015), решение Q-2 шага B7.7. Нужен ещё до подбора
+  // макета (B32: первое слово заголовка должно влезать в бокс) и до текстов: заголовок
+  // пишется под бокс макета в этом размере (B7.8).
+  const cardProfile: OutputProfile = { ...profile, ...cardAssemblySize(profile) }
+  const fonts = generation.kind === 'card' ? await readFonts() : null
+
+  if (generation.kind === 'card' && fonts !== null) {
+    const measure = await measureText()
+    const selection = await selectLayout(generation, profile, (candidate) =>
+      firstWordFits(candidate, cardProfile, fonts, measure, generation.product_title))
     const snapshot = layoutSnapshot(generation.id, selection)
     await callDatabase('snapshot_generation_layout', {
       target_generation: snapshot.generationId,
@@ -243,13 +253,6 @@ async function run(generation: GenerationRow, usage: ProviderUsage[]): Promise<s
   )
 
   const provider = createProvider(undefined, (entry) => usage.push(entry))
-
-  // Размер собранной карточки — `cardAssemblySize`: пока сборка в изоляте, большой профиль
-  // (Ozon «Одежда», «Аксессуары») собирается в порог площадки, а не в целевой кадр. Снять
-  // при переезде сборки на коробку (ADR-0015), решение Q-2 шага B7.7. Нужен ещё до текстов:
-  // заголовок пишется под бокс макета в этом размере (B7.8).
-  const cardProfile: OutputProfile = { ...profile, ...cardAssemblySize(profile) }
-  const fonts = layout !== null ? await readFonts() : null
 
   // Тексты карточки — вторая независимая операция, и её отказ равносилен отказу целиком
   // (US-E4). Нужны дважды: в поля `title_of_card` / `description_of_card` (FR-07 требует их
@@ -547,7 +550,11 @@ function readProperties(value: unknown[]): { label: string; value: string }[] {
   })
 }
 
-async function selectLayout(generation: GenerationRow, profile: OutputProfile) {
+async function selectLayout(
+  generation: GenerationRow,
+  profile: OutputProfile,
+  accepts: (layout: CardLayout) => boolean,
+) {
   const queries = layoutQueries(generation.category_id)
   const [layouts, fallbacks] = await Promise.all([
     selectFromDatabase(queries.candidates),
@@ -572,6 +579,7 @@ async function selectLayout(generation: GenerationRow, profile: OutputProfile) {
       targetAspectW: profile.aspectW,
       targetAspectH: profile.aspectH,
     },
+    accepts,
   )
 }
 
