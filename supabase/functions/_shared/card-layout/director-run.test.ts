@@ -12,6 +12,7 @@ import {
   byLength,
   frame,
   layoutOf,
+  moduleGroup,
   productMap,
   text,
 } from './direction.fixtures.ts'
@@ -110,6 +111,24 @@ describe('runDirector (ADR-0018, п. 3 и 5)', () => {
       complaints: [],
       icons: ICONS,
     })
+  })
+
+  it('номера свойств в постановке — номера гнёзд макета, а не порядок продавца (B28)', async () => {
+    // Гнездо 0 осталось без подходящего свойства, «Вес» продавца лёг в гнездо 1.
+    const layers = [
+      ...baseLayers(),
+      moduleGroup({ x: 0.05, y: 0.82, w: 0.3, h: 0.1 }, 1, 'mod-1'),
+    ]
+    const content = { ...CONTENT, props: [{}, { label: 'Вес', value: '1 кг' }] }
+    const { ask, briefs } = asker({})
+
+    await runDirector(
+      input({ layout: layoutOf(layers), content, properties: [{ label: 'Вес', value: '1 кг' }], ask }),
+    )
+
+    expect(briefs[0].properties).toEqual([{ label: '', value: '' }, { label: 'Вес', value: '1 кг' }])
+    // Иконку для пустого гнезда не просят: модулю нечего подписывать.
+    expect(briefs[0].iconProps).toEqual([1])
   })
 
   it('годная иконка и негодный бокс заголовка: повтор с возражениями, итог собран из двух ответов', async () => {

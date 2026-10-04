@@ -20,6 +20,7 @@ import {
   usesCutout,
   usesLogo,
 } from './features.ts'
+import { arrangeProps } from './prop-slots.ts'
 import type { CardContent, CardLayout, CardProp, ImageRef, TextSlot } from './types.ts'
 
 export type PreviewProperty = { label: string; value: string }
@@ -36,7 +37,7 @@ export type PreviewFilling = {
   content: CardContent
   /** Сколько характеристик макет умеет показать. */
   capacity: number
-  /** Хвост списка сверх ёмкости — то, чего в кадре не будет. */
+  /** Свойства без гнезда — хвост сверх ёмкости и не подошедшие по смыслу: в кадре их не будет. */
   cut: PreviewProperty[]
   /** Гнёзда, заполненные рыбой: превью называет их человеку, чтобы не выдать за настоящее. */
   stubbed: TextSlot[]
@@ -77,6 +78,9 @@ export function previewFilling(layout: CardLayout, input: PreviewInput): Preview
     (property) => property.label.trim() !== '' || property.value.trim() !== '',
   )
 
+  // Раскладка та же, что у сборки: гнёзда со смыслом берут свойства по подписи (B28).
+  const { placed, cut } = arrangeProps(layout, properties)
+
   const title = input.productTitle.trim()
   const stubbed: TextSlot[] = []
   const texts: Partial<Record<TextSlot, string[]>> = {}
@@ -100,13 +104,13 @@ export function previewFilling(layout: CardLayout, input: PreviewInput): Preview
     cutout: usesCutout(layout) ? STUB_IMAGE : undefined,
     logo: input.hasLogo && usesLogo(layout) ? STUB_LOGO : undefined,
     texts,
-    props: properties.slice(0, capacity).map(toProp),
+    props: placed.map((property) => (property === undefined ? {} : toProp(property))),
     swatches: Array.from({ length: swatchCount(layout) }, (_, index) => ({
       color: STUB_SWATCHES[index % STUB_SWATCHES.length],
     })),
   }
 
-  return { content, capacity, cut: properties.slice(capacity), stubbed }
+  return { content, capacity, cut, stubbed }
 }
 
 /** Иконок в превью нет: базу иконок разбирает арт-директор (B5), и до него их выбирать некому. */

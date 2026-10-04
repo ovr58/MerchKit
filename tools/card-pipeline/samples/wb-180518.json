@@ -42,7 +42,10 @@
         },
         "bind": {
           "kind": "prop",
-          "index": 1
+          "index": 1,
+          "meaning": [
+            "мощн"
+          ]
         },
         "children": [
           {

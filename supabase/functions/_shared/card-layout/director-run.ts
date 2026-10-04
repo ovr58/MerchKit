@@ -118,7 +118,16 @@ export async function runDirector(input: DirectorInput): Promise<DirectorResult>
   const iconRefs: Record<string, ImageRef> = {}
   let reason: string | undefined
   let calls = 0
-  let request: Request = { mode, fillSlots: directedBound, iconPropsAsked: iconProps(layout), complaints: [] }
+  // Номера свойств в постановке — номера гнёзд макета, а значит, и `content.props`: гнёзда со
+  // смыслом (B28) берут свойства по подписи, и порядок продавца с номерами гнёзд уже не совпадает.
+  // Модель ответила бы «иконка свойства 1» про то свойство, которое видит под номером 1.
+  const slotProperties = content.props.map((prop) => ({ label: prop.label ?? '', value: prop.value ?? '' }))
+  // Пустому гнезду иконку не заказывают: слой модуля снят, подписывать нечего.
+  const filledIconProps = iconProps(layout).filter((index) => {
+    const prop = content.props[index]
+    return prop !== undefined && (prop.label !== undefined || prop.value !== undefined)
+  })
+  let request: Request = { mode, fillSlots: directedBound, iconPropsAsked: filledIconProps, complaints: [] }
 
   for (let attempt = 1; attempt <= DIRECTOR_ATTEMPTS; attempt += 1) {
     calls += 1
@@ -130,7 +139,7 @@ export async function runDirector(input: DirectorInput): Promise<DirectorResult>
           mode: request.mode,
           layout,
           texts: input.texts,
-          properties: input.properties,
+          properties: slotProperties,
           wishes: input.wishes,
           canvasMap,
           icons: input.icons,

@@ -367,7 +367,10 @@
         "bind": {
           "kind": "prop",
           "index": 3,
-          "part": "value"
+          "part": "value",
+          "meaning": [
+            "капсул"
+          ]
         },
         "lines": [
           [
@@ -406,7 +409,14 @@
         },
         "bind": {
           "kind": "prop",
-          "index": 4
+          "index": 4,
+          "meaning": [
+            "дозиров",
+            "доза",
+            "дозы",
+            "прием",
+            "суточн"
+          ]
         },
         "children": [
           {

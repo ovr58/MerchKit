@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { cardFilling, fromStored, imageBytes, imageRef, storedContent } from './filling.ts'
 import type { CardLayout, Layer } from './types.ts'
+import { resolveLayout } from './validate.ts'
 
 /**
  * Наполнение макета на настоящей сборке (шаг B7.2).
@@ -135,5 +136,49 @@ describe('Наполнение макета на сборке (M7 B7.2)', () => 
     expect(imageBytes(IMAGE)).toEqual(PNG)
     expect(IMAGE).toMatchObject({ width: 1, height: 1 })
     expect(IMAGE.dataUri.startsWith('data:image/png;base64,')).toBe(true)
+  })
+
+  describe('гнёзда со смыслом (B28)', () => {
+    function meaningSlot(index: number, meaning: string[]): Layer {
+      return {
+        id: `slot-${index}`,
+        type: 'text',
+        z: index + 10,
+        box,
+        style,
+        bind: { kind: 'prop', index, part: 'value', meaning },
+      }
+    }
+
+    const SPECS = {
+      ...INPUT,
+      properties: [
+        { label: 'Вес', value: '45 г' },
+        { label: 'Объём памяти', value: '256 ГБ' },
+        { label: 'Цвет', value: 'Чёрный' },
+      ],
+    }
+
+    it('раскладывает по подписи, а не по номеру; не занятое гнездом идёт в cut', () => {
+      const layout = layoutOf([meaningSlot(0, ['гаранти']), meaningSlot(1, ['памят'])])
+
+      const filling = cardFilling(layout, SPECS)
+
+      expect(filling.content.props).toEqual([{}, { label: 'Объём памяти', value: '256 ГБ' }])
+      expect(filling.cut).toEqual([
+        { label: 'Вес', value: '45 г' },
+        { label: 'Цвет', value: 'Чёрный' },
+      ])
+    })
+
+    it('гнездо без подходящего свойства снимается правилом K-3, а не берёт чужое', () => {
+      const layout = layoutOf([meaningSlot(0, ['гаранти']), meaningSlot(1, ['памят'])])
+      const { content } = cardFilling(layout, SPECS)
+
+      const { layers, dropped } = resolveLayout(layout, content)
+
+      expect(layers.map((placed) => placed.layer.id)).toEqual(['slot-1'])
+      expect(dropped.map((layer) => layer.id)).toEqual(['slot-0'])
+    })
   })
 })

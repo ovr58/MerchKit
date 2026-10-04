@@ -270,7 +270,10 @@
         },
         "bind": {
           "kind": "prop",
-          "index": 2
+          "index": 2,
+          "meaning": [
+            "гаранти"
+          ]
         },
         "children": [
           {

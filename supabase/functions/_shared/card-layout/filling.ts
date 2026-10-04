@@ -16,7 +16,8 @@
  */
 
 import { mimeOf, readImageInfo } from '../image.ts'
-import { propertyCapacity, usesCutout, usesLogo } from './features.ts'
+import { usesCutout, usesLogo } from './features.ts'
+import { arrangeProps } from './prop-slots.ts'
 import type { DownloadFile } from './renderer-assets.ts'
 import type { CardContent, CardLayout, CardProp, ImageRef } from './types.ts'
 
@@ -33,7 +34,8 @@ export type FillingInput = {
 
 export type CardFilling = {
   content: CardContent
-  /** Хвост списка сверх ёмкости макета — того, чего в кадре не будет. */
+  /** Свойства, которым в макете не нашлось гнезда: хвост сверх ёмкости и те, что не подошли
+   *  ни одному гнезду по смыслу, — то, чего в кадре не будет. */
   cut: CardProp[]
 }
 
@@ -54,10 +56,12 @@ const RESULTS_BUCKET = 'results'
 const UPLOADS_BUCKET = 'uploads'
 
 export function cardFilling(layout: CardLayout, input: FillingInput): CardFilling {
-  const capacity = propertyCapacity(layout)
   const properties = input.properties
     .map(toProp)
     .filter((property) => property.label !== undefined || property.value !== undefined)
+  // Гнездо со смыслом берёт свойство по подписи (B28); гнезду, которому не нашлось, — пустое
+  // место, и K-3 снимет его слой.
+  const { placed, cut } = arrangeProps(layout, properties)
 
   return {
     content: {
@@ -67,10 +71,10 @@ export function cardFilling(layout: CardLayout, input: FillingInput): CardFillin
       cutout: input.cutout !== null && usesCutout(layout) ? input.cutout : undefined,
       logo: input.logo !== null && usesLogo(layout) ? input.logo : undefined,
       texts: { title: [input.title], body: [input.description] },
-      props: properties.slice(0, capacity),
+      props: placed.map((property) => property ?? {}),
       swatches: [],
     },
-    cut: properties.slice(capacity),
+    cut,
   }
 }
 

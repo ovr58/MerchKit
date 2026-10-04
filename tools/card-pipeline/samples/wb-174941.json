@@ -114,7 +114,10 @@
         },
         "bind": {
           "kind": "prop",
-          "index": 0
+          "index": 0,
+          "meaning": [
+            "температур"
+          ]
         },
         "children": [
           {

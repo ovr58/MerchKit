@@ -183,7 +183,10 @@
         },
         "bind": {
           "kind": "prop",
-          "index": 4
+          "index": 4,
+          "meaning": [
+            "гаранти"
+          ]
         },
         "children": [
           {
@@ -392,7 +395,10 @@
         },
         "bind": {
           "kind": "prop",
-          "index": 0
+          "index": 0,
+          "meaning": [
+            "мощн ва"
+          ]
         },
         "children": [
           {
@@ -513,7 +519,10 @@
         },
         "bind": {
           "kind": "prop",
-          "index": 1
+          "index": 1,
+          "meaning": [
+            "мощн вт"
+          ]
         },
         "children": [
           {

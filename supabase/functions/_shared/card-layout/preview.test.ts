@@ -140,4 +140,27 @@ describe('Наполнение превью карточки (M7 B6)', () => {
     expect(filling.content.props).toEqual([{ label: 'Сезон', value: 'Зима' }])
     expect(filling.cut).toEqual([])
   })
+
+  it('гнёзда со смыслом берут свойство по подписи (B28), остальное называет отсечённым', () => {
+    const slot = (index: number, meaning: string[]): Layer => ({
+      id: `slot-${index}`,
+      type: 'text',
+      z: index + 1,
+      box,
+      style,
+      bind: { kind: 'prop', index, part: 'value', meaning },
+    })
+
+    const filling = previewFilling(layoutOf([slot(0, ['гаранти']), slot(1, ['сезон'])]), {
+      productTitle: 'Куртка',
+      properties: PROPERTIES,
+      hasLogo: false,
+    })
+
+    expect(filling.content.props).toEqual([{}, { label: 'Сезон', value: 'Зима' }])
+    expect(filling.cut).toEqual([
+      { label: 'Материал', value: 'Мембрана' },
+      { label: 'Утеплитель', value: 'Синтепон' },
+    ])
+  })
 })

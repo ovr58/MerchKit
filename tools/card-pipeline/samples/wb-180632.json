@@ -285,7 +285,10 @@
         "bind": {
           "kind": "prop",
           "index": 0,
-          "part": "value"
+          "part": "value",
+          "meaning": [
+            "sim"
+          ]
         },
         "lines": [
           [
@@ -322,7 +325,10 @@
         },
         "bind": {
           "kind": "prop",
-          "index": 1
+          "index": 1,
+          "meaning": [
+            "памят"
+          ]
         },
         "children": [
           {
@@ -432,7 +438,10 @@
         },
         "bind": {
           "kind": "prop",
-          "index": 2
+          "index": 2,
+          "meaning": [
+            "гаранти"
+          ]
         },
         "children": [
           {
