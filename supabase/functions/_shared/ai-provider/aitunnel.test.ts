@@ -214,3 +214,70 @@ describe('Операция directCard', () => {
     })
   })
 })
+
+/**
+ * `composeCard` и предел заголовка (шаг B7.8, решение Q-4): модель пишет заголовок под бокс
+ * макета, а не «до 100 символов». Проверяется то, что уходит пользовательским телом запроса.
+ */
+describe('Операция composeCard: предел заголовка', () => {
+  const profile: ProviderProfile = {
+    name: 'aitunnel',
+    baseUrl: 'https://gateway.test/v1',
+    imageModel: 'image-model',
+    imageModelFallback: null,
+    imageSizes: null,
+    imageSizesFallback: null,
+    textModel: 'text-model',
+  }
+
+  const product = {
+    title: 'Термокружка',
+    description: '',
+    categoryTitle: 'Посуда',
+    presetPrompt: null,
+    presetTitle: null,
+    wishes: '',
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  async function composeWith(titleLimit: number | null): Promise<{ system: string; user: string }> {
+    vi.stubGlobal('Deno', { env: { get: () => 'test-key' } })
+    const fetchMock = vi.fn(async () =>
+      new Response(
+        JSON.stringify({
+          choices: [{ message: { content: JSON.stringify({ title: 'Термокружка', description: 'Держит тепло.' }) } }],
+          usage: { cost_rub: 0.01 },
+        }),
+        { status: 200 },
+      ))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await createAitunnelProvider(profile).composeCard({ product, profile: clothing, titleLimit })
+
+    const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
+    const { messages } = JSON.parse(init.body as string)
+    return { system: messages[0].content, user: messages[1].content }
+  }
+
+  it('называет предел макета в знаках с пробелами', async () => {
+    const { user } = await composeWith(12)
+
+    expect(user).toContain('не длиннее 12 символов')
+  })
+
+  it('без предела — прежние «до 100 символов»', async () => {
+    const { user } = await composeWith(null)
+
+    expect(user).toContain('до 100')
+    expect(user).not.toContain('не длиннее')
+  })
+
+  it('общей фразы «до 100 символов» в системной постановке больше нет: она спорила бы с пределом', async () => {
+    const { system } = await composeWith(12)
+
+    expect(system).not.toContain('100')
+  })
+})

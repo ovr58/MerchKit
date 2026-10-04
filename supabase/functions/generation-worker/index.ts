@@ -49,6 +49,7 @@ import { measureText, renderCard } from '../_shared/card-layout/render.ts'
 import { layoutQueries, layoutSnapshot, selectCardLayout, type LayoutCandidate } from '../_shared/card-layout/selection.ts'
 import type { FontFamilies } from '../_shared/card-layout/svg.ts'
 import { textMismatches } from '../_shared/card-layout/text-check.ts'
+import { fitTitle, titleCharLimit, titleFits } from '../_shared/card-layout/title-fit.ts'
 import type { CardContent, CardLayout, FontRole, ImageRef } from '../_shared/card-layout/types.ts'
 import type { GenerationKind } from '../_shared/pricing.ts'
 
@@ -243,18 +244,21 @@ async function run(generation: GenerationRow, usage: ProviderUsage[]): Promise<s
 
   const provider = createProvider(undefined, (entry) => usage.push(entry))
 
+  // Размер собранной карточки — `cardAssemblySize`: пока сборка в изоляте, большой профиль
+  // (Ozon «Одежда», «Аксессуары») собирается в порог площадки, а не в целевой кадр. Снять
+  // при переезде сборки на коробку (ADR-0015), решение Q-2 шага B7.7. Нужен ещё до текстов:
+  // заголовок пишется под бокс макета в этом размере (B7.8).
+  const cardProfile: OutputProfile = { ...profile, ...cardAssemblySize(profile) }
+  const fonts = layout !== null ? await readFonts() : null
+
   // Тексты карточки — вторая независимая операция, и её отказ равносилен отказу целиком
   // (US-E4). Нужны дважды: в поля `title_of_card` / `description_of_card` (FR-07 требует их
   // и отдельно от изображения) и в гнёзда макета на сборке. Модели изображений они не
   // передаются — сцену она рисует без текста (ADR-0012). Идут ДО изображения, потому что их
   // отказ так не стоит уже оплаченного кадра.
-  const card = generation.kind === 'card'
-    ? await provider.composeCard({ product, profile })
+  const card = layout !== null && fonts !== null
+    ? await composeFittedCard({ generation, provider, product, profile, layout, size: cardProfile, fonts })
     : null
-
-  if (card !== null && (card.title.trim() === '' || card.description.trim() === '')) {
-    throw new Error('Провайдер не вернул тексты карточки')
-  }
 
   const images = await provider.generateImages({
     photos,
@@ -270,12 +274,8 @@ async function run(generation: GenerationRow, usage: ProviderUsage[]): Promise<s
 
   // У карточки пользователю уходит не кадр вендора, а собранный по макету файл; у фото —
   // кадр как есть. Сверка с профилем — по тому, что уходит.
-  // Размер собранной карточки — `cardAssemblySize`: пока сборка в изоляте, большой профиль
-  // (Ozon «Одежда», «Аксессуары») собирается в порог площадки, а не в целевой кадр. Снять
-  // при переезде сборки на коробку (ADR-0015), решение Q-2 шага B7.7.
-  const cardProfile: OutputProfile = { ...profile, ...cardAssemblySize(profile) }
-  const assembly = layout !== null && card !== null
-    ? await assembleCard(generation, layout, card, images[0].bytes, cardProfile, provider)
+  const assembly = layout !== null && card !== null && fonts !== null
+    ? await assembleCard(generation, layout, card, images[0].bytes, cardProfile, fonts, provider)
     : null
   const results = assembly !== null ? [assembly.bytes] : images.map((image) => image.bytes)
 
@@ -320,6 +320,42 @@ async function run(generation: GenerationRow, usage: ProviderUsage[]): Promise<s
   return 'done'
 }
 
+/**
+ * Тексты карточки с заголовком под бокс макета (шаг B7.8, решение Q-4).
+ *
+ * Модели говорят предел в знаках, но верят ему не на слово: ответ проверяется обмером тем же
+ * растеризатором, что рисует карточку, и при переполнении режется по словам. Карточку из-за
+ * длины заголовка не отказываем, шрифт не сжимаем. Обрезанный заголовок идёт и в
+ * `title_of_card`, и в гнездо макета — C1 сравнивает кадр именно с ним.
+ */
+async function composeFittedCard(args: {
+  generation: GenerationRow
+  provider: AiProvider
+  product: ProductBrief
+  profile: OutputProfile
+  layout: CardLayout
+  size: { width: number; height: number }
+  fonts: FontFamilies
+}): Promise<CardTexts> {
+  const measure = await measureText()
+  const titleLimit = titleCharLimit(args.layout, args.size, args.fonts, measure)
+
+  const card = await args.provider.composeCard({ product: args.product, profile: args.profile, titleLimit })
+
+  if (card.title.trim() === '' || card.description.trim() === '') {
+    throw new Error('Провайдер не вернул тексты карточки')
+  }
+
+  const title = fitTitle(card.title, titleFits(args.layout, args.size, args.fonts, measure))
+
+  if (title !== card.title.trim()) {
+    console.info(`Заголовок: «${card.title}» → «${title}» (предел ${titleLimit ?? 'не задан'} зн.)`,
+      '· генерация', args.generation.id)
+  }
+
+  return { ...card, title }
+}
+
 type Assembly = {
   /** Собранная карточка, PNG ровно в размер профиля. */
   bytes: Uint8Array
@@ -345,6 +381,7 @@ async function assembleCard(
   card: CardTexts,
   frameBytes: Uint8Array,
   profile: OutputProfile,
+  fonts: FontFamilies,
   provider: AiProvider,
 ): Promise<Assembly> {
   // Вендор отдаёт один кадр; слои второго кадра снимаются правилом K-3.
@@ -367,10 +404,9 @@ async function assembleCard(
     directorOn && maskEndpoint && secret ? createMaskRunner({ endpoint: maskEndpoint, secret })(frame) : null,
   ])
 
-  const [logo, fonts] = await Promise.all([
-    generation.logo_path === null ? null : downloadFile('uploads', generation.logo_path).then(imageRef),
-    readFonts(),
-  ])
+  const logo = generation.logo_path === null
+    ? null
+    : await downloadFile('uploads', generation.logo_path).then(imageRef)
 
   const properties = readProperties(generation.product_properties)
   const { content, cut } = cardFilling(layout, {

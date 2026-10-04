@@ -147,8 +147,14 @@ export interface AiProvider {
     objects: number
   }): Promise<GeneratedImage[]>
 
-  /** FR-07: заголовок и описание карточки. Только для типа «карточка». */
-  composeCard(input: { product: ProductBrief; profile: OutputProfile }): Promise<CardTexts>
+  /** FR-07: заголовок и описание карточки. Только для типа «карточка».
+   *  `titleLimit` — сколько знаков с пробелами влезает в бокс заголовка выбранного макета
+   *  (шаг B7.8, решение Q-4); `null` — у макета нет такого бокса, и предел общий. */
+  composeCard(input: {
+    product: ProductBrief
+    profile: OutputProfile
+    titleLimit: number | null
+  }): Promise<CardTexts>
 
   /** FR-16: название генерации для каталога — список из «Генерация №17» нечитаем. */
   nameGeneration(input: { product: ProductBrief }): Promise<string>

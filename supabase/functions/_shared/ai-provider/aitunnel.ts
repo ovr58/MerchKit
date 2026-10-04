@@ -382,8 +382,8 @@ const NAME_GENERATION_SYSTEM_PROMPT =
   'строго JSON: {"title": "..."}.'
 
 const COMPOSE_CARD_SYSTEM_PROMPT =
-  'Ты пишешь заголовок и описание карточки товара для маркетплейса. Заголовок — до 100 ' +
-  'символов, точный и по делу, без капслока и лишних восклицаний. Описание — 2–4 предложения: ' +
+  'Ты пишешь заголовок и описание карточки товара для маркетплейса. Заголовок — ' +
+  'точный и по делу, без капслока и лишних восклицаний. Описание — 2–4 предложения: ' +
   'что за товар и чем полезен, без воды и без придуманных характеристик, которых не было в ' +
   'исходных данных от продавца. Ответь строго JSON: {"title": "...", "description": "..."}.'
 
@@ -415,13 +415,21 @@ const DIRECT_CARD_SYSTEM =
   'Ответь строго JSON без пояснений: {"boxes":[{"layerId":"…","box":{"x":…,"y":…,"w":…,' +
   '"h":…}}],"texts":{…},"icons":[{"prop":0,"icon":"…"}]}.'
 
-function composeCardPrompt(product: ProductBrief, profile: OutputProfile): string {
+function composeCardPrompt(
+  product: ProductBrief,
+  profile: OutputProfile,
+  titleLimit: number | null,
+): string {
   return [
     `Площадка: ${profile.marketplaceTitle}.`,
     `Товар: ${product.title}, категория «${product.categoryTitle}».`,
     product.description.trim() === '' ? '' : `Что известно от продавца: ${product.description.trim()}.`,
     product.presetTitle === null ? '' : `Сценарий показа: ${product.presetTitle}.`,
     product.wishes.trim() === '' ? '' : `Пожелания продавца: ${product.wishes.trim()}.`,
+    // Предел — под бокс заголовка макета (B7.8, Q-4): шрифт на карточке не сжимается.
+    titleLimit === null
+      ? 'Заголовок — до 100 символов.'
+      : `Заголовок — не длиннее ${titleLimit} символов с пробелами: он стоит одной строкой на карточке.`,
   ].filter((line) => line !== '').join(' ')
 }
 
@@ -653,12 +661,12 @@ export function createAitunnelProvider(
       return images
     },
 
-    async composeCard({ product, profile }): Promise<CardTexts> {
+    async composeCard({ product, profile, titleLimit }): Promise<CardTexts> {
       const config = requireConfig(providerProfile)
       const parsed = await chatJson(
         config,
         COMPOSE_CARD_SYSTEM_PROMPT,
-        composeCardPrompt(product, profile),
+        composeCardPrompt(product, profile, titleLimit),
         { operation: 'composeCard', onUsage },
       )
 
