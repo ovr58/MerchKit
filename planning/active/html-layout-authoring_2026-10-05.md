@@ -1,6 +1,6 @@
 # HTML как язык сочинения карточки — модель верстает, транспилятор переводит в слои
 
-Status: ACTIVE (с 2026-10-05) · проба гипотезы проведена 2026-10-05 (8 карточек, 62 ₽), вердикт владельца 2026-10-05: **8 из 8 «HTML лучше», общий — «гениально!»**; все шаги открыты · первый шаг — **начинать в новой сессии**
+Status: ACTIVE (с 2026-10-05) · проба гипотезы проведена 2026-10-05 (8 карточек, 62 ₽), вердикт владельца 2026-10-05: **8 из 8 «HTML лучше», общий — «гениально!»**; закрыты A1, A2, B1–B3, C1, C4, D1 (сведены 2026-10-05) · следующая волна — H-3 ‖ H-5, **в новой сессии**
 
 > Закон дробления — `AGENTS.md` «Изоморфное дробление» и
 > [ADR-T0011](../../docs/adr/T0011-isomorphic-fragmentation-of-plans.md); рубрика модели —
@@ -97,21 +97,21 @@ https://claude.ai/artifact/8pH8gzhGsdLTgFpU9nX3wK (коллекция `verdicts`
 
 ### Фаза B — транспилятор офлайн (Node, Playwright)
 
-- [ ] **B1. Подмножество CSS и выходная форма скила-жанра.** — Sonnet · high
+- [x] **B1. Подмножество CSS и выходная форма скила-жанра.** — Sonnet · high
   - **Целевой файл(ы):** `tools/card-pipeline/html-layout/SUBSET.md` (новый), `bench/html-probe/CARD_GENRE.md` (раздел «Форма ответа»).
   - **Файлы-контракты:** `card-layout/types.ts` — `TextStyle`, `ShapeLayer`, `Paint`, `Effect`, `FontRole`, `TextLine`; `tools/card-pipeline/fonts/roles.json`; ADR-0019 п. 5.
   - **Границы:** `types.ts` не менять; словарь слоёв не расширять — нехватка пишется в SUBSET.md разделом «Не выражается» для решения в B4.
   - **Задача:** записать таблицу «CSS → слой» с единственным способом на каждую строку: `#card` — холст; `img#frame` — слой `frame` (`fit: cover`, `box` 0/0/1/1); `div` с `background` и без текста — `shape` `rect` с `fill` solid или linear (`linear-gradient` только с двумя-пятью стопами, углы 0/90/180/270), `border-radius` → `radius` долей меньшей стороны, `border` → эффект `stroke`, `box-shadow` → эффект `shadow`, `opacity` → `opacity`; элемент с текстом — `text`: `position:absolute` + `left/top/width/height` в px → `box` долями холста, `font-family` → `role` по `roles.json`, `font-size` px → `size` долей высоты холста, `font-weight`, `color`, `text-align` → `align`, `line-height` → `lineHeight` множителем, `letter-spacing` → `tracking` долей кегля, `text-transform` → `transform`; строки — по `Range.getClientRects` (каждая строка слоя — элемент `lines`); **элемент с текстом и собственным `background`/`border`/`box-shadow` (плашка с подписью) — два слоя тем же боксом: `shape` под ним и `text` над ним**; порядок DOM → `z` с шагом 10; `z-index` допускается только на `#card` детях. Запрещено: `flex`/`grid` для текстовых боксов (разрешены только как контейнеры без собственных стилей), `transform`, `filter`, `url()` кроме `frame.png`, `<svg>`, псевдоэлементы, `em/rem/%`. В CARD_GENRE.md форма ответа переписана под это подмножество, и добавлено **правило разнообразия**: композицию (где заголовок, где модули, какая форма плашек, какая акцентная краска) брать у одного из референсов, названного в задании как «ведущий», а не повторять одну схему «заголовок сверху — три плашки снизу» на каждой карточке; задание (C1) называет ведущий референс явно.
   - **Критерий приёмки:** SUBSET.md содержит таблицу с ≥ 14 строками «CSS → слой» и раздел «Запрещено»; в CARD_GENRE.md нет слов «потоковое позиционирование»; `grep -c "px" bench/html-probe/CARD_GENRE.md` ≥ 3; `grep -c "ведущий" bench/html-probe/CARD_GENRE.md` ≥ 1.
 
-- [ ] **B2. Снятие сцены HTML в Chromium (`extract`).** — Sonnet · high
+- [x] **B2. Снятие сцены HTML в Chromium (`extract`).** — Sonnet · high
   - **Целевой файл(ы):** `tools/card-pipeline/html-layout/extract.mts` (новый), `tools/card-pipeline/html-layout/scene.ts` (тип `HtmlScene`, новый), `tools/card-pipeline/html-layout/extract.test.ts` (новый), фикстура `tools/card-pipeline/html-layout/fixtures/home-chair.html` (копия `bench/runs/html-2026-10-05/03-home-chair.ozon/claude-sonnet-5-5.html` без `<style>@font-face…`).
   - **Файлы-контракты:** `SUBSET.md` (B1) — что снимать; `bench/html-probe.mts` — запуск Chromium и подключение шрифтов `@font-face` (функция `withFonts`, `screenshot`).
   - **Границы:** не переводить в слои (это B3); `card-layout/` не трогать; сцена — px, не доли.
   - **Задача:** `extractScene(htmlPath, canvas): Promise<HtmlScene>` — открывает файл в Chromium с шрифтами, обходит потомков `#card` в порядке DOM; для каждого элемента пишет `{ kind: 'frame'|'shape'|'text', rect: {x,y,w,h} px относительно #card, style: <снятые по SUBSET.md свойства из getComputedStyle>, lines?: [{text, rect}] по Range.getClientRects, order: n }`; элементы вне подмножества — в `scene.rejected: [{selector, reason}]`. CLI: `node --experimental-strip-types tools/card-pipeline/html-layout/extract.mts <html> <W>x<H>` печатает JSON.
   - **Критерий приёмки:** красный тест до кода: `extract.test.ts` на фикстуре ожидает один `frame`, ≥ 3 `text` с `lines.length ≥ 1`, все `rect` внутри холста, `rejected` пуст; `node --test "tools/card-pipeline/html-layout/*.test.ts"` зелёный; `npm run lint` чистый по новым файлам.
 
-- [ ] **B3. Перевод сцены в макет и содержимое (`toLayout`).** — Sonnet · high
+- [x] **B3. Перевод сцены в макет и содержимое (`toLayout`).** — Sonnet · high
   - **Целевой файл(ы):** `supabase/functions/_shared/card-layout/html/to-layout.ts` (новый; общий код для сервера и инструментов), `…/html/to-layout.test.ts` (новый), `tools/card-pipeline/html-layout/scene.ts` — тип переезжает в `card-layout/html/scene.ts`, старый путь реэкспортирует.
   - **Файлы-контракты:** `card-layout/types.ts` (`CardLayout`, `CardContent`, `TextLayer`, `ShapeLayer`, `Binding`), `validate.ts` (`validateLayout`), `SUBSET.md` (B1), `roles.json` — отображение `font-family` → `FontRole`.
   - **Границы:** чистая функция без I/O; `types.ts` не менять; не вызывать растеризатор.
@@ -124,6 +124,7 @@ https://claude.ai/artifact/8pH8gzhGsdLTgFpU9nX3wK (коллекция `verdicts`
   - **Границы:** модель не вызывать — вход только записанные HTML из `bench/runs/html-2026-10-05/*/claude-sonnet-5-5.html`; порог не подгонять под результат: он записан здесь — **≤ 2 % пикселей** с разницей яркости > 32 после уменьшения обеих картинок до 256 px по ширине.
   - **Задача:** для каждого HTML: скриншот Chromium → сцена → слои → PNG по слоям → разница; выложить `<case>.html.png`, `<case>.layers.png`, `<case>.diff.png` и `report.html` в `bench/runs/html-2026-10-05/roundtrip/`; в SUBSET.md раздел «Не выражается» — перечень расхождений выше порога с причиной (свойство CSS, которого нет в словаре слоёв).
   - **Критерий приёмки:** `npm run cards:html-roundtrip` печатает таблицу «карточка · % разницы · вердикт» для 8 карточек; доля карточек ≤ порога записана в этот план (раздел «Что реально сделано»); расхождения выше порога все названы в SUBSET.md.
+  - **Известно из B2/B3 (H-2):** тесты проекта — на vitest (`npx vitest run tools/card-pipeline/html-layout supabase/functions/_shared/card-layout/html`), не `node --test`; `extractScene` сам снимает чужие `@font-face` страницы и подключает шрифты проекта — HTML пробы без этого падают с `NetworkError`. Все 8 HTML пробы проходят `extract` → `toLayout` с пустыми `rejected` и `problems`. **Регистр привязанного текста** — известное расхождение: слои берут слова продавца («чёрная вишня»), Chromium показывает набранное моделью («Чёрная вишня», карточка `09-food-pepsi`). Назвать в «Не выражается» с двумя способами (содержимое регистром Chromium · задание просит модель сохранять регистр продавца) и не выбирать: это вид на экране, выбор — владельцу через супервизора. Первым делом открыть `frame.png` карточки и убедиться, что это голый кадр, а не собранная карточка.
 
 - [ ] **B5. Дословность текста на транспилированном содержимом.** — Sonnet · medium
   - **Целевой файл(ы):** `supabase/functions/_shared/card-layout/html/to-layout.ts` (вызов), `to-layout.test.ts` (случай).
@@ -141,7 +142,7 @@ https://claude.ai/artifact/8pH8gzhGsdLTgFpU9nX3wK (коллекция `verdicts`
 
 ### Фаза C — рантайм (Q-H1 = «да»)
 
-- [ ] **C1. Операция провайдера `authorCard` и скил-жанр как код.** — Sonnet · high
+- [x] **C1. Операция провайдера `authorCard` и скил-жанр как код.** — Sonnet · high
   - **Целевой файл(ы):** `supabase/functions/_shared/ai-provider/types.ts` (`operation` + `'authorCard'`, метод `authorCard`), `ai-provider/aitunnel.ts`, `ai-provider/stub.ts` (по образцу `directCard`), `ai-provider/card-genre.ts` (новый: текст `bench/html-probe/CARD_GENRE.md` константой), миграция `supabase/migrations/<ts>_author_card_cost.sql` (`generation_costs.operation` + `'authorCard'`), `.env.example` (`AI_PROVIDER_AUTHOR_MODEL`), тесты рядом с существующими для `directCard`.
   - **Файлы-контракты:** `aitunnel.ts` — `callGateway`, `costRub`, форма `image_url` (`inputDataUri`); `bench/html-probe.mts` — `brief()` и сборка сообщений; ADR-0019 п. 3; миграция `20260830000000_generation_costs.sql` — как расширялся `operation` для `directCard`.
   - **Границы:** `directCard` не удалять; воркер не трогать (C3); `max_tokens: 4000`, таймаут 60 с — шлюз резервирует по `max_tokens`, больше не ставить.
@@ -154,6 +155,7 @@ https://claude.ai/artifact/8pH8gzhGsdLTgFpU9nX3wK (коллекция `verdicts`
   - **Границы:** HTML от модели — недоверенный ввод: Chromium без сети (`route('**', abort)` кроме `frame.png` из тела запроса), без JS (`javaScriptEnabled: false`), лимит тела 2 МБ, таймаут 10 с, один браузер на процесс; ответ — только `HtmlScene` JSON, никаких скриншотов.
   - **Задача:** тело `{ html, canvas: {width, height}, frame: data-URI }` → сцена B2; шрифты — те же файлы, что у сборки (`tools/card-pipeline/fonts/`, копия в сервисе); деплой — владелец (как `/mask`, `SUPERVISOR_HANDOFF.md`).
   - **Критерий приёмки:** в `cutout_runner` тест маршрута на фикстуре B2 возвращает сцену с одним `frame` и ≥ 3 `text`; HTML с `<script>` и `url(https://…)` → 422; локальный запуск сервиса + `curl` с фикстурой — JSON в ответе; деплой — отдельная строка владельца.
+  - **Известно из B2 (H-2):** обход DOM — самодостаточная функция `sceneInPage` в `extract.mts` (параметр `canvas`), её и выносить в `extract-browser.ts`; перед обходом — снятие чужих `@font-face` и подключение своих шрифтов, как в `extractScene`. Работает ли `page.evaluate` при `javaScriptEnabled: false`, H-2 не проверял — проверить первым тестом маршрута; не работает — назвать в отчёте пунктом 3, границу не ослаблять без супервизора.
 
 - [ ] **C3. Воркер: сочинение → сцена → слои → сборка, с откатом на библиотеку.** — Sonnet · high
   - **Целевой файл(ы):** `supabase/functions/generation-worker/index.ts` (ветка `CARD_AUTHOR=on` рядом с `directCard`), `supabase/functions/_shared/card-layout/html/author.ts` (новый: оркестрация `authorCard` → `/layout` → `toLayout` → проверки), `card-layout/cutout.ts` (`createLayoutRunner` по образцу `createMaskRunner`), тесты.
@@ -162,7 +164,7 @@ https://claude.ai/artifact/8pH8gzhGsdLTgFpU9nX3wK (коллекция `verdicts`
   - **Задача:** после кадра и выреза: взять ≤ 4 референса по площадке и категории; `authorCard`; `/layout`; `toLayout`; `problems` пуст → собрать и сохранить, иначе откат; строка затрат `authorCard` с `cost_rub` шлюза.
   - **Критерий приёмки:** красный тест до кода на заглушках: при `CARD_AUTHOR=on` карточка собирается по макету с `origin = 'author'`; при `problems` непустом — `origin = 'library'` и генерация `done`; `npm run test:generation` зелёный; `npm run lint` чистый.
 
-- [ ] **C4. Каталог референсов: таблица, бакет, инструмент загрузки — петля улучшения.** — Sonnet · high
+- [x] **C4. Каталог референсов: таблица, бакет, инструмент загрузки — петля улучшения.** — Sonnet · high
   - **Целевой файл(ы):** миграция `card_references (id, storage_path, marketplace_id, category_id, tags text[], status, added_at)` + бакет `references` (приватный, чтение service-role), `tools/card-pipeline/references.mts` (новый; `push`/`pull`/`list` по образцу `assets.mts`), `package.json` скрипт `cards:references`, `tools/card-pipeline/README.md`, `bench/samples/references/README.md` (новый: куда класть — `<площадка>/<категория>/<файл>.jpg`, категория — слаг из `catalog-taxonomy`).
   - **Файлы-контракты:** `assets.mts` — форма инструмента; `docs/SPEC.md` §4 — соглашения о таблицах и RLS; `catalog-taxonomy` — слаги категорий; `bench/samples/wb-starter/` — стартовое наполнение (31 образец, категории по папкам → слаги).
   - **Границы:** модель не вызывать; теги — из имени папки, не из распознавания; картинки > 2 МБ отклоняются инструментом с подсказкой ужать.
@@ -185,12 +187,12 @@ https://claude.ai/artifact/8pH8gzhGsdLTgFpU9nX3wK (коллекция `verdicts`
 
 ### Фаза D — носители по канону
 
-- [ ] **D1. Документы после решения (сразу после A1).** — Sonnet · medium
+- [x] **D1. Документы после решения (сразу после A1).** — Sonnet · medium
   - **Целевой файл(ы):** `docs/SPEC.md` §3 — строки `ai-provider` (операция `authorCard`) и `generation-worker` (ветка сочинения) и §5 «Интеграции» (коробка: `/layout`); `docs/VISUALS.md` V-11 — седьмой этап «сочинение» в списке этапов; `planning/active/card-assembly-pipeline_2026-08-31.md` — таблица решений: строка «B38 закрыт решением ADR-0019; B37 — путь отката (детерминированный контраст) остаётся открытым в BACKLOG»; `planning/SUPERVISOR_HANDOFF.md` — «Дальше по очереди» (B37/B38 в `BACKLOG.md` уже помечены `→ заведён план` при заведении плана).
   - **Файлы-контракты:** ADR-0019; этот план.
   - **Границы:** поправка переписывает на месте (`AGENTS.md`), без врезок «ПОПРАВКА»; `UNIT_ECONOMICS.md` не трогать (C5).
   - **Задача:** внести перечисленное; в V-11 — текст этапа для нетехнического читателя (три предложения).
-  - **Критерий приёмки:** `grep -rn "~~\|ПОПРАВКА" docs/SPEC.md docs/VISUALS.md planning/active/` пусто; `grep -c "authorCard" docs/SPEC.md` ≥ 2; `grep -c "ADR-0019" planning/active/card-assembly-pipeline_2026-08-31.md planning/SUPERVISOR_HANDOFF.md` ≥ 1 в каждом.
+  - **Критерий приёмки:** `grep -rn --exclude=html-layout-authoring_2026-10-05.md "~~\|ПОПРАВКА" docs/SPEC.md docs/VISUALS.md planning/active/` пусто (сам план цитирует эти слова); `grep -c "authorCard" docs/SPEC.md` ≥ 2; `grep -c "ADR-0019" planning/active/card-assembly-pipeline_2026-08-31.md planning/SUPERVISOR_HANDOFF.md` ≥ 1 в каждом.
 
 - [ ] **D2. Документы по факту (после C6 или B6).** — Sonnet · medium
   - **Целевой файл(ы):** этот план — блок «Что реально сделано»; `planning/INDEX.md` — строка плана; `docs/METHODOLOGY.md` — не трогать (модули шаблона не менялись); `bench/README.md` — раздел «HTML-проба и проба сочинения».
@@ -206,7 +208,7 @@ https://claude.ai/artifact/8pH8gzhGsdLTgFpU9nX3wK (коллекция `verdicts`
 - Откат (C3): тест на отказ транспилятора собирает карточку библиотеки, генерация не падает.
 - Экономика (C5/C6): фактическая цена `authorCard` против замера пробы 6,20–8,53 ₽.
 - Петля (C4): новый файл в `bench/samples/references/ozon/home/` после `push` попадает в выбор для `ozon/home` первым.
-- Канон: `grep -rn "~~\|ПОПРАВКА\|неверной вводной" planning/active/ docs/*.md` пусто после D1 и D2.
+- Канон: `grep -rn --exclude=html-layout-authoring_2026-10-05.md "~~\|ПОПРАВКА\|неверной вводной" planning/active/ docs/*.md` пусто после D1 и D2 (сам план цитирует эти слова).
 
 ## Open questions
 
@@ -241,4 +243,6 @@ https://claude.ai/artifact/8pH8gzhGsdLTgFpU9nX3wK (коллекция `verdicts`
 
 ## Что реально сделано
 
-_(заполняется по ходу)_
+- **H-1 (A1, A2)** — сведена 2026-10-05 (`2adc0a5`, `fefa025`): ADR-0019, термины.
+- **H-2 (B1–B3), H-4 (C1, C4), H-D1 (D1)** — сведены 2026-10-05 по слову владельца, `main` = `008593e` (`556ffe0` D1 → `07355e3` B1–B3 → `b65993e`, `5f4c451`, `008593e` C1/C4). Супервизор на вершине (дерево файлов совпало с пробной сведённой вершиной `d13eb25`), каждую отдельно: `npm test` 528/528, `npm run lint`, oxlint 14 серверных файлов (подсадка ловится), `npm run build`, `npm run test:db` 173 PASS (стенд с нуля, наполнен, погашен). Глазами: `home-chair` и `bobblehead` по слоям совпадают со скриншотами Chromium, подложка — голый кадр. Расхождения с текстом шагов: тесты на vitest, а не `node --test`; «Запрещено» в SUBSET.md в трёх ступенях (форма ответа строже, чем отказ транспилятора); заглушка `authorCard` отдаёт фикстуру B2 константой `author-fixture.ts`, тесты сверяют копии `card-genre.ts` и фикстуры с файлами-источниками; раскладка `wb-starter` по категориям — `WB_STARTER_CATEGORIES` в `references.mts` (Автотовары, Здоровье, Спорт → `other`: таких слагов в таксономии нет). Миграции `20261005100000_author_card_cost`, `20261005110000_card_references` в стейдж не накатаны; секрет `AI_PROVIDER_AUTHOR_MODEL` в стейдже не заведён — оба до H-6, командой владельца.
+
