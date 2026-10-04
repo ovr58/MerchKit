@@ -255,6 +255,47 @@ describe('Плашка — леса, а не содержимое', () => {
   })
 })
 
+describe('Подложка надписи (B29): привязка плашки к гнезду надписи', () => {
+  const plate: Layer = {
+    id: 'kicker-plate',
+    type: 'shape',
+    z: 20,
+    box: { x: 0.05, y: 0.05, w: 0.3, h: 0.05 },
+    shape: { form: 'ellipse' },
+    fill: { kind: 'solid', color: '#111111' },
+    bind: { kind: 'text', slot: 'kicker' },
+  }
+  const kicker: Layer = {
+    ...title,
+    id: 'kicker',
+    z: 21,
+    box: { x: 0.05, y: 0.05, w: 0.3, h: 0.05 },
+    bind: { kind: 'text', slot: 'kicker' },
+  }
+  const ids = (layers: { layer: Layer }[]) => layers.map((placed) => placed.layer.id)
+
+  it('валидатор принимает фигуру с привязкой к текстовому гнезду', () => {
+    expect(validateLayout(layout([plate, kicker]))).toEqual([])
+  })
+
+  it('есть надпись — плашка рисуется под ней', () => {
+    const resolved = resolveLayout(layout([plate, kicker]), content({ texts: { kicker: ['Новинка'] } }))
+    expect(ids(resolved.layers)).toEqual(['kicker-plate', 'kicker'])
+  })
+
+  it('нет надписи — плашка уходит вместе с ней, пустого пятна не остаётся', () => {
+    const resolved = resolveLayout(layout([plate, kicker]), content())
+    expect(ids(resolved.layers)).toEqual([])
+    expect(resolved.dropped.map((drop) => drop.id)).toEqual(['kicker-plate', 'kicker'])
+  })
+
+  it('плашка без привязки остаётся и без надписи — так было до B29', () => {
+    const bare: Layer = { ...plate, bind: undefined }
+    const resolved = resolveLayout(layout([bare, kicker]), content())
+    expect(ids(resolved.layers)).toEqual(['kicker-plate'])
+  })
+})
+
 describe('Раскрытие групп и z-порядок', () => {
   it('координаты вложенного слоя пересчитываются в доли холста', () => {
     const module: Layer = {

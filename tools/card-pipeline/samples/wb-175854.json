@@ -74,6 +74,10 @@
         "fill": {
           "kind": "solid",
           "color": "#0f8391"
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "kicker"
         }
       },
       {
@@ -166,6 +170,10 @@
         "fill": {
           "kind": "solid",
           "color": "#0f8391"
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "brand"
         }
       },
       {

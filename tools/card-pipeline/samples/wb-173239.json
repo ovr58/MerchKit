@@ -122,6 +122,10 @@
               "color": "#dedad6"
             }
           ]
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "sizes"
         }
       },
       {

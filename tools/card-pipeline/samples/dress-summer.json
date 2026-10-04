@@ -251,7 +251,11 @@
             "color": "#000000",
             "opacity": 0.3
           }
-        ]
+        ],
+        "bind": {
+          "kind": "text",
+          "slot": "sizes"
+        }
       },
       {
         "id": "sizes-divider",

@@ -115,7 +115,11 @@
             "thickness": 0.0012,
             "opacity": 0.5
           }
-        ]
+        ],
+        "bind": {
+          "kind": "text",
+          "slot": "title"
+        }
       },
       {
         "id": "title",
