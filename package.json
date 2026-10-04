@@ -27,7 +27,8 @@
     "cards:apply-layout-tags": "node --experimental-strip-types tools/card-pipeline/apply-layout-tags.mts",
     "cards:render-assets": "node --experimental-strip-types tools/card-pipeline/render-assets.mts",
     "cards:bench": "node --experimental-strip-types tools/card-pipeline/bench.mts",
-    "cards:cutout": "node --experimental-strip-types tools/card-pipeline/cutout.mts"
+    "cards:cutout": "node --experimental-strip-types tools/card-pipeline/cutout.mts",
+    "cards:references": "node --experimental-strip-types tools/card-pipeline/references.mts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.122.0",

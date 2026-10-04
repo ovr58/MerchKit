@@ -20,6 +20,7 @@
 | `roundtrip.mts` | Гейт A3: разобрать → собрать → положить рядом с оригиналом |
 | `bench.mts` | Оснастка замера в рантайме функций: сборка и вырез (шаг B4.0) |
 | `cutout.mts` | Замер раннера выреза в Node и в браузере плюс лицензии кандидатов (шаг B4.0) |
+| `references.mts` | Каталог референсов сочинения карточки: загрузка образцов в `card_references` и бакет `references` (ADR-0019, шаг C4) |
 
 Сама композиция считается **не здесь**, а в
 [`supabase/functions/_shared/card-layout/`](../../supabase/functions/_shared/card-layout/) —
@@ -157,6 +158,30 @@ node --env-file=.env --experimental-strip-types tools/card-pipeline/layouts.mts 
 
 Edge Function загружает `resvg/index_bg.wasm`, `fonts/manifest.json` и названные в манифесте
 шрифты один раз на холодный старт; дальнейшая растеризация в сеть не ходит.
+
+## Каталог референсов
+
+Референсы — образцы карточек лидеров выдачи, которые модель сочинения видит рядом с кадром
+([ADR-0019](../../docs/adr/0019-html-authoring-transpiled-to-layers.md), п. 7). Это петля
+улучшения: новый образец в каталоге — опора следующей карточке без правки кода. Таблица
+`card_references` и приватный бакет `references`; не больше четырёх на карточку выбирает
+`pickReferences` (`supabase/functions/_shared/card-layout/html/references.ts`) по площадке,
+категории и ротации по идентификатору генерации.
+
+```
+npm run cards:references                что в каталоге
+npm run cards:references -- push        загрузить новые файлы и завести строки
+npm run cards:references -- pull        выложить каталог в bench/samples/references/
+```
+
+Источники `push` — `bench/samples/references/<площадка>/<категория>/` (куда класть — README
+там же) и стартовый набор `bench/samples/wb-starter/` (площадка `wildberries`, категория — по
+разделу WB, таблица `WB_STARTER_CATEGORIES` в скрипте). Теги — имена папок. Файл больше
+2 МБ отклоняется с подсказкой ужать; тот же файл второй раз не заводится — путь в бакете
+содержит хеш содержимого. Цель «стейдж» — тот же флаг `--target staging`, что выше.
+
+Каталог не восстанавливается миграциями: после `supabase db reset` локальный стенд пуст, и
+`push` нужно повторить.
 
 ## Оснастка замера (шаг B4.0)
 
