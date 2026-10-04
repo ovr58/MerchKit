@@ -218,6 +218,16 @@ function modeGuess(calls: number, firstCallRub: number | undefined, direction: C
   return (firstCallRub ?? 0) >= 0.2 ? 'full' : 'content'
 }
 
+/**
+ * Ступень по патчу (журнала нет, см. выше): `null` — ступень 4; повтор `layerId` в `boxes` — к боксам ИИ
+ * дописан сдвиг без ИИ (ступень 3, `applyDirection` берёт последний); иначе 1 или 2 — по патчу не различить.
+ */
+function stageGuess(direction: CardDirection | null): string | number {
+  if (direction === null) return 4
+  const ids = direction.boxes.map((entry) => entry.layerId)
+  return new Set(ids).size < ids.length ? 3 : '1–2'
+}
+
 async function runCase(caseId: string, sample: string, marketplaceId: string, index: number, user: { id: string; token: string }): Promise<CaseRecord> {
   const dir = join(ROOT, 'bench', 'samples', sample)
   const manifest = JSON.parse(readFileSync(join(dir, 'sample.json'), 'utf8'))
@@ -301,7 +311,7 @@ async function runCase(caseId: string, sample: string, marketplaceId: string, in
   record.direction = card.direction
   record.canvas = { width: asset.width, height: asset.height }
   record.mode = modeGuess(Number(record.directorCalls), (record.directorCallRub as number[])[0], card.direction)
-  record.stage = card.direction === null ? 4 : '1–3'
+  record.stage = stageGuess(card.direction)
   record.patch = {
     boxes: card.direction?.boxes.length ?? 0,
     texts: Object.keys(card.direction?.texts ?? {}).length,
@@ -389,6 +399,9 @@ const esc = (value: unknown) => String(value ?? '').replace(/[&<>"]/g, (ch) => (
 
 function writeReport(): void {
   const order = new Map(CASES.map((entry, index) => [`${entry.sample}.${entry.marketplaceId}`, index]))
+  for (const record of state.records) {
+    if (record.status === 'done') record.stage = stageGuess((record.direction ?? null) as CardDirection | null)
+  }
   const records = [...state.records].sort((a, b) => (order.get(a.caseId) ?? 99) - (order.get(b.caseId) ?? 99))
   const done = records.filter((record) => record.status === 'done')
   const directorRub = records.reduce((total, record) => total + Number(record.directorRub ?? 0), 0)
