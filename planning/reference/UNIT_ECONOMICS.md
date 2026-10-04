@@ -361,6 +361,10 @@ M5. Вендор этим расчётом не выбирается ([ADR-0005]
   по равным долям. Реальный спрос перекошен, и перекос в сторону «дорогих» наборов вроде
   `food-pepsi` двигает себестоимость к пессимистичному сценарию.
 - **Цена правки кадра** ([B14](../BACKLOG.md)) в расчёт не входит: там своя единица продажи.
+- **Арт-директор** (операция `directCard`) в себестоимость карточки не входит. До замера есть
+  только оценка — основание решения в [ADR-0018](../../docs/adr/0018-art-director-layout-patch.md)
+  п. 5; фактическую цену и долю полной постановки вносит сюда пробный прогон, шаг B5.10 плана
+  `active/card-assembly-pipeline_2026-08-31.md`.
 
 ## 11. Где ещё нарисованы и закодированы числа модели
 
@@ -380,5 +384,6 @@ M5. Вендор этим расчётом не выбирается ([ADR-0005]
 | `supabase/migrations/20260828130000_signup_bonus.sql` | N | новая миграция, переопределяющая функции начисления; старую не править |
 | `supabase/migrations/20260828140000_credit_packages.sql` | состав и цены пакетов | новая миграция, обновляющая строки `credit_packages` |
 | `src/screens/SignUp.tsx`, `src/screens/ConfirmEmail.tsx` | N в тексте | править копирайт |
-| `src/components/CreditPackages.tsx` (комментарий), `src/screens/profile.test.tsx`, `src/features/generation/api.test.ts` | пакеты, N, цена объекта в фикстурах | править фикстуры вместе с константами |
+| `src/components/CreditPackages.tsx` (комментарий), `src/screens/profile.test.tsx`, `src/screens/generation.test.tsx`, `src/features/generation/api.test.ts` | пакеты, N, цена объекта в фикстурах | править фикстуры вместе с константами |
 | `supabase/tests/auth-flow.mjs`, `billing-flow.mjs`, `generation-flow.mjs`, `supabase/tests/database/*.test.sql` | N, цены, пакеты в ожиданиях | править ожидания вместе с константами |
+| `docs/adr/0018-art-director-layout-patch.md` п. 5 и его строка в `docs/adr/README.md` | себестоимость карточки §10, цена объекта и надбавка §8 — в расчёте цены арт-директора | не править: ADR — запись решения на 2026-10-03; новая цена — сюда, решение — новым ADR |
