@@ -258,6 +258,9 @@
         "fill": {
           "kind": "solid",
           "color": "#12296e"
+        },
+        "bind": {
+          "kind": "logo"
         }
       },
       {

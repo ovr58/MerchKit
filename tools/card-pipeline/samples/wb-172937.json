@@ -108,7 +108,10 @@
             "thickness": 0.0013,
             "opacity": 0.6
           }
-        ]
+        ],
+        "bind": {
+          "kind": "logo"
+        }
       },
       {
         "id": "logo",
