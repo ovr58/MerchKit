@@ -1,6 +1,6 @@
 # Конвейер сборки карточки слоями — веха M7
 
-Status: ACTIVE (с 2026-08-31) · фаза A, шаги B0–B4, B6, B7.1–B7.7, B5.0–B5.8, B5.11, C1 исполнены (B5.3 — код, деплой за владельцем); открыты B7.8, B5.9, B5.10, C2–C4 · аудит `/validate-plan` 2026-10-03
+Status: ACTIVE (с 2026-08-31) · фаза A, шаги B0–B4, B6, B7.1–B7.8, B5.0–B5.9, B5.11, C1 исполнены (B5.3 — код, деплой за владельцем); открыты B5.10, C2–C4 · аудит `/validate-plan` 2026-10-03
 
 > Закон дробления — `AGENTS.md` «Изоморфное дробление» и
 > [ADR-T0011](../../docs/adr/T0011-isomorphic-fragmentation-of-plans.md); рубрика модели —
@@ -87,8 +87,8 @@ M7 меняет.
 вендора сверяется с профилем допуском `ASPECT_TOLERANCE` (`output-profile.ts`). После сборки
 `textMismatches` роняет генерацию, если заголовок или описание легли не дословно. Вырез
 (`createCutoutRunner`) зовётся, только если заведены `CUTOUT_ENDPOINT` и `CUTOUT_SECRET`; их нет —
-воркер собирает без выреза. Заголовок модели в бокс макета не подгоняется — сборку не
-деплоить до B7.8.
+воркер собирает без выреза. Заголовок модели пишется под бокс макета и при переполнении режется
+по словам (B7.8).
 
 ## Шаги
 
@@ -282,7 +282,7 @@ M7 меняет.
     (запросы строятся только построителем); повторный bench по нетяжёлым — 0 отказов из 3
     прогонов. Снять фильтр — одной миграцией, когда сборка переедет на коробку (ADR-0015).
 
-- [ ] **B7.8. Короткий заголовок под бокс макета (решение Q-4, запись B30).**
+- [x] **B7.8. Короткий заголовок под бокс макета (решение Q-4, запись B30).**
   - **Целевой файл(ы):** `supabase/functions/_shared/card-layout/title-fit.ts` (новый) +
     `title-fit.test.ts` (новый), `supabase/functions/_shared/ai-provider/types.ts`, `aitunnel.ts`,
     `aitunnel.test.ts`, `stub.ts`, `supabase/functions/generation-worker/index.ts`.
@@ -680,7 +680,7 @@ M7 меняет.
     `direction` — `null` (ступень 4). Без `CARD_DIRECTOR` — `direction` `null`, результат побайтово
     как без арт-директора. `npm test`, `npm run lint`, `npm run test:db` — каждая отдельно.
 
-- [ ] **B5.9. Пересборка применяет правку арт-директора.**
+- [x] **B5.9. Пересборка применяет правку арт-директора.**
   - **Целевой файл(ы):** `supabase/functions/card-rebuild/index.ts` и его тест.
   - **Файлы-контракты:** ADR-0018, п. 3 · `direction.ts` — `applyDirection`, `directedContent` ·
     B7.5 — режимы чтения и пересборки.
@@ -810,8 +810,8 @@ M7 меняет.
 | M7-7b ✓ сведена 2026-10-03 | B5.4, B5.5, B5.11 | Sonnet · high | консервативная | `feature/m7-director-core` | M7-2 сведена | M7-7a, M7-7m, M7-7c |
 | M7-7c ✓ сведена 2026-10-03 | B5.6 | Sonnet · high | консервативная | `feature/m7-director-provider` | M7-2 сведена; держит стенд (`test:db`) | M7-7a, M7-7b, M7-7m; со стендом — по времени |
 | M7-7d ✓ сведена 2026-10-04 | B5.7, B5.8 | Sonnet · high | консервативная | `feature/m7-director-worker` | M7-7a, M7-7b, M7-7c сведены; держит стенд | — |
-| M7-6b | B7.8 | Sonnet · high | консервативная | `feature/m7-title-fit` | M7-7d сведена (`measureText`, воркер); держит стенд | M7-7e |
-| M7-7e | B5.9 | Sonnet · medium | консервативная | `feature/m7-director-rebuild` | M7-4 и M7-7d сведены | M7-7f, M7-6b |
+| M7-6b ✓ сведена 2026-10-04 | B7.8 | Sonnet · high | консервативная | `feature/m7-title-fit` | M7-7d сведена (`measureText`, воркер); держит стенд | M7-7e |
+| M7-7e ✓ сведена 2026-10-04 | B5.9 | Sonnet · medium | консервативная | `feature/m7-director-rebuild` | M7-4 и M7-7d сведены | M7-7f, M7-6b |
 | M7-7f | B5.10 | Sonnet · high | консервативная | `feature/m7-director-probe` | M7-7d сведена; M7-7m задеплоена; слово владельца на запуск (бюджет разрешён) | M7-7e |
 | M7-8 | C2 | Sonnet · high | консервативная | `feature/m7-hands-measure` | M7-6, M7-7f сведены; разрешение владельца на платный прогон | C3 |
 | M7-9 | C3 | Sonnet · medium | консервативная | `feature/m7-library-ozon-ym` | образцы владельца в `bench/samples/`; разрешение на Batch API | C2 |
