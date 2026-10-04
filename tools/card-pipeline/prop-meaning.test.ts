@@ -3,16 +3,16 @@ import { resolve as resolvePath } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
-import { propSlots } from '../../supabase/functions/_shared/card-layout/prop-slots.ts'
 import type { CardLayout, Layer } from '../../supabase/functions/_shared/card-layout/types.ts'
 
 /**
- * Смысл гнёзд свойств в библиотеке макетов (B28, решение владельца «гнездо по смыслу»).
+ * Гнёзда свойств в библиотеке макетов (B28: «гнездо по смыслу», вариант А владельца).
  *
- * Гнездо свойства, в котором макет несёт вшитый текст («мес», «Вт», «Dual », «ГОДА»), получает
- * смысл: без него вшитое встало бы рядом с любым свойством, какое окажется N-м («5.3 мес» у
- * Bluetooth). Валидатор макета этот инвариант не держит: смысл — необязательное поле, и макет без
- * него законен. Держит библиотека — этим тестом.
+ * Гнездо свойства берёт свойство по подписи (`meaning`), а значение выводит так, как его написал
+ * продавец: единицы («гб», «мес», «Вт»), предлоги («от», «до», «по», «Dual ») и надписи рядом со
+ * значением в макете не вшиваются — иначе они дублируют слова продавца («256 ГБ гб») или встают
+ * рядом с чужим значением. Валидатор макета этого не держит: вшитый текст для языка законен
+ * (подписи-надписи, декор). Держит библиотека — этим тестом.
  */
 
 type Sample = { layout: CardLayout }
@@ -23,6 +23,9 @@ const samples: Sample[] = readdirSync(DIR)
   .map((name) => JSON.parse(readFileSync(resolvePath(DIR, name), 'utf8')) as Sample)
 
 const LETTER = /\p{L}/u
+
+/** Надписи-подписи модуля, не относящиеся к значению: стоят отдельным слоем и остаются. */
+const CAPTIONS = new Set(['gost-cert', 'warranty-ribbon-text'])
 
 /** Вшитый текст с буквами в гнезде свойства: адрес — «макет → слой», номер гнезда — значение. */
 function embeddedTexts(layers: Layer[], slot: number | null, found: Map<string, number>, id: string): void {
@@ -40,21 +43,35 @@ function embeddedTexts(layers: Layer[], slot: number | null, found: Map<string, 
   }
 }
 
-describe('смысл гнёзд свойств в библиотеке', () => {
-  it('у каждого гнезда с вшитым текстом есть смысл', () => {
-    const missing: string[] = []
+describe('гнёзда свойств в библиотеке', () => {
+  it('рядом со значением гнезда нет вшитого текста — ни в строках слоя, ни отдельным слоем', () => {
+    const embedded: string[] = []
 
     for (const { layout } of samples) {
       const found = new Map<string, number>()
       embeddedTexts(layout.layers, null, found, layout.id)
 
-      const meanings = new Map(propSlots(layout).map((slot) => [slot.index, slot.meaning]))
       for (const [address, index] of found) {
-        if (meanings.get(index) === undefined) missing.push(`${address} (гнездо ${index})`)
+        if (!CAPTIONS.has(address.split(' → ')[1])) embedded.push(`${address} (гнездо ${index})`)
       }
     }
 
-    expect(missing).toEqual([])
+    expect(embedded).toEqual([])
+  })
+
+  it('у ИБП подпись слота гарантии не лежит единицей рядом с числом', () => {
+    const layout = samples.find((sample) => sample.layout.id === 'ups-rucelf-upi750')!.layout
+    const ids = new Set<string>()
+    const collect = (layers: Layer[]): void => {
+      for (const layer of layers) {
+        ids.add(layer.id)
+        if (layer.type === 'group') collect(layer.children)
+      }
+    }
+    collect(layout.layers)
+
+    expect(ids.has('warranty-number')).toBe(true)
+    expect(ids.has('warranty-unit')).toBe(false)
   })
 
   it('смысл — список слов, и у гнезда он один на все слои', () => {

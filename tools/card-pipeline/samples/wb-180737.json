@@ -261,34 +261,6 @@
             }
           },
           {
-            "id": "warranty-unit",
-            "type": "text",
-            "z": 3,
-            "box": {
-              "x": 0.42,
-              "y": 0.2,
-              "w": 0.5,
-              "h": 0.16
-            },
-            "rotate": -90,
-            "bind": {
-              "kind": "prop",
-              "index": 4,
-              "part": "label"
-            },
-            "style": {
-              "role": "label",
-              "size": 0.015,
-              "weight": 700,
-              "color": "#ffffff",
-              "align": "center",
-              "valign": "middle",
-              "lineHeight": 1,
-              "tracking": 0.04,
-              "transform": "upper"
-            }
-          },
-          {
             "id": "warranty-ribbon",
             "type": "shape",
             "z": 4,
@@ -487,12 +459,7 @@
             },
             "lines": [
               [
-                {},
-                {
-                  "text": " ВА",
-                  "size": 0.042,
-                  "weight": 900
-                }
+                {}
               ]
             ],
             "style": {
@@ -542,12 +509,7 @@
             },
             "lines": [
               [
-                {},
-                {
-                  "text": " Вт",
-                  "size": 0.042,
-                  "weight": 900
-                }
+                {}
               ]
             ],
             "style": {

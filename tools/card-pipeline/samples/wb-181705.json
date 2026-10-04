@@ -336,32 +336,6 @@
             }
           },
           {
-            "id": "warranty-unit",
-            "type": "text",
-            "z": 3,
-            "box": {
-              "x": 0.265,
-              "y": 0.375,
-              "w": 0.55,
-              "h": 0.17
-            },
-            "rotate": 90,
-            "lines": [
-              "ГОДА"
-            ],
-            "style": {
-              "role": "label",
-              "size": 0.023,
-              "weight": 800,
-              "color": "#ffffff",
-              "align": "center",
-              "valign": "middle",
-              "lineHeight": 1,
-              "transform": "upper",
-              "tracking": 0.03
-            }
-          },
-          {
             "id": "warranty-label",
             "type": "text",
             "z": 4,
