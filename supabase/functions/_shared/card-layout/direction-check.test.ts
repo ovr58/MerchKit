@@ -80,7 +80,8 @@ describe('combineDirection (ADR-0018, п. 2, проверки 3–6)', () => {
 
   it('сужение бокса до переполнения отвергает только этот бокс; иконка и гнездо остаются', () => {
     // «Куртка мужская» — 140 px; бокс 0,3 × 300 = 90 px.
-    const narrow = { ...TITLE, w: 0.3 }
+    // Высота 20 px — одна строка: переносить некуда.
+    const narrow = { ...TITLE, w: 0.3, h: 0.05 }
     const { direction, rejected } = combine({ ...FILL, boxes: [{ layerId: 'title', box: narrow }] })
 
     expect(rejected).toHaveLength(1)
@@ -89,6 +90,31 @@ describe('combineDirection (ADR-0018, п. 2, проверки 3–6)', () => {
     expect(direction.boxes).toEqual([])
     expect(direction.texts).toEqual(FILL.texts)
     expect(direction.icons).toEqual(FILL.icons)
+  })
+
+  it('перенос заголовка учтён: бокс на две строки сужается по ширине без отказа', () => {
+    // «Куртка мужская» — 140 px; бокс 0,3 × 300 = 90 px, высота 40 px вмещает две строки по
+    // 19,2 px: «Куртка» / «мужская» — 80 px, влезает. Без переноса сверка отвергла бы годную правку.
+    const narrow = { ...TITLE, w: 0.3 }
+    const { direction, rejected } = combine({ boxes: [{ layerId: 'title', box: narrow }] })
+
+    expect(rejected).toEqual([])
+    expect(direction.boxes).toEqual([{ layerId: 'title', box: narrow }])
+  })
+
+  it('перенос заголовка учтён: бокс, потерявший вторую строку, отвергается, хотя ширина прежняя', () => {
+    // Библиотека — бокс 90 × 40 px: две строки, заголовок переносится и влезает. Правка срезает
+    // высоту до 20 px — одна строка, «Куртка мужская» 140 px вылезает на 56%. Без переноса
+    // обе стороны дали бы одно и то же переполнение по ширине, и правку приняли бы.
+    const library = layoutOf(baseLayers({ ...TITLE, w: 0.3 }))
+    const flat = { ...TITLE, w: 0.3, h: 0.05 }
+
+    const { direction, rejected } = combine({ boxes: [{ layerId: 'title', box: flat }] }, { library })
+
+    expect(rejected).toHaveLength(1)
+    expect(rejected[0].part).toBe('бокс «title»')
+    expect(rejected[0].reason).toMatch(/^строка «Куртка мужская» шире бокса на 56%/)
+    expect(direction.boxes).toEqual([])
   })
 
   it('высота: блок строк выше бокса отвергает бокс', () => {

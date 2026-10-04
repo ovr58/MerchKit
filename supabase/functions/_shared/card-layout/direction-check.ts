@@ -8,8 +8,8 @@
  * выбрасывает годные иконки и гнёзда, а худший исход — макет библиотеки как есть.
  *
  * **Растеризатора здесь нет — обмерщик приходит параметром**, как у `overflowsOf`: функция
- * остаётся чистой, а в изоляте за `measure` стоит `resvg`. Обмеров ровно два на весь ответ
- * (библиотека и правка): переполнение — свойство пары «бокс — текст» и от соседей не зависит.
+ * остаётся чистой, а в изоляте за `measure` стоит `resvg`. Проходов обмера ровно два на весь
+ * ответ (библиотека и правка; перенос заголовка добавляет к каждому несколько обмеров его строк): переполнение — свойство пары «бокс — текст» и от соседей не зависит.
  * Круг сочетания растеризатора не зовёт совсем — только арифметика боксов и карты.
  */
 
@@ -28,6 +28,7 @@ import {
 import type { CardDirection } from './direction.ts'
 import { overflowsOf, textProbes } from './svg.ts'
 import type { FontFamilies } from './svg.ts'
+import { withTitleLines } from './title-fit.ts'
 import { resolveLayout, validateLayout } from './validate.ts'
 import type { Box, CardContent, CardLayout, ImageRef, Layer } from './types.ts'
 
@@ -82,18 +83,18 @@ export function combineDirection(input: CombineInput): { direction: CardDirectio
     return true
   }
 
-  // 3. Переполнение не хуже библиотеки. Один обмер библиотеки и один — правки.
-  const before = overflowsOf(textProbes(library, libraryContent, input.size, input.fonts), input.measure)
+  // 3. Переполнение не хуже библиотеки. Один обмер библиотеки и один — правки. Заголовок
+  // обеих сторон сначала раскладывается на строки своего бокса (B32): считать надо то, что
+  // нарисует `renderCard`, а не одну строку, иначе одинаковое «переполнение» по ширине в
+  // обеих сторонах скроет правку, отнявшую у бокса вторую строку.
+  const overflowOf = (layout: CardLayout, content: CardContent) =>
+    overflowsOf(
+      textProbes(layout, withTitleLines(layout, content, input.size, input.fonts, input.measure), input.size, input.fonts),
+      input.measure,
+    )
+  const before = overflowOf(library, libraryContent)
   const edited = snapshot()
-  const after = overflowsOf(
-    textProbes(
-      applyDirection(library, edited),
-      directedContent(libraryContent, edited, iconRefs),
-      input.size,
-      input.fonts,
-    ),
-    input.measure,
-  )
+  const after = overflowOf(applyDirection(library, edited), directedContent(libraryContent, edited, iconRefs))
   const layersById = new Map(flattenLayers(library.layers).map((layer) => [layer.id, layer]))
 
   for (const overflow of after) {
