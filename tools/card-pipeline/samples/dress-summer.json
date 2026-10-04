@@ -274,6 +274,10 @@
         "fill": {
           "kind": "solid",
           "color": "#d3d0cc"
+        },
+        "bind": {
+          "kind": "text",
+          "slot": "sizes"
         }
       },
       {

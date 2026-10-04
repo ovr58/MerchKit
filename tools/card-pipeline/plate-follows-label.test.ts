@@ -56,12 +56,24 @@ function contentOf(sample: Sample, without?: Label): CardContent {
   }
 }
 
-type Pair = { layout: string; plate: string; label: Label }
+type Pair = { layout: string; plate: string; label: Label; inner: string[] }
 
 /** Чем слой надписи называется в содержимом: гнездо текста или логотип; иначе `null`. */
 function labelOf(layer: { bind?: { kind: string; slot?: string } }): Label | null {
   if (layer.bind?.kind === 'text') return layer.bind.slot ?? null
   return layer.bind?.kind === 'logo' ? LOGO : null
+}
+
+type Rect = { x: number; y: number; w: number; h: number }
+
+function inside(box: Rect, outer: Rect): boolean {
+  const eps = 1e-9
+  return (
+    box.x >= outer.x - eps &&
+    box.y >= outer.y - eps &&
+    box.x + box.w <= outer.x + outer.w + eps &&
+    box.y + box.h <= outer.y + outer.h + eps
+  )
 }
 
 /** Плашки, которые несут ровно одну надпись из гнезда макета и ничего кроме неё. */
@@ -82,7 +94,20 @@ function labelPlates(): Pair[] {
         const small = plate.box.w * plate.box.h <= PLATE_RATIO * carrier.box.w * carrier.box.h
 
         if (carried.length === 1 && small) {
-          pairs.push({ layout: sample.layout.id, plate: plate.layer.id, label })
+          // Всё декоративное, что целиком лежит на плашке (разделитель между двумя размерами),
+          // принадлежит ей же: останется одно — висит чертой над пустым местом.
+          const inner = layers
+            .filter(
+              (other) =>
+                other !== plate &&
+                other.layer.type === 'shape' &&
+                other.layer.bind === undefined &&
+                other.z > plate.z &&
+                inside(other.box, plate.box),
+            )
+            .map((other) => other.layer.id)
+
+          pairs.push({ layout: sample.layout.id, plate: plate.layer.id, label, inner })
         }
       }
     }
@@ -98,12 +123,14 @@ describe('плашка надписи (B29)', () => {
     expect(pairs.length).toBeGreaterThan(5)
   })
 
-  it.each(pairs)('$layout: плашка «$plate» уходит вместе с надписью «$label»', ({ layout, plate, label }) => {
+  it.each(pairs)('$layout: плашка «$plate» уходит вместе с надписью «$label»', ({ layout, plate, label, inner }) => {
     const sample = samples.find((item) => item.layout.id === layout)!
     const ids = (content: CardContent) =>
       resolveLayout(sample.layout, content).layers.map((placed) => placed.layer.id)
 
-    expect(ids(contentOf(sample))).toContain(plate)
-    expect(ids(contentOf(sample, label))).not.toContain(plate)
+    expect(ids(contentOf(sample))).toEqual(expect.arrayContaining([plate, ...inner]))
+    for (const id of [plate, ...inner]) {
+      expect(ids(contentOf(sample, label))).not.toContain(id)
+    }
   })
 })
