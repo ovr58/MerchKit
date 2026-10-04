@@ -20,10 +20,12 @@ vi.mock('../_shared/card-layout/filling.ts', async (importOriginal) => {
   }
 })
 
+import type { CardDirection } from '../_shared/card-layout/direction.ts'
 import { imageRef, storedContent, type StoredContent } from '../_shared/card-layout/filling.ts'
 import { composeSvg } from '../_shared/card-layout/svg.ts'
 import type { FontFamilies } from '../_shared/card-layout/svg.ts'
-import type { CardLayout, Layer } from '../_shared/card-layout/types.ts'
+import type { CardContent, CardLayout, ImageRef, Layer } from '../_shared/card-layout/types.ts'
+import { resolveLayout } from '../_shared/card-layout/validate.ts'
 import { createRebuildHandler, type RebuildDeps } from './rebuild.ts'
 
 /**
@@ -84,7 +86,12 @@ const FRAME_PATH = `${USER}/${GENERATION}/frame-1.png`
 
 type World = {
   generation: { user_id: string; status: string; kind: string; card_title: string; card_description: string; product_properties: unknown }
-  card: { layout: CardLayout; content: StoredContent; font_map: Partial<FontFamilies> }
+  card: {
+    layout: CardLayout
+    content: StoredContent
+    font_map: Partial<FontFamilies>
+    direction: CardDirection | null
+  }
   files: Map<string, Uint8Array>
   queries: string[]
   quotaKeys: string[]
@@ -92,6 +99,12 @@ type World = {
   updates: Record<string, unknown>[]
   recorded: { content: StoredContent; fontMap: FontFamilies }[]
   rendered: { fonts: FontFamilies; width: number; height: number }[]
+  /** Что именно пришло на растеризатор: макет и содержимое (для правки арт-директора, B5.9). */
+  renderedWith: { layout: CardLayout; content: CardContent }[]
+  /** Имена иконок, которые пересборка запросила в базе; `iconBase` — что база готова отдать. */
+  iconQueries: string[][]
+  iconBase: Record<string, ImageRef>
+  iconsFail: boolean
 }
 
 function storedCard(): StoredContent {
@@ -117,7 +130,7 @@ function world(patch: Partial<World['generation']> = {}): World {
       product_properties: [{ label: 'Материал', value: 'Хлопок' }],
       ...patch,
     },
-    card: { layout: LAYOUT, content: storedCard(), font_map: FONTS },
+    card: { layout: LAYOUT, content: storedCard(), font_map: FONTS, direction: null },
     files: new Map([[`results/${FRAME_PATH}`, PNG]]),
     queries: [],
     quotaKeys: [],
@@ -125,6 +138,10 @@ function world(patch: Partial<World['generation']> = {}): World {
     updates: [],
     recorded: [],
     rendered: [],
+    renderedWith: [],
+    iconQueries: [],
+    iconBase: {},
+    iconsFail: false,
   }
 }
 
@@ -134,7 +151,12 @@ function handlerFor(state: World, overflows: unknown[] = []) {
     select: async (query) => {
       state.queries.push(query)
       if (query.startsWith('generations?')) return [state.generation]
-      if (query.startsWith('generation_cards?')) return [state.card]
+      // Как PostgREST: отдаются только запрошенные колонки. Иначе правка арт-директора «читалась»
+      // бы и тогда, когда пересборка не попросила её в `select`.
+      if (query.startsWith('generation_cards?')) {
+        const columns = /select=([^&]+)/.exec(query)![1].split(',')
+        return [Object.fromEntries(columns.map((column) => [column, state.card[column as keyof World['card']]]))]
+      }
       if (query.startsWith('generation_assets?')) {
         return [{ storage_path: RESULT_PATH, width: 600, height: 800 }]
       }
@@ -166,8 +188,16 @@ function handlerFor(state: World, overflows: unknown[] = []) {
       state.updates.push(patch)
       state.generation = { ...state.generation, ...patch }
     },
+    loadIcons: async (names) => {
+      state.iconQueries.push(names)
+      if (state.iconsFail) throw new Error('база иконок недоступна')
+      return Object.fromEntries(
+        names.flatMap((name) => (state.iconBase[name] === undefined ? [] : [[name, state.iconBase[name]]])),
+      )
+    },
     render: async (layout, content, size, fonts) => {
       state.rendered.push({ fonts, ...size })
+      state.renderedWith.push({ layout, content })
       const { svg, dropped } = composeSvg(layout, content, size, fonts)
       return {
         bytes: new TextEncoder().encode(svg),
@@ -425,5 +455,129 @@ describe('card-rebuild — режим пересборки (B7.5)', () => {
 
     expect(response.status).toBe(503)
     expect(JSON.stringify(body)).not.toContain('results/')
+  })
+})
+
+describe('card-rebuild — правка арт-директора (B5.9)', () => {
+  const SHIFTED = { x: 0.05, y: 0.55, w: 0.9, h: 0.1 }
+  const SOMEWHERE = { x: 0.1, y: 0.7, w: 0.8, h: 0.1 }
+  const CHECK: ImageRef = { dataUri: 'data:image/svg+xml;base64,PHN2Zy8+', width: 24, height: 24 }
+  const STAR: ImageRef = { dataUri: 'data:image/svg+xml;base64,PHN0YXIvPg==', width: 24, height: 24 }
+
+  const DIRECTION: CardDirection = {
+    boxes: [{ layerId: 'title', box: SHIFTED }],
+    texts: { subtitle: ['Лёгкий лён'] },
+    icons: [
+      { prop: 0, icon: 'check' },
+      { prop: 1, icon: 'check' },
+      { prop: 2, icon: null },
+    ],
+  }
+
+  /** Бокс заголовка так, как его видит композиция: после `resolveLayout`, а не из исходного макета. */
+  function titleBox(call: { layout: CardLayout; content: CardContent }): unknown {
+    return resolveLayout(call.layout, call.content).layers.find((placed) => placed.layer.id === 'title')!.box
+  }
+
+  function directedWorld(direction: CardDirection | null = DIRECTION): World {
+    const state = world()
+    state.card = { ...state.card, direction }
+    state.iconBase = { check: CHECK, star: STAR }
+    return state
+  }
+
+  it('пересобирает с тем же сдвигом бокса заголовка, что принят на сборке', async () => {
+    const state = directedWorld()
+    const response = await handlerFor(state)(post(EDIT))
+
+    expect(response.status).toBe(200)
+    expect(titleBox(state.renderedWith[0])).toEqual(SHIFTED)
+    // Макет без правки — другой бокс: сдвиг не совпал с исходным случайно.
+    expect(titleBox({ layout: LAYOUT, content: state.renderedWith[0].content })).not.toEqual(SHIFTED)
+  })
+
+  it('строки гнёзд и иконки правки попадают в кадр; иконки — из базы по уникальным именам без null', async () => {
+    const state = directedWorld()
+    await handlerFor(state)(post(EDIT))
+
+    expect(state.iconQueries).toEqual([['check']])
+    const { content } = state.renderedWith[0]
+    expect(content.texts.subtitle).toEqual(['Лёгкий лён'])
+    expect(content.props.map((prop) => prop.icon)).toEqual([CHECK, CHECK])
+  })
+
+  it('в снимок уходит содержимое без правки, а direction не перезаписывается', async () => {
+    const state = directedWorld()
+    await handlerFor(state)(post(EDIT))
+
+    expect(state.recorded).toHaveLength(1)
+    expect(state.recorded[0].content.texts).toEqual({ title: ['Новый заголовок'], body: ['Новое описание'] })
+    expect(state.recorded[0].content.props.every((prop) => prop.icon === undefined)).toBe(true)
+    expect(state.card.direction).toEqual(DIRECTION)
+    expect(state.card.layout).toBe(LAYOUT)
+  })
+
+  it('повтор даёт побайтово тот же файл и тот же снимок', async () => {
+    const state = directedWorld()
+    const handler = handlerFor(state)
+
+    await handler(post(EDIT))
+    const first = state.files.get(`results/${RESULT_PATH}`)!
+    await handler(post(EDIT))
+    const second = state.files.get(`results/${RESULT_PATH}`)!
+
+    expect(second).toEqual(first)
+    expect(state.recorded[1]).toEqual(state.recorded[0])
+    expect(titleBox(state.renderedWith[1])).toEqual(SHIFTED)
+  })
+
+  it('два бокса одного слоя — главный последний', async () => {
+    const state = directedWorld({
+      boxes: [
+        { layerId: 'title', box: SOMEWHERE },
+        { layerId: 'title', box: SHIFTED },
+      ],
+      texts: {},
+      icons: [],
+    })
+    await handlerFor(state)(post(EDIT))
+
+    expect(titleBox(state.renderedWith[0])).toEqual(SHIFTED)
+  })
+
+  it('иконок в правке нет — в базу за ними не ходит', async () => {
+    const state = directedWorld({ boxes: DIRECTION.boxes, texts: {}, icons: [] })
+    await handlerFor(state)(post(EDIT))
+
+    expect(state.iconQueries).toEqual([])
+  })
+
+  it('иконки нет в базе — свойство без иконки, пересборка проходит', async () => {
+    const state = directedWorld()
+    state.iconBase = {}
+    const response = await handlerFor(state)(post(EDIT))
+
+    expect(response.status).toBe(200)
+    expect(state.renderedWith[0].content.props.every((prop) => prop.icon === undefined)).toBe(true)
+  })
+
+  it('база иконок упала — 503, ни файла, ни снимка, ни текстов', async () => {
+    const state = directedWorld()
+    state.iconsFail = true
+    const response = await handlerFor(state)(post(EDIT))
+
+    expect(response.status).toBe(503)
+    expect(state.files.has(`results/${RESULT_PATH}`)).toBe(false)
+    expect(state.recorded).toEqual([])
+    expect(state.updates).toEqual([])
+  })
+
+  it('direction = null — как на B7.5: макет снимка как есть, в базу иконок не ходит', async () => {
+    const state = directedWorld(null)
+    await handlerFor(state)(post(EDIT))
+
+    expect(state.renderedWith[0].layout).toBe(LAYOUT)
+    expect(state.iconQueries).toEqual([])
+    expect(state.renderedWith[0].content.texts.subtitle).toBeUndefined()
   })
 })

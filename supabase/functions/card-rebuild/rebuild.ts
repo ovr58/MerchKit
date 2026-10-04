@@ -8,20 +8,23 @@
  *
  * **Бесплатно и без вендора.** Ни `ledger`, ни баланс, ни провайдер сюда не дотягиваются: у
  * зависимостей нет ни одного вызова в эту сторону. Пересборка берёт то, что сборка уже
- * сохранила (B7.4) — снимок макета, кадр, вырез и знак, — и кладёт поверх новые тексты.
+ * сохранила (B7.4) — снимок макета, кадр, вырез и знак, — и кладёт поверх новые тексты. Если на
+ * сборке арт-директор правил карточку (B5.8, `generation_cards.direction`), та же правка
+ * накладывается и здесь (B5.9); самого арт-директора пересборка не зовёт.
  *
  * Два режима по телу запроса: чтение (`{ generationId }`) наполняет форму правки, пересборка
  * (`{ generationId, texts, properties, fontMap? }`) собирает карточку заново.
  */
 
 import { CORS_HEADERS, failure, json } from '../_shared/edge.ts'
+import { applyDirection, directedContent, type CardDirection } from '../_shared/card-layout/direction.ts'
 import { propertyCapacity } from '../_shared/card-layout/features.ts'
 import { cardFilling, fromStored, storedContent, type StoredContent } from '../_shared/card-layout/filling.ts'
 import type { DownloadFile } from '../_shared/card-layout/renderer-assets.ts'
 import type { PreviewRenderResult } from '../_shared/card-layout/render.ts'
 import type { FontFamilies } from '../_shared/card-layout/svg.ts'
 import { textMismatches } from '../_shared/card-layout/text-check.ts'
-import { FONT_ROLES, type CardLayout, type FontRole } from '../_shared/card-layout/types.ts'
+import { FONT_ROLES, type CardContent, type CardLayout, type FontRole, type ImageRef } from '../_shared/card-layout/types.ts'
 
 export type RebuildDeps = {
   callerId: (request: Request) => Promise<string | null>
@@ -39,9 +42,11 @@ export type RebuildDeps = {
     userId: string,
     patch: { card_title: string; card_description: string; product_properties: Property[] },
   ) => Promise<void>
+  /** Иконки базы по именам, которыми арт-директор пометил свойства (B5.9). Тот же код, что у воркера. */
+  loadIcons: (names: string[]) => Promise<Record<string, ImageRef>>
   render: (
     layout: CardLayout,
-    content: ReturnType<typeof cardFilling>['content'],
+    content: CardContent,
     size: { width: number; height: number },
     fonts: FontFamilies,
   ) => Promise<PreviewRenderResult>
@@ -60,7 +65,13 @@ type GenerationRow = {
   product_properties: unknown
 }
 
-type CardRow = { layout: CardLayout; content: StoredContent; font_map: Partial<FontFamilies> | null }
+type CardRow = {
+  layout: CardLayout
+  content: StoredContent
+  font_map: Partial<FontFamilies> | null
+  /** Правка арт-директора со сборки (B5.8); `null` — ступень 4, карточка по макету библиотеки. */
+  direction: CardDirection | null
+}
 type AssetRow = { storage_path: string; width: number; height: number }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -173,11 +184,17 @@ async function handle(deps: RebuildDeps, request: Request): Promise<Response> {
     logo: restored.logo ?? null,
   })
 
+  // Правка арт-директора (B5.9) накладывается на снимок и на содержимое каждый раз заново, а в
+  // снимок возвращается содержимое без неё: библиотечный макет остаётся библиотечным, `direction`
+  // не перезаписывается, и повтор даёт тот же файл. Арт-директор здесь не зовётся — только
+  // применяется то, что он решил на сборке.
+  const directed = await directedAssembly(deps, card.layout, filling.content, card.direction)
+
   // Механическая приёмка (C1) на каждой сборке, и пересборка — сборка: заголовок и описание в
   // кадре — ровно те слова, что прислал человек. До любой записи: при расхождении файл, снимок
   // и тексты остаются прежними. Статус 500, а не 400: ввод был годным, слова потеряла наша
   // сборка, и повтор того же запроса этого не лечит. Квота уже списана — как у неудачного превью.
-  const mismatched = textMismatches(card.layout, filling.content, {
+  const mismatched = textMismatches(directed.layout, directed.content, {
     title: [texts.title],
     body: [texts.description],
   })
@@ -187,7 +204,7 @@ async function handle(deps: RebuildDeps, request: Request): Promise<Response> {
   }
 
   // Размер — у файла, который заменяем: сборка обязана вернуть то же, что площадка уже приняла.
-  const rendered = await deps.render(card.layout, filling.content, { width: asset.width, height: asset.height }, fontMap)
+  const rendered = await deps.render(directed.layout, directed.content, { width: asset.width, height: asset.height }, fontMap)
 
   // Порядок: файл → снимок → тексты. Обрыв на любом шаге лечится повтором того же запроса:
   // каждый шаг пишет одно и то же второй раз, а не прибавляет.
@@ -217,6 +234,25 @@ async function handle(deps: RebuildDeps, request: Request): Promise<Response> {
   })
 }
 
+/**
+ * Макет и содержимое с правкой арт-директора. Иконки — из базы по именам правки, теми же руками,
+ * что на сборке; имя, которого в базе уже нет, оставляет свойство без иконки (`directedContent`),
+ * а сбой базы — отказ с повтором, а не молчаливо другая карточка.
+ */
+async function directedAssembly(
+  deps: RebuildDeps,
+  layout: CardLayout,
+  content: CardContent,
+  direction: CardDirection | null,
+): Promise<{ layout: CardLayout; content: CardContent }> {
+  if (direction === null || direction === undefined) return { layout, content }
+
+  const names = [...new Set(direction.icons.flatMap(({ icon }) => (icon === null ? [] : [icon])))]
+  const iconRefs = names.length === 0 ? {} : await deps.loadIcons(names)
+
+  return { layout: applyDirection(layout, direction), content: directedContent(content, direction, iconRefs) }
+}
+
 /** Кадр есть среди сохранённого: карточка собрана после B7.4, иначе собирать не из чего. */
 function isRebuildable(content: StoredContent): boolean {
   return Array.isArray(content?.frames) && content.frames.length > 0
@@ -224,7 +260,7 @@ function isRebuildable(content: StoredContent): boolean {
 
 async function readCard(deps: RebuildDeps, generationId: string): Promise<CardRow | null> {
   const [row] = (await deps.select(
-    `generation_cards?generation_id=eq.${generationId}&select=layout,content,font_map`,
+    `generation_cards?generation_id=eq.${generationId}&select=layout,content,font_map,direction`,
   )) as CardRow[]
   return row ?? null
 }

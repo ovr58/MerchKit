@@ -43,6 +43,7 @@ import type { CardDirection } from '../_shared/card-layout/direction.ts'
 import { directorLogLine, runDirector, type DirectorResult } from '../_shared/card-layout/director-run.ts'
 import { usesCutout } from '../_shared/card-layout/features.ts'
 import { cardFilling, imageBytes, imageRef, storedContent } from '../_shared/card-layout/filling.ts'
+import { readIcons } from '../_shared/card-layout/icons.ts'
 import { occupancyOf, type MaskSamples } from '../_shared/card-layout/occupancy.ts'
 import { measureText, renderCard } from '../_shared/card-layout/render.ts'
 import { layoutQueries, layoutSnapshot, selectCardLayout, type LayoutCandidate } from '../_shared/card-layout/selection.ts'
@@ -459,25 +460,6 @@ async function directCard(args: {
     console.error('Арт-директор: сбой вокруг цикла, карточка по макету библиотеки', error)
     return null
   }
-}
-
-/** Иконки базы по именам → картинки для композиции. Исходник SVG лежит в `bytea`: PostgREST
- *  отдаёт его строкой `\x<hex>`. Размер 24 × 24 — как у иконок оснастки (`render.mts`): иконка
- *  вписывается в бокс слоя, а не берёт размер из файла. */
-async function readIcons(names: string[]): Promise<Record<string, ImageRef>> {
-  const list = names.map(encodeURIComponent).join(',')
-  const rows = (await selectFromDatabase(
-    `card_icons?select=name,content&name=in.(${list})&status=eq.${encodeURIComponent('готово')}`,
-  )) as { name: string; content: string }[]
-
-  return Object.fromEntries(
-    rows.map((row) => {
-      const hex = row.content.slice(2)
-      let binary = ''
-      for (let i = 0; i < hex.length; i += 2) binary += String.fromCharCode(Number.parseInt(hex.slice(i, i + 2), 16))
-      return [row.name, { dataUri: `data:image/svg+xml;base64,${btoa(binary)}`, width: 24, height: 24 }]
-    }),
-  )
 }
 
 /** Исходники пересборки — в `results` рядом с карточкой, содержимое — в снимок (B7.4). */

@@ -21,6 +21,7 @@ import {
   selectFromDatabase,
   uploadFile,
 } from '../_shared/edge.ts'
+import { readIcons } from '../_shared/card-layout/icons.ts'
 import { renderPreview } from '../_shared/card-layout/render.ts'
 import { createRebuildHandler } from './rebuild.ts'
 
@@ -52,6 +53,7 @@ Deno.serve(
       })
     },
     updateGeneration,
+    loadIcons: readIcons,
     render: renderPreview,
     dailyLimit: REBUILD_DAILY_LIMIT,
   }),
