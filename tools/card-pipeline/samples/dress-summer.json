@@ -516,7 +516,7 @@
       }
     ]
   },
-  "isFallback": true,
+  "edgeHeavy": true,
   "content": {
     "texts": {
       "kicker": [

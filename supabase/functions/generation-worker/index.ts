@@ -35,6 +35,7 @@ import {
   uploadFile,
 } from '../_shared/edge.ts'
 import { mimeOf, readImageInfo } from '../_shared/image.ts'
+import { cardAssemblySize } from '../_shared/card-size.ts'
 import { describeProfileMismatch } from '../_shared/output-profile.ts'
 import { createCutoutRunner } from '../_shared/card-layout/cutout.ts'
 import { usesCutout } from '../_shared/card-layout/features.ts'
@@ -264,16 +265,22 @@ async function run(generation: GenerationRow, usage: ProviderUsage[]): Promise<s
 
   // У карточки пользователю уходит не кадр вендора, а собранный по макету файл; у фото —
   // кадр как есть. Сверка с профилем — по тому, что уходит.
+  // Размер собранной карточки — `cardAssemblySize`: пока сборка в изоляте, большой профиль
+  // (Ozon «Одежда», «Аксессуары») собирается в порог площадки, а не в целевой кадр. Снять
+  // при переезде сборки на коробку (ADR-0015), решение Q-2 шага B7.7.
+  const cardProfile: OutputProfile = { ...profile, ...cardAssemblySize(profile) }
   const assembly = layout !== null && card !== null
-    ? await assembleCard(generation, layout, card, images[0].bytes, profile)
+    ? await assembleCard(generation, layout, card, images[0].bytes, cardProfile)
     : null
   const results = assembly !== null ? [assembly.bytes] : images.map((image) => image.bytes)
 
   // Профиль уходил В запрос, но верить на слово нельзя: файл не по требованиям площадки —
   // это файл, за который пользователь заплатил зря (FR-25). Собранную карточку — на точный
-  // размер профиля (её рисуем мы), кадр фото — порогом и допуском, как и до сборки.
+  // размер сборки (её рисуем мы), кадр фото — порогом и допуском, как и до сборки.
   for (const bytes of results) {
-    const mismatch = describeProfileMismatch(bytes, profile, { exact: assembly !== null })
+    const mismatch = assembly !== null
+      ? describeProfileMismatch(bytes, cardProfile, { exact: true })
+      : describeProfileMismatch(bytes, profile)
 
     if (mismatch !== null) {
       throw new Error(`Изображение не подходит профилю площадки: ${mismatch}`)

@@ -1,5 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useState, type FormEvent } from 'react'
+import { cardAssemblySize } from '@shared/card-size.ts'
 import { Link, useNavigate, useParams } from 'react-router'
 
 import { AppLayout, Panel, PanelTitle } from '@/components/AppLayout'
@@ -327,6 +328,8 @@ export default function Generation() {
   const row = generation.data
   const running = row?.status === 'queued' || row?.status === 'running'
   const profile = profileOf(taxonomy.data, row?.marketplaceId ?? null, row?.categoryId ?? null)
+  // Карточка собирается не в целевой кадр большого профиля, а в порог площадки (B7.7, Q-2).
+  const fileSize = profile && row?.kind === 'card' ? cardAssemblySize(profile) : profile
 
   const heading = row
     ? row.status === 'failed'
@@ -376,7 +379,7 @@ export default function Generation() {
                 />
                 <SummaryRow
                   label="Файл"
-                  value={profile ? `${profile.aspectLabel} · ${profile.width} × ${profile.height}` : null}
+                  value={profile && fileSize ? `${profile.aspectLabel} · ${fileSize.width} × ${fileSize.height}` : null}
                 />
               </dl>
 
@@ -547,6 +550,7 @@ export default function Generation() {
 
               {profile && (
                 <OutputParams
+                  kind={row.kind}
                   note={`Файл готов под требования площадки для этой категории — загружается в карточку как есть.`}
                   profile={profile}
                 />

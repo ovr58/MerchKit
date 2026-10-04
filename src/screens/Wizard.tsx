@@ -674,7 +674,7 @@ export default function Wizard() {
                 ))}
               </div>
 
-              {profile && <OutputParams note={profileNote} profile={profile} />}
+              {profile && <OutputParams kind={draft.kind} note={profileNote} profile={profile} />}
 
               <p className="text-muted-foreground text-[13px] leading-[18px]">
                 Публиковать за вас мы не умеем — готовим файл, который площадка примет.
@@ -885,7 +885,7 @@ export default function Wizard() {
                 <SummaryRow label="Пожелания" value={draft.wishes || null} />
               </dl>
 
-              {profile && <OutputParams note={profileNote} profile={profile} />}
+              {profile && <OutputParams kind={draft.kind} note={profileNote} profile={profile} />}
 
               <div className="bg-muted border-border flex flex-col gap-2 rounded-lg border p-4">
                 <PriceRow label="Объект" value={`${OBJECT_PRICE} баллов`} />

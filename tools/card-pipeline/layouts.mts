@@ -3,7 +3,9 @@
  *
  * Источник правды — `card_layouts`; JSON-разборы в samples/ нужны офлайн-разбору и гейту A3.
  * Команды синхронизируют только поля, которыми владеет рабочая копия: сам макет, заголовок,
- * источник и универсальный макет. Теги B2.0 не затираются при `push`.
+ * источник, универсальный макет и признак «тяжёлый» (B7.7: после `db reset` миграция знает
+ * только макеты, которые в ней записаны, остальные получают признак отсюда). Теги B2.0 не
+ * затираются при `push`.
  *
  *   npm run cards:layouts       — сверить базу и рабочую копию
  *   npm run cards:layouts push  — залить разборы в базу
@@ -26,6 +28,7 @@ type Sample = {
   content: unknown
   notes: unknown
   isFallback?: boolean
+  edgeHeavy?: boolean
 }
 
 type LayoutRow = {
@@ -34,6 +37,7 @@ type LayoutRow = {
   layout: CardLayout
   source: string
   is_fallback: boolean
+  edge_heavy: boolean
 }
 
 function localEnv(): Record<string, string> {
@@ -91,7 +95,7 @@ async function samples(): Promise<Map<string, Sample>> {
 
 async function base(): Promise<LayoutRow[]> {
   return (await rest(
-    'card_layouts?select=id,title,layout,source,is_fallback&order=id',
+    'card_layouts?select=id,title,layout,source,is_fallback,edge_heavy&order=id',
   )) as LayoutRow[]
 }
 
@@ -112,7 +116,8 @@ function sameWorkingCopyFields(sample: Sample, row: LayoutRow): boolean {
     sample.layout.title === row.title &&
     canonicalJson(sample.layout) === canonicalJson(row.layout) &&
     sample.source === row.source &&
-    (sample.isFallback === true) === row.is_fallback
+    (sample.isFallback === true) === row.is_fallback &&
+    (sample.edgeHeavy === true) === row.edge_heavy
   )
 }
 
@@ -150,6 +155,7 @@ async function push(): Promise<void> {
       layout: sample.layout,
       source: sample.source,
       is_fallback: sample.isFallback === true,
+      edge_heavy: sample.edgeHeavy === true,
     }
     if (remoteById.has(id)) {
       await rest(`card_layouts?id=eq.${encodeURIComponent(id)}`, {
@@ -181,6 +187,7 @@ async function pull(): Promise<void> {
       source: row.source,
       layout: row.layout,
       isFallback: row.is_fallback || undefined,
+      edgeHeavy: row.edge_heavy || undefined,
     }
     delete updated.file
     await writeFile(`${SAMPLES}${sample.file}`, `${JSON.stringify(updated, null, 2)}\n`, 'utf8')

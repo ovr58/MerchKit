@@ -6,6 +6,8 @@ import {
   type ProductProperty,
 } from '@/features/generation'
 import type { OutputProfile } from '@/features/taxonomy'
+import { cardAssemblySize } from '@shared/card-size.ts'
+import type { GenerationKind } from '@shared/pricing.ts'
 import { useEffect, useState, type ReactNode } from 'react'
 
 import { AlertTriangleIcon, CheckIcon, CloseIcon, SparkIcon } from '@/components/icons'
@@ -217,10 +219,21 @@ export function ChoiceCard({
  * разрешение, формат и фон ДО того, как с него спишут баллы. Изображение, не прошедшее
  * модерацию площадки, бесполезно — продавец заплатил за файл, который некуда загрузить.
  */
-export function OutputParams({ note, profile }: { note?: string; profile: OutputProfile }) {
+export function OutputParams({
+  kind,
+  note,
+  profile,
+}: {
+  kind: GenerationKind
+  note?: string
+  profile: OutputProfile
+}) {
+  // Карточку собираем мы, и пока сборка в изоляте, большой профиль собирается в порог
+  // площадки (B7.7, Q-2): обещаем тот размер, который получится. Фото — кадр вендора как есть.
+  const size = kind === 'card' ? cardAssemblySize(profile) : profile
   const rows: [string, ReactNode][] = [
     ['Кадр', profile.aspectLabel],
-    ['Размер', `${profile.width} × ${profile.height}`],
+    ['Размер', `${size.width} × ${size.height}`],
     // Форматов несколько, и выбирает из них вендор, а не мы: обещать один — обещать то,
     // чем мы не управляем. Площадка принимает любой из перечисленных (FR-25).
     [

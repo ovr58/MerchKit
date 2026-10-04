@@ -7,7 +7,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(5);
+select plan(8);
 
 select has_column('public', 'card_layouts', 'edge_heavy', 'У макета есть признак «тяжёлый»');
 
@@ -44,6 +44,28 @@ select throws_ok(
   '23514',
   null,
   'Универсальный макет не может быть тяжёлым: иначе у подбора нет безопасного ответа'
+);
+
+-- Решения B7.7 по замеру в размерах профилей (Q-1, Q-3): список тяжёлых и новый универсальный.
+
+select is(
+  (select array_agg(id order by id) from public.card_layouts where is_fallback),
+  array['school-shirt-girls-dark'],
+  'Универсальный макет — school-shirt-girls-dark, а не тяжёлый dress-summer'
+);
+
+select is(
+  (select edge_heavy from public.card_layouts where id = 'dress-summer'),
+  true,
+  'dress-summer не успевает собраться в изоляте и вне подбора'
+);
+
+-- Строки tires-formula-ice до первого `cards:layouts push` на стенде нет; после него признак
+-- приезжает из рабочей копии. Проверяем, что не обратное: такая строка не может быть лёгкой.
+select is(
+  (select count(*)::integer from public.card_layouts where id = 'tires-formula-ice' and not edge_heavy),
+  0,
+  'tires-formula-ice, если он есть в библиотеке, помечен тяжёлым'
 );
 
 select * from finish();
