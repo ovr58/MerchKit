@@ -1,6 +1,6 @@
 # ADR-0018: Арт-директор — текстовая операция провайдера, которая правит макет патчем; карта занятости — из сэмплов маски от сервиса выреза
 
-- **Status:** Accepted — владелец принял все девять пунктов 2026-10-03 (страница приёмки https://claude.ai/artifact/JdjVBjAg7oULyf2koZdiqd)
+- **Status:** Accepted — владелец принял все девять пунктов 2026-10-03 (страница приёмки https://claude.ai/artifact/JdjVBjAg7oULyf2koZdiqd) · Superseded by [ADR-0019](0019-html-authoring-transpiled-to-layers.md) в части пп. 1–2 и 5 (постановка, патч, предпроверка): карточку сочиняет модель в HTML по кадру; п. 4 (`POST /mask`) в силе
 - **Date:** 2026-10-03
 - **Related:** шаг B5.0 плана [`card-assembly-pipeline_2026-08-31.md`](../../planning/active/card-assembly-pipeline_2026-08-31.md) ·
   постановка владельца [`ART_DIRECTOR_BRIEF.md`](../../planning/reference/ART_DIRECTOR_BRIEF.md) ·
