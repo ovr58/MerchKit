@@ -268,6 +268,12 @@ describe('Операция composeCard: предел заголовка', () => 
     expect(user).toContain('не длиннее 12 символов')
   })
 
+  it('не обещает модели одну строку: бокс может вместить две, и перенос делает вёрстка', async () => {
+    const { user } = await composeWith(22)
+
+    expect(user).not.toContain('одной строкой')
+  })
+
   it('без предела — прежние «до 100 символов»', async () => {
     const { user } = await composeWith(null)
 

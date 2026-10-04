@@ -165,7 +165,7 @@ export type Overflow = {
 }
 
 /** Меньшее превышение — след округлений, а не брак вёрстки. */
-const OVERFLOW_TOLERANCE_PX = 1
+export const OVERFLOW_TOLERANCE_PX = 1
 
 /**
  * Арифметика переполнения (K-1): какие строки не влезают в свои боксы.

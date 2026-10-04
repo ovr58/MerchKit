@@ -1,8 +1,18 @@
 import { describe, expect, it } from 'vitest'
 
-import { fitTitle, titleCharLimit, titleFits, titleWidthOf } from './title-fit.ts'
+import { textMismatches } from './text-check.ts'
+import {
+  fitTitle,
+  titleCharLimit,
+  titleFits,
+  titleLineLimit,
+  titleLines,
+  titleWidthOf,
+  withTitleLines,
+  wrapWords,
+} from './title-fit.ts'
 import type { FontFamilies } from './svg.ts'
-import type { CardLayout, Layer } from './types.ts'
+import type { CardContent, CardLayout, Layer } from './types.ts'
 
 /**
  * Короткий заголовок под бокс макета (шаг B7.8, решение Q-4).
@@ -46,14 +56,18 @@ function layoutOf(layers: Layer[]): CardLayout {
   }
 }
 
-/** Бокс заголовка на `chars` знаков: 10 px на знак, холст шириной 300 px. */
-function layoutWithTitleFor(chars: number): CardLayout {
+/** Высота одной строки заголовка: кегль 0,05 от 400 px, межстрочный 1,2. */
+const LINE_PX = 24
+
+/** Бокс заголовка на `chars` знаков: 10 px на знак, холст шириной 300 px; по высоте — на
+ *  `lines` строк (по умолчанию одна: решение B32 пускает вторую строку только в высокий бокс). */
+function layoutWithTitleFor(chars: number, lines = 1): CardLayout {
   return layoutOf([
     {
       id: 'title',
       type: 'text',
       z: 1,
-      box: { x: 0, y: 0, w: (chars * PX_PER_CHAR) / SIZE.width, h: 0.2 },
+      box: { x: 0, y: 0, w: (chars * PX_PER_CHAR) / SIZE.width, h: (lines * LINE_PX) / SIZE.height },
       style,
       bind: { kind: 'text', slot: 'title' },
     },
@@ -81,7 +95,7 @@ describe('Предел заголовка в знаках', () => {
   it('округляет вниз: 12 знаков с хвостом места — всё равно 12', () => {
     // Бокс 125 px при 10 px на знак.
     const layout = layoutOf([
-      { id: 'title', type: 'text', z: 1, box: { x: 0, y: 0, w: 125 / SIZE.width, h: 0.2 }, style, bind: { kind: 'text', slot: 'title' } },
+      { id: 'title', type: 'text', z: 1, box: { x: 0, y: 0, w: 125 / SIZE.width, h: LINE_PX / SIZE.height }, style, bind: { kind: 'text', slot: 'title' } },
     ])
 
     expect(titleCharLimit(layout, SIZE, FONTS, byLength)).toBe(12)
@@ -96,6 +110,96 @@ describe('Предел заголовка в знаках', () => {
   })
 })
 
+describe('Сколько строк позволяет бокс заголовка', () => {
+  it('бокс на одну строку по высоте — одна', () => {
+    expect(titleLineLimit(layoutWithTitleFor(12, 1), SIZE, FONTS)).toBe(1)
+  })
+
+  it('бокс на две строки по высоте — две', () => {
+    expect(titleLineLimit(layoutWithTitleFor(12, 2), SIZE, FONTS)).toBe(2)
+  })
+
+  it('бокс на три строки всё равно даёт две: больше двух заголовок не занимает', () => {
+    expect(titleLineLimit(layoutWithTitleFor(12, 3), SIZE, FONTS)).toBe(2)
+  })
+
+  it('недобор высоты в пиксель — след округления, строка помещается', () => {
+    const layout = (heightPx: number): CardLayout =>
+      layoutOf([
+        { id: 'title', type: 'text', z: 1, box: { x: 0, y: 0, w: 0.5, h: heightPx / SIZE.height }, style, bind: { kind: 'text', slot: 'title' } },
+      ])
+
+    expect(titleLineLimit(layout(2 * LINE_PX - 1), SIZE, FONTS)).toBe(2)
+    expect(titleLineLimit(layout(2 * LINE_PX - 2), SIZE, FONTS)).toBe(1)
+  })
+
+  it('у макета без гнезда заголовка строк нет', () => {
+    expect(titleLineLimit(WITHOUT_TITLE, SIZE, FONTS)).toBeNull()
+  })
+})
+
+describe('Предел знаков на две строки', () => {
+  it('у бокса на 12 знаков в две строки предел — 24', () => {
+    expect(titleCharLimit(layoutWithTitleFor(12, 2), SIZE, FONTS, byLength)).toBe(24)
+  })
+
+  it('у бокса в одну строку предел прежний — 12', () => {
+    expect(titleCharLimit(layoutWithTitleFor(12, 1), SIZE, FONTS, byLength)).toBe(12)
+  })
+
+  it('высокий бокс на три строки считается на две — 24', () => {
+    expect(titleCharLimit(layoutWithTitleFor(12, 3), SIZE, FONTS, byLength)).toBe(24)
+  })
+})
+
+describe('Перенос по словам', () => {
+  const byChars = (limit: number) => (text: string) => text.length <= limit
+
+  it('влезающий заголовок остаётся одной строкой', () => {
+    expect(wrapWords('Куртка мужская', byChars(20), 2)).toEqual(['Куртка мужская'])
+  })
+
+  it('переносит на границе слова: первая строка заполняется до предела', () => {
+    expect(wrapWords('Термокружка стальная вакуумная', byChars(22), 2)).toEqual(['Термокружка стальная', 'вакуумная'])
+  })
+
+  it('на одной строке всё остаётся одной строкой, даже когда не влезает', () => {
+    expect(wrapWords('Термокружка стальная вакуумная', byChars(22), 1)).toEqual(['Термокружка стальная вакуумная'])
+  })
+
+  it('вторая строка забирает остаток целиком: слова не теряются, переполнение видно обмеру', () => {
+    expect(wrapWords('Куртка мужская зимняя тёплая длинная', byChars(14), 2)).toEqual([
+      'Куртка мужская',
+      'зимняя тёплая длинная',
+    ])
+  })
+
+  it('слово длиннее строки стоит на строке одно и не рвётся', () => {
+    expect(wrapWords('Электрочайникпрофессиональный 2 л', byChars(10), 2)).toEqual([
+      'Электрочайникпрофессиональный',
+      '2 л',
+    ])
+  })
+
+  it('схлопывает лишние пробелы', () => {
+    expect(wrapWords('  Куртка   мужская ', byChars(20), 2)).toEqual(['Куртка мужская'])
+  })
+})
+
+describe('Строки заголовка в боксе', () => {
+  it('в боксе на две строки длинный заголовок идёт двумя', () => {
+    expect(titleLines(layoutWithTitleFor(12, 2), SIZE, FONTS, byLength, 'Куртка мужская')).toEqual(['Куртка', 'мужская'])
+  })
+
+  it('в боксе на одну строку остаётся одной: переносить некуда', () => {
+    expect(titleLines(layoutWithTitleFor(12, 1), SIZE, FONTS, byLength, 'Куртка мужская')).toEqual(['Куртка мужская'])
+  })
+
+  it('короткий заголовок в высоком боксе — одна строка', () => {
+    expect(titleLines(layoutWithTitleFor(12, 2), SIZE, FONTS, byLength, 'Куртка')).toEqual(['Куртка'])
+  })
+})
+
 describe('Ширина строки заголовка', () => {
   it('отдаёт обмер строки заголовка, а не соседних слоёв', () => {
     expect(titleWidthOf(layoutWithTitleFor(30), SIZE, FONTS, byLength, 'Куртка')).toBe(60)
@@ -103,6 +207,68 @@ describe('Ширина строки заголовка', () => {
 
   it('у макета без гнезда заголовка — null', () => {
     expect(titleWidthOf(WITHOUT_TITLE, SIZE, FONTS, byLength, 'Куртка')).toBeNull()
+  })
+})
+
+describe('Влезает ли заголовок в бокс на две строки', () => {
+  it('две строки в высоком боксе влезают, а в низком того же размера — нет', () => {
+    expect(titleFits(layoutWithTitleFor(12, 2), SIZE, FONTS, byLength)('Куртка мужская')).toBe(true)
+    expect(titleFits(layoutWithTitleFor(12, 1), SIZE, FONTS, byLength)('Куртка мужская')).toBe(false)
+  })
+
+  it('не влезает, когда вторая строка длиннее бокса', () => {
+    expect(titleFits(layoutWithTitleFor(12, 2), SIZE, FONTS, byLength)('Куртка мужская зимняя')).toBe(false)
+  })
+
+  it('обрезка по словам оставляет то, что влезает в бокс: в две строки или в одну', () => {
+    const title = 'Термокружка стальная вакуумная'
+
+    expect(fitTitle(title, titleFits(layoutWithTitleFor(12, 2), SIZE, FONTS, byLength))).toBe('Термокружка стальная')
+    expect(fitTitle(title, titleFits(layoutWithTitleFor(12, 1), SIZE, FONTS, byLength))).toBe('Термокружка')
+  })
+})
+
+describe('Содержимое с готовыми строками заголовка', () => {
+  const content = (title: string[] | undefined): CardContent => ({
+    texts: { title, body: ['Описание'] },
+    props: [],
+    swatches: [],
+  })
+
+  it('кладёт в гнездо заголовка строки переноса и не трогает остальные гнёзда', () => {
+    const wrapped = withTitleLines(layoutWithTitleFor(12, 2), content(['Куртка мужская']), SIZE, FONTS, byLength)
+
+    expect(wrapped.texts.title).toEqual(['Куртка', 'мужская'])
+    expect(wrapped.texts.body).toEqual(['Описание'])
+  })
+
+  it('повторный перенос ничего не меняет', () => {
+    const layout = layoutWithTitleFor(12, 2)
+    const once = withTitleLines(layout, content(['Куртка мужская']), SIZE, FONTS, byLength)
+
+    expect(withTitleLines(layout, once, SIZE, FONTS, byLength)).toEqual(once)
+  })
+
+  it('слова в кадре те же, что ввели: дословность C1 не нарушена переносом', () => {
+    const layout = layoutWithTitleFor(12, 2)
+    const wrapped = withTitleLines(layout, content(['Куртка мужская']), SIZE, FONTS, byLength)
+
+    expect(textMismatches(layout, wrapped, { title: ['Куртка мужская'] })).toEqual([])
+  })
+
+  it('пустой заголовок возвращается как есть: нечего переносить, гнездо остаётся как было', () => {
+    const blank = content(['  '])
+
+    expect(withTitleLines(layoutWithTitleFor(12, 2), blank, SIZE, FONTS, byLength)).toBe(blank)
+  })
+
+  it('макет без гнезда заголовка и содержимое без заголовка возвращаются как есть', () => {
+    const plain = content(['Куртка мужская'])
+
+    expect(withTitleLines(WITHOUT_TITLE, plain, SIZE, FONTS, byLength)).toBe(plain)
+
+    const noTitle = content(undefined)
+    expect(withTitleLines(layoutWithTitleFor(12, 2), noTitle, SIZE, FONTS, byLength)).toBe(noTitle)
   })
 })
 

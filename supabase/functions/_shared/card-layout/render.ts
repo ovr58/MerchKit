@@ -9,6 +9,7 @@ import { initWasm, Resvg } from 'npm:@resvg/resvg-wasm@2.6.2'
 
 import { downloadFile } from '../edge.ts'
 import { composeSvg, overflowsOf, textProbes } from './svg.ts'
+import { withTitleLines } from './title-fit.ts'
 import { validateLayout } from './validate.ts'
 import { createRendererAssets } from './renderer-assets.ts'
 import type { FontFamilies, Overflow } from './svg.ts'
@@ -33,7 +34,10 @@ export async function renderCard(
   }
 
   const assets = await ensureWasm()
-  const { svg, dropped } = composeSvg(layout, content, size, fonts)
+  // Заголовок раскладывается на строки бокса здесь, где есть обмерщик: сборщику строки приходят
+  // готовыми (B32). Тот же перенос видит и превью, и пересборка, и сборка после оплаты.
+  const wrapped = withTitleLines(layout, content, size, fonts, await measureText())
+  const { svg, dropped } = composeSvg(layout, wrapped, size, fonts)
   const bytes = withResvg(svg, assets.fonts, (resvg) => {
     const image = resvg.render()
     try {
@@ -78,8 +82,12 @@ export async function renderPreview(
   size: { width: number; height: number },
   fonts: FontFamilies,
 ): Promise<PreviewRenderResult> {
-  const rendered = await renderCard(layout, content, size, fonts)
-  const overflows = overflowsOf(textProbes(layout, content, size, fonts), await measureText())
+  const measure = await measureText()
+  // Переполнение считается по тем же строкам, что нарисованы: иначе перенесённый заголовок
+  // числился бы «шире бокса» (B32). Повторный перенос в `renderCard` строк не меняет.
+  const wrapped = withTitleLines(layout, content, size, fonts, measure)
+  const rendered = await renderCard(layout, wrapped, size, fonts)
+  const overflows = overflowsOf(textProbes(layout, wrapped, size, fonts), measure)
 
   return { ...rendered, overflows }
 }
