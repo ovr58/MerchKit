@@ -19,6 +19,7 @@
 
 import {
   createProvider,
+  type AiProvider,
   type CardTexts,
   type OutputProfile,
   type ProductBrief,
@@ -37,14 +38,17 @@ import {
 import { mimeOf, readImageInfo } from '../_shared/image.ts'
 import { cardAssemblySize } from '../_shared/card-size.ts'
 import { describeProfileMismatch } from '../_shared/output-profile.ts'
-import { createCutoutRunner } from '../_shared/card-layout/cutout.ts'
+import { createCutoutRunner, createMaskRunner } from '../_shared/card-layout/cutout.ts'
+import type { CardDirection } from '../_shared/card-layout/direction.ts'
+import { directorLogLine, runDirector, type DirectorResult } from '../_shared/card-layout/director-run.ts'
 import { usesCutout } from '../_shared/card-layout/features.ts'
 import { cardFilling, imageBytes, imageRef, storedContent } from '../_shared/card-layout/filling.ts'
-import { renderCard } from '../_shared/card-layout/render.ts'
+import { occupancyOf, type MaskSamples } from '../_shared/card-layout/occupancy.ts'
+import { measureText, renderCard } from '../_shared/card-layout/render.ts'
 import { layoutQueries, layoutSnapshot, selectCardLayout, type LayoutCandidate } from '../_shared/card-layout/selection.ts'
 import type { FontFamilies } from '../_shared/card-layout/svg.ts'
 import { textMismatches } from '../_shared/card-layout/text-check.ts'
-import type { CardContent, CardLayout, FontRole } from '../_shared/card-layout/types.ts'
+import type { CardContent, CardLayout, FontRole, ImageRef } from '../_shared/card-layout/types.ts'
 import type { GenerationKind } from '../_shared/pricing.ts'
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -270,7 +274,7 @@ async function run(generation: GenerationRow, usage: ProviderUsage[]): Promise<s
   // при переезде сборки на коробку (ADR-0015), решение Q-2 шага B7.7.
   const cardProfile: OutputProfile = { ...profile, ...cardAssemblySize(profile) }
   const assembly = layout !== null && card !== null
-    ? await assembleCard(generation, layout, card, images[0].bytes, cardProfile)
+    ? await assembleCard(generation, layout, card, images[0].bytes, cardProfile, provider)
     : null
   const results = assembly !== null ? [assembly.bytes] : images.map((image) => image.bytes)
 
@@ -321,12 +325,16 @@ type Assembly = {
   /** Исходники пересборки (B7.5): кадр вендора и вырез, если он есть. */
   frame: Uint8Array
   cutout: Uint8Array | null
+  /** Содержимое без правки арт-директора: пересборка (B5.9) накладывает правку на него. */
   content: CardContent
   fonts: FontFamilies
+  /** Итоговый патч арт-директора и сдвига; `null` — ступень 4 или арт-директор выключен. */
+  direction: CardDirection | null
 }
 
 /**
- * Сборка карточки по снимку макета (шаг B7.1): кадр вендора → вырез → содержимое → растр.
+ * Сборка карточки по снимку макета (шаг B7.1): кадр вендора → вырез → содержимое →
+ * арт-директор (B5.8) → растр.
  *
  * Сверка с профилем — у вызывающего, по собранным байтам: тем же правилом, что и у фото.
  */
@@ -336,6 +344,7 @@ async function assembleCard(
   card: CardTexts,
   frameBytes: Uint8Array,
   profile: OutputProfile,
+  provider: AiProvider,
 ): Promise<Assembly> {
   // Вендор отдаёт один кадр; слои второго кадра снимаются правилом K-3.
   const frame = imageRef(frameBytes)
@@ -345,29 +354,46 @@ async function assembleCard(
   // `null` (ADR-0016), генерация из-за коробки не теряется.
   const endpoint = Deno.env.get('CUTOUT_ENDPOINT')
   const secret = Deno.env.get('CUTOUT_SECRET')
-  const cutout = usesCutout(layout) && endpoint && secret
-    ? await createCutoutRunner({ endpoint, secret })(frame)
-    : null
+
+  // Арт-директор включается секретом `CARD_DIRECTOR=on` (ADR-0018, п. 3), а не деплоем. Выключен —
+  // маски нет, вызова нет, сборка как раньше. Маска и вырез идут вместе: оба — по инференсу на
+  // коробке, и ждать их друг за другом значило бы складывать время.
+  const directorOn = Deno.env.get('CARD_DIRECTOR') === 'on'
+  const maskEndpoint = Deno.env.get('CUTOUT_MASK_ENDPOINT')
+
+  const [cutout, maskSamples] = await Promise.all([
+    usesCutout(layout) && endpoint && secret ? createCutoutRunner({ endpoint, secret })(frame) : null,
+    directorOn && maskEndpoint && secret ? createMaskRunner({ endpoint: maskEndpoint, secret })(frame) : null,
+  ])
 
   const [logo, fonts] = await Promise.all([
     generation.logo_path === null ? null : downloadFile('uploads', generation.logo_path).then(imageRef),
     readFonts(),
   ])
 
+  const properties = readProperties(generation.product_properties)
   const { content, cut } = cardFilling(layout, {
     title: card.title,
     description: card.description,
-    properties: readProperties(generation.product_properties),
+    properties,
     frame,
     cutout,
     logo,
   })
 
-  const rendered = await renderCard(layout, content, { width: profile.width, height: profile.height }, fonts)
+  const size = { width: profile.width, height: profile.height }
+  const directed = directorOn
+    ? await directCard({ generation, layout, content, card, properties, frame, cutout, maskSamples, size, fonts, provider })
+    : null
+
+  // Правка арт-директора — только на сборку: снимок макета и содержимое остаются библиотечными.
+  const finalLayout = directed?.layout ?? layout
+  const finalContent = directed?.content ?? content
+  const rendered = await renderCard(finalLayout, finalContent, size, fonts)
 
   // Механическая приёмка (C1): заголовок и описание в кадре — те же слова, что вернул
   // провайдер. Сверка с `card`, а не с `content`: обрезка при наполнении иначе невидима.
-  const mismatched = textMismatches(layout, content, { title: [card.title], body: [card.description] })
+  const mismatched = textMismatches(finalLayout, finalContent, { title: [card.title], body: [card.description] })
   if (mismatched.length > 0) {
     throw new Error(`В кадре не дословны тексты карточки: ${mismatched.join(', ')}`)
   }
@@ -383,7 +409,75 @@ async function assembleCard(
     cutout: cutout === null ? null : imageBytes(cutout),
     content,
     fonts,
+    direction: directed?.direction ?? null,
   }
+}
+
+/**
+ * Арт-директор на сборке (шаг B5.8): маска → карта → цикл по ступеням. Любой сбой вокруг цикла
+ * (база иконок, карта) — карточка по макету библиотеки, а не упавшая генерация (ADR-0018, п. 3);
+ * сам цикл ступень 4 возвращает без исключений. Затраты попыток пишет провайдер в `usage`.
+ */
+async function directCard(args: {
+  generation: GenerationRow
+  layout: CardLayout
+  content: CardContent
+  card: CardTexts
+  properties: { label: string; value: string }[]
+  frame: ImageRef
+  cutout: ImageRef | null
+  maskSamples: MaskSamples | null
+  size: { width: number; height: number }
+  fonts: FontFamilies
+  provider: AiProvider
+}): Promise<DirectorResult | null> {
+  try {
+    const icons = (await selectFromDatabase(
+      `card_icons?select=name,description&status=eq.${encodeURIComponent('готово')}&order=name`,
+    )) as { name: string; description: string }[]
+
+    const result = await runDirector({
+      layout: args.layout,
+      content: args.content,
+      texts: { title: args.card.title, body: args.card.description },
+      properties: args.properties,
+      wishes: args.generation.wishes,
+      frameMask: args.maskSamples === null ? null : occupancyOf(args.maskSamples),
+      frame: args.frame,
+      size: args.size,
+      hasCutout: args.cutout !== null,
+      icons,
+      loadIcons: readIcons,
+      ask: (brief) => args.provider.directCard({ brief }),
+      fonts: args.fonts,
+      measure: await measureText(),
+    })
+
+    console.info(directorLogLine(result), '· генерация', args.generation.id)
+    return result
+  } catch (error: unknown) {
+    console.error('Арт-директор: сбой вокруг цикла, карточка по макету библиотеки', error)
+    return null
+  }
+}
+
+/** Иконки базы по именам → картинки для композиции. Исходник SVG лежит в `bytea`: PostgREST
+ *  отдаёт его строкой `\x<hex>`. Размер 24 × 24 — как у иконок оснастки (`render.mts`): иконка
+ *  вписывается в бокс слоя, а не берёт размер из файла. */
+async function readIcons(names: string[]): Promise<Record<string, ImageRef>> {
+  const list = names.map(encodeURIComponent).join(',')
+  const rows = (await selectFromDatabase(
+    `card_icons?select=name,content&name=in.(${list})&status=eq.${encodeURIComponent('готово')}`,
+  )) as { name: string; content: string }[]
+
+  return Object.fromEntries(
+    rows.map((row) => {
+      const hex = row.content.slice(2)
+      let binary = ''
+      for (let i = 0; i < hex.length; i += 2) binary += String.fromCharCode(Number.parseInt(hex.slice(i, i + 2), 16))
+      return [row.name, { dataUri: `data:image/svg+xml;base64,${btoa(binary)}`, width: 24, height: 24 }]
+    }),
+  )
 }
 
 /** Исходники пересборки — в `results` рядом с карточкой, содержимое — в снимок (B7.4). */
@@ -410,6 +504,15 @@ async function storeAssembly(generation: GenerationRow, assembly: Assembly): Pro
     }),
     assembled_font_map: assembly.fonts,
   })
+
+  // Правка арт-директора — отдельной записью и только когда она есть: `null` в колонке и значит
+  // «ступень 4». Снимок макета и содержимое она не трогает.
+  if (assembly.direction !== null) {
+    await callDatabase('record_card_direction', {
+      target_generation: generation.id,
+      card_direction: assembly.direction,
+    })
+  }
 }
 
 /** Карта «роль → гарнитура» — тем же запросом, что у превью (`card-preview`). */

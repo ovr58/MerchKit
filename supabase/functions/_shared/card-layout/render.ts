@@ -79,13 +79,19 @@ export async function renderPreview(
   fonts: FontFamilies,
 ): Promise<PreviewRenderResult> {
   const rendered = await renderCard(layout, content, size, fonts)
-  const assets = await ensureWasm()
-
-  const overflows = overflowsOf(textProbes(layout, content, size, fonts), (probe) =>
-    withResvg(probe, assets.fonts, (resvg) => resvg.getBBox()?.width ?? 0),
-  )
+  const overflows = overflowsOf(textProbes(layout, content, size, fonts), await measureText())
 
   return { ...rendered, overflows }
+}
+
+/**
+ * Обмерщик строк для `overflowsOf`: ширина SVG-строки по тому же `resvg`, который её рисует.
+ * Нужен превью и арт-директору (ADR-0018, п. 2, проверка 3) — общий, чтобы «влезет ли строка»
+ * решалось одним растеризатором, а не двумя копиями.
+ */
+export async function measureText(): Promise<(svg: string) => number> {
+  const assets = await ensureWasm()
+  return (probe) => withResvg(probe, assets.fonts, (resvg) => resvg.getBBox()?.width ?? 0)
 }
 
 /**
