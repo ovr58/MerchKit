@@ -190,7 +190,7 @@ const sha = (bytes: Uint8Array) => createHash('sha256').update(bytes).digest('he
 
 /* -------------------------------------------------------------------------- прогон */
 
-type Cost = { operation: string; cost_rub: string; duration_ms: number; created_at: string }
+type Cost = { operation: string; vendor: string; cost_rub: string; duration_ms: number; created_at: string }
 
 function summarise(costs: Cost[]) {
   const sum = (operation: string) => costs.filter((cost) => cost.operation === operation).reduce((total, cost) => total + Number(cost.cost_rub), 0)
@@ -219,13 +219,14 @@ function modeGuess(calls: number, firstCallRub: number | undefined, direction: C
 }
 
 /**
- * Ступень по патчу (журнала нет, см. выше): `null` — ступень 4; повтор `layerId` в `boxes` — к боксам ИИ
- * дописан сдвиг без ИИ (ступень 3, `applyDirection` берёт последний); иначе 1 или 2 — по патчу не различить.
+ * Ступень по патчу (журнала нет, см. выше): `null` — ступень 4. Повтор `layerId` в `boxes` — к принятым боксам ИИ
+ * дописан сдвиг без ИИ; по `director-run.ts` это ступень 2 (ступень 3 — только сдвиг при нуле принятых боксов ИИ).
+ * Остальное — 1, 2 или 3: по патчу не различить.
  */
 function stageGuess(direction: CardDirection | null): string | number {
   if (direction === null) return 4
   const ids = direction.boxes.map((entry) => entry.layerId)
-  return new Set(ids).size < ids.length ? 3 : '1–2'
+  return new Set(ids).size < ids.length ? '2 (сдвиг)' : '1–3'
 }
 
 async function runCase(caseId: string, sample: string, marketplaceId: string, index: number, user: { id: string; token: string }): Promise<CaseRecord> {
