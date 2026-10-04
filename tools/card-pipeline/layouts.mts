@@ -12,10 +12,10 @@
  *   npm run cards:layouts pull  — забрать макеты базы в существующие разборы
  */
 
-import { execFileSync } from 'node:child_process'
 import { readdir, readFile, writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 
+import { connect } from './target.ts'
 import { validateLayout } from '../../supabase/functions/_shared/card-layout/validate.ts'
 import type { CardLayout } from '../../supabase/functions/_shared/card-layout/types.ts'
 
@@ -40,23 +40,8 @@ type LayoutRow = {
   edge_heavy: boolean
 }
 
-function localEnv(): Record<string, string> {
-  const raw = execFileSync('npx', ['supabase', 'status', '-o', 'env'], {
-    encoding: 'utf8',
-    shell: process.platform === 'win32',
-  })
-  const env: Record<string, string> = {}
-  for (const line of raw.split('\n')) {
-    const match = line.match(/^([A-Z_0-9]+)="(.*)"$/)
-    if (match) env[match[1]] = match[2]
-  }
-  if (env.API_URL === undefined) throw new Error('Локальный Supabase не отвечает. Сначала `supabase start`.')
-  return env
-}
-
-const env = localEnv()
-const REST = `${env.API_URL}/rest/v1`
-const SECRET = env.SECRET_KEY ?? env.SERVICE_ROLE_KEY
+const { url, secret: SECRET, args } = connect()
+const REST = `${url}/rest/v1`
 
 async function rest(path: string, init: RequestInit = {}): Promise<unknown> {
   const res = await fetch(`${REST}/${path}`, {
@@ -195,7 +180,7 @@ async function pull(): Promise<void> {
   }
 }
 
-const [command] = process.argv.slice(2)
+const [command] = args
 
 switch (command ?? 'list') {
   case 'list':

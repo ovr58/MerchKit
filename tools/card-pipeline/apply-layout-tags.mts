@@ -1,33 +1,18 @@
 /** Applies user-confirmed B2.0 tag proposals to the local layout library. */
 
-import { execFileSync } from 'node:child_process'
 import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 
+import { connect } from './target.ts'
 import { validateTagProposal } from './layout-tags-lib.ts'
 import type { TagProposal, TagReferences } from './layout-tags-lib.ts'
 
 const PROPOSALS = fileURLToPath(new URL('layout-tag-proposals.json', import.meta.url))
 
-function localEnv(): Record<string, string> {
-  const raw = execFileSync('npx', ['supabase', 'status', '-o', 'env'], {
-    encoding: 'utf8',
-    shell: process.platform === 'win32',
-  })
-  const env: Record<string, string> = {}
-  for (const line of raw.split('\n')) {
-    const match = line.match(/^([A-Z_0-9]+)="(.*)"$/)
-    if (match !== null) env[match[1]] = match[2]
-  }
-  if (env.API_URL === undefined) throw new Error('Локальный Supabase не отвечает. Сначала `supabase start`.')
-  return env
-}
-
-const env = localEnv()
-const secret = env.SECRET_KEY ?? env.SERVICE_ROLE_KEY
+const { url, secret } = connect()
 
 async function rest(path: string, init: RequestInit = {}): Promise<unknown> {
-  const response = await fetch(`${env.API_URL}/rest/v1/${path}`, {
+  const response = await fetch(`${url}/rest/v1/${path}`, {
     ...init,
     headers: {
       apikey: secret,

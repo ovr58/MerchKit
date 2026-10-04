@@ -142,6 +142,19 @@ npm run cards:assets push
 npm run cards:render-assets
 ```
 
+**Цель «стейдж».** `cards:layouts`, `cards:assets`, `cards:render-assets` и
+`cards:apply-layout-tags` по умолчанию ходят в локальный стенд (`supabase status`). Флаг
+`--target staging` переключает их на облачный проект: адрес и service-role ключ берутся из
+`VITE_SUPABASE_URL` и `SUPABASE_SERVICE_ROLE_KEY` окружения, поэтому запуск — напрямую через
+`node --env-file=.env` (`npm run` флаг Node не передаёт):
+
+```
+node --env-file=.env --experimental-strip-types tools/card-pipeline/layouts.mts push --target staging
+```
+
+Скрипт печатает хост цели и отказывает, если адрес локальный. Выбор источника —
+`target.ts`, тест рядом.
+
 Edge Function загружает `resvg/index_bg.wasm`, `fonts/manifest.json` и названные в манифесте
 шрифты один раз на холодный старт; дальнейшая растеризация в сеть не ходит.
 

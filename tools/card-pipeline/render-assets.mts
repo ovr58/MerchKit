@@ -5,33 +5,19 @@
  * из рабочей копии базы. Запускать после `supabase db reset` и `cards:assets push`.
  */
 
-import { execFileSync } from 'node:child_process'
 import { readdir, readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
+
+import { connect } from './target.ts'
 
 const here = fileURLToPath(new URL('.', import.meta.url))
 const FONTS = `${here}fonts/`
 const BUCKET = 'card-render-assets'
 
-function localEnv(): Record<string, string> {
-  const raw = execFileSync('npx', ['supabase', 'status', '-o', 'env'], {
-    encoding: 'utf8',
-    shell: process.platform === 'win32',
-  })
-  const env: Record<string, string> = {}
-  for (const line of raw.split('\n')) {
-    const match = line.match(/^([A-Z_0-9]+)="(.*)"$/)
-    if (match) env[match[1]] = match[2]
-  }
-  if (env.API_URL === undefined) throw new Error('Локальный Supabase не отвечает. Сначала `supabase start`.')
-  return env
-}
-
-const env = localEnv()
-const secret = env.SECRET_KEY ?? env.SERVICE_ROLE_KEY
+const { url, secret } = connect()
 
 async function upload(path: string, bytes: Uint8Array, contentType: string): Promise<void> {
-  const response = await fetch(`${env.API_URL}/storage/v1/object/${BUCKET}/${path}`, {
+  const response = await fetch(`${url}/storage/v1/object/${BUCKET}/${path}`, {
     method: 'POST',
     headers: {
       apikey: secret,
