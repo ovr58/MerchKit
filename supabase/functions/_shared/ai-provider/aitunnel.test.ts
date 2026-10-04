@@ -7,6 +7,7 @@ import {
   isContentRefusal,
   readModerationVerdict,
 } from './aitunnel.ts'
+import { CARD_GENRE } from './card-genre.ts'
 import type { OutputProfile, ProviderProfile, ProviderUsage } from './types.ts'
 
 /**
@@ -285,5 +286,102 @@ describe('Операция composeCard: предел заголовка', () => 
     const { system } = await composeWith(12)
 
     expect(system).not.toContain('100')
+  })
+})
+
+/**
+ * `authorCard` (ADR-0019, п. 3): сочинение карточки в HTML на подменном `fetch`, вендор не
+ * вызывается. Провайдер обязан: позвать модель сочинения (не текстовую), послать скил-жанр
+ * системным сообщением и кадр первой картинкой, держать `max_tokens` низким (шлюз резервирует
+ * по нему), записать цену и вынуть первый блок ```html```; блока нет — отказ операции.
+ */
+describe('Операция authorCard', () => {
+  const profile: ProviderProfile = {
+    name: 'aitunnel',
+    baseUrl: 'https://gateway.test/v1',
+    imageModel: 'image-model',
+    imageModelFallback: null,
+    imageSizes: null,
+    imageSizesFallback: null,
+    textModel: 'text-model',
+    authorModel: 'author-model',
+  }
+
+  const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
+  const input = {
+    frame: png,
+    references: [new Uint8Array([0xff, 0xd8, 0xff]), new Uint8Array([0xff, 0xd8, 0xff])],
+    seller: {
+      title: 'Куртка-бомбер',
+      description: 'Тёплая куртка',
+      properties: [{ label: 'Утеплитель', value: 'синтепон' }],
+      wishes: '',
+    },
+    marketplaceId: 'ozon',
+    categoryId: 'clothing',
+    canvas: { width: 900, height: 1200 },
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  function stubGateway(content: string) {
+    vi.stubGlobal('Deno', { env: { get: () => 'test-key' } })
+    const fetchMock = vi.fn(async () =>
+      new Response(
+        JSON.stringify({ choices: [{ message: { content } }], usage: { cost_rub: 7.5 } }),
+        { status: 200 },
+      ))
+    vi.stubGlobal('fetch', fetchMock)
+    return fetchMock
+  }
+
+  it('вынимает первый блок html и зовёт модель сочинения со скилом-жанром', async () => {
+    const fetchMock = stubGateway(
+      'Вот вёрстка:\n```html\n<div id="card"></div>\n```\nи ещё\n```html\n<p>второй</p>\n```',
+    )
+
+    const { html } = await createAitunnelProvider(profile).authorCard(input)
+
+    expect(html).toBe('<div id="card"></div>')
+
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
+    expect(url).toBe('https://gateway.test/v1/chat/completions')
+
+    const body = JSON.parse(init.body as string)
+    expect(body.model).toBe('author-model')
+    expect(body.max_tokens).toBe(4000)
+    expect(body.response_format).toBeUndefined()
+    expect(body.messages[0]).toEqual({ role: 'system', content: CARD_GENRE })
+
+    const parts = body.messages[1].content as { type: string; image_url?: { url: string }; text?: string }[]
+    expect(parts.map((part) => part.type)).toEqual(['image_url', 'image_url', 'image_url', 'text'])
+    // Кадр — первой картинкой, референсы за ним: задание называет их по порядку.
+    expect(parts[0].image_url?.url.endsWith(';base64,iVBORw0KGgo=')).toBe(true)
+    expect(parts[3].text).toContain('Холст: 900×1200 px')
+    expect(parts[3].text).toContain('первый референс — ведущий: возьми его композицию')
+    expect(parts[3].text).toContain('Утеплитель — синтепон')
+  })
+
+  it('без блока html — отказ, но вызов записан в затраты', async () => {
+    stubGateway('<div id="card"></div>')
+    const usages: ProviderUsage[] = []
+
+    await expect(
+      createAitunnelProvider(profile, (usage) => usages.push(usage)).authorCard(input),
+    ).rejects.toThrow(/блока html/)
+
+    expect(usages).toHaveLength(1)
+    expect(usages[0]).toMatchObject({ operation: 'authorCard', vendor: 'aitunnel', costRub: 7.5 })
+  })
+
+  it('без AI_PROVIDER_AUTHOR_MODEL — отказ до вызова шлюза', async () => {
+    const fetchMock = stubGateway('```html\n<div id="card"></div>\n```')
+
+    await expect(
+      createAitunnelProvider({ ...profile, authorModel: null }).authorCard(input),
+    ).rejects.toThrow(/AI_PROVIDER_AUTHOR_MODEL/)
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 })

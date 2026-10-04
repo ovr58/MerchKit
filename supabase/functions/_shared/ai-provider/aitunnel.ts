@@ -3,7 +3,8 @@
  *
  * **OpenAI-совместимый HTTP.** Текстовые операции (`moderate`, `recognize`, `composeCard`,
  * `nameGeneration`, `directCard`) идут на `POST {baseUrl}/chat/completions` дешёвой моделью
- * `AI_PROVIDER_TEXT_MODEL`; изображения — на `POST {baseUrl}/images/generations` моделью
+ * `AI_PROVIDER_TEXT_MODEL`; сочинение карточки `authorCard` (ADR-0019) — туда же, но своей
+ * моделью `AI_PROVIDER_AUTHOR_MODEL` и без требования JSON; изображения — на `POST {baseUrl}/images/generations` моделью
  * `AI_PROVIDER_IMAGE_MODEL`. Контракт сверен по сырому JSON публичного каталога шлюза
  * 2026-08-29 (план вехи M5, шаг 0): референсные фото — полем `input_references` с
  * `data:`-URL, а не отдельной загрузкой файла; ключ — заголовком `Authorization: Bearer`.
@@ -32,6 +33,7 @@
 import { mimeOf, readImageInfo } from '../image.ts'
 import { ASPECT_TOLERANCE, describeProfileMismatch } from '../output-profile.ts'
 import type { GenerationKind } from '../pricing.ts'
+import { CARD_GENRE } from './card-genre.ts'
 import { CATEGORY_IDS, CATEGORY_TITLES } from './categories.ts'
 import type {
   AiProvider,
@@ -415,6 +417,39 @@ const DIRECT_CARD_SYSTEM =
   'Ответь строго JSON без пояснений: {"boxes":[{"layerId":"…","box":{"x":…,"y":…,"w":…,' +
   '"h":…}}],"texts":{…},"icons":[{"prop":0,"icon":"…"}]}.'
 
+/**
+ * Потолки сочинения (ADR-0019, п. 3). Шлюз резервирует деньги на балансе по `max_tokens`, а не
+ * по факту (Sonnet 5.5 с картинками — 200 ₽ на запрос): завышенный потолок отбивает запрос `402`
+ * при живом балансе. Проба 2026-10-05 уложилась в 1 900–2 500 токенов ответа за 19–26 с.
+ */
+const AUTHOR_MAX_TOKENS = 4000
+const AUTHOR_TIMEOUT_MS = 60_000
+
+/** Задание сочинения — по образцу пробы (`bench/html-probe.mts`, `brief()`), плюс ведущий референс. */
+function authorBrief(input: Parameters<AiProvider['authorCard']>[0]): string {
+  const { seller, canvas } = input
+  const properties = seller.properties.map((property) => `${property.label} — ${property.value}`)
+
+  return [
+    `Площадка: ${input.marketplaceId}. Категория: ${input.categoryId}. Холст: ${canvas.width}×${canvas.height} px (W×H).`,
+    `Название товара: ${seller.title}`,
+    `Описание продавца: ${seller.description.trim() || '—'}`,
+    `Свойства (по порядку важности): ${properties.join('; ') || '—'}`,
+    `Пожелания продавца: ${seller.wishes.trim() || '—'}`,
+    input.references.length === 0
+      ? 'Картинка — кадр, который лежит фоном. Референсов нет.'
+      : 'Первая картинка — кадр, который лежит фоном. Остальные — референсы жанра (другие товары, ' +
+        'их тексты не копировать); первый референс — ведущий: возьми его композицию.',
+    'Верни один блок ```html``` по форме скила.',
+  ].join('\n')
+}
+
+/** Первый блок ```html``` ответа; нет блока — `null`. */
+function firstHtmlBlock(text: string): string | null {
+  const match = text.match(/```html\s*([\s\S]*?)```/i)
+  return match === null ? null : match[1].trim()
+}
+
 function composeCardPrompt(
   product: ProductBrief,
   profile: OutputProfile,
@@ -687,6 +722,39 @@ export function createAitunnelProvider(
         operation: 'directCard',
         onUsage,
       })
+    },
+
+    async authorCard(input): Promise<{ html: string }> {
+      const config = requireConfig(providerProfile)
+      const model = providerProfile.authorModel
+      if (!model) throw new Error('Не задана переменная окружения AI_PROVIDER_AUTHOR_MODEL')
+
+      const started = Date.now()
+      const result = await callGateway(`${config.baseUrl}/chat/completions`, config.apiKey, {
+        model,
+        max_tokens: AUTHOR_MAX_TOKENS,
+        messages: [
+          { role: 'system', content: CARD_GENRE },
+          {
+            role: 'user',
+            content: [
+              ...imageContentParts([input.frame, ...input.references]),
+              { type: 'text', text: authorBrief(input) },
+            ],
+          },
+        ],
+      }, AUTHOR_TIMEOUT_MS)
+
+      const durationMs = Date.now() - started
+      console.info('AITunnel', model, durationMs, 'мс', 'cost_rub', costRub(result))
+      // Деньги потрачены до разбора: строка затрат пишется и тогда, когда ответ отвергнут.
+      onUsage?.({ operation: 'authorCard', vendor: VENDOR, costRub: costRub(result), durationMs })
+
+      const text = result?.choices?.[0]?.message?.content
+      const html = typeof text === 'string' ? firstHtmlBlock(text) : null
+      if (html === null || html === '') throw new Error('AITunnel: в ответе сочинения нет блока html')
+
+      return { html }
     },
 
     async nameGeneration({ product }): Promise<string> {

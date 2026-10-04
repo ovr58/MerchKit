@@ -16,8 +16,10 @@ import type { AiProvider, ProviderProfile, ProviderUsage } from './types.ts'
 
 export type {
   AiProvider,
+  AuthorSeller,
   CardTexts,
   GeneratedImage,
+  ImageInput,
   Moderated,
   OutputProfile,
   ProductBrief,
@@ -43,6 +45,7 @@ export function providerProfile(): ProviderProfile {
     imageSizes: Deno.env.get('AI_PROVIDER_IMAGE_SIZES') || null,
     imageSizesFallback: Deno.env.get('AI_PROVIDER_IMAGE_SIZES_FALLBACK') || null,
     textModel: Deno.env.get('AI_PROVIDER_TEXT_MODEL') ?? null,
+    authorModel: Deno.env.get('AI_PROVIDER_AUTHOR_MODEL') || null,
   }
 }
 

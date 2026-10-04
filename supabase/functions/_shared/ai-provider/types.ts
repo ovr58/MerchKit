@@ -59,6 +59,18 @@ export type OutputProfile = {
   backgroundTitle: string
 }
 
+/** Картинка на входе операции — байты файла, как фото продавца в `moderate` и `generateImages`. */
+export type ImageInput = Uint8Array
+
+/** Тексты продавца для сочинения (ADR-0019, п. 3): модель берёт слова только отсюда. */
+export type AuthorSeller = {
+  title: string
+  description: string
+  /** Порядок — порядок важности, подтверждённый продавцом (B1). */
+  properties: ProductProperty[]
+  wishes: string
+}
+
 /** Что за товар и как его показать — всё, что мастер собрал за шесть шагов. */
 export type ProductBrief = {
   title: string
@@ -116,7 +128,7 @@ export type Moderated = {
  * `recognize` сюда намеренно не входит — см. миграцию `20260830000000_generation_costs.sql`.
  */
 export type ProviderUsage = {
-  operation: 'moderate' | 'generateImages' | 'composeCard' | 'nameGeneration' | 'directCard'
+  operation: 'moderate' | 'generateImages' | 'composeCard' | 'nameGeneration' | 'directCard' | 'authorCard'
   /** Профиль, который в самом деле обслужил вызов ("stub" | "aitunnel") — записывается
    *  реализацией, а не берётся вызывающим из конфигурации: смена вендора мимо кода не
    *  должна расходиться с тем, что легло в БД. */
@@ -168,6 +180,21 @@ export interface AiProvider {
    * Отказ вызова (сеть, пустой ответ) — исключение, как у остальных текстовых операций.
    */
   directCard(input: { brief: DirectorBrief }): Promise<Record<string, unknown>>
+
+  /**
+   * Сочинение карточки в HTML ([ADR-0019](../../../../docs/adr/0019-html-authoring-transpiled-to-layers.md),
+   * п. 3): модель видит кадр и не больше четырёх референсов, `references[0]` — ведущий.
+   * Возвращает страницу по форме скила-жанра (`card-genre.ts`) — первый блок ```html```
+   * ответа; блока нет — исключение. Подмножество CSS проверяет транспилятор, не провайдер.
+   */
+  authorCard(input: {
+    frame: ImageInput
+    references: ImageInput[]
+    seller: AuthorSeller
+    marketplaceId: string
+    categoryId: string
+    canvas: { width: number; height: number }
+  }): Promise<{ html: string }>
 }
 
 /**
@@ -187,4 +214,7 @@ export type ProviderProfile = {
   imageSizes: string | null
   imageSizesFallback: string | null
   textModel: string | null
+  /** Модель сочинения карточки (`AI_PROVIDER_AUTHOR_MODEL`, ADR-0019 п. 3) — отдельно от
+   *  текстовой: сочинению нужна модель, видящая кадр и пишущая вёрстку, а не дешёвая. */
+  authorModel?: string | null
 }

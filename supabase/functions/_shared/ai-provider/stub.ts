@@ -191,6 +191,27 @@ function recordZeroCost(
   onUsage?.({ operation, vendor: 'stub', costRub: 0, durationMs })
 }
 
+const escapeHtml = (text: string): string =>
+  text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+
+/** Надпись — в верхней полосе холста с безопасной зоной 4 % (скил-жанр), кеглем от ширины. */
+function stubAuthoredHtml(title: string, canvas: { width: number; height: number }): string {
+  const { width, height } = canvas
+  const inset = Math.round(width * 0.04)
+  const fontSize = Math.round(width * 0.06)
+
+  return [
+    '<!doctype html><html lang="ru"><head><meta charset="utf-8">',
+    `<style>body{margin:0;width:${width}px;height:${height}px;overflow:hidden}</style></head><body>`,
+    `<div id="card" style="position:relative;width:${width}px;height:${height}px;overflow:hidden">`,
+    '<img id="frame" src="frame.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">',
+    `<div style="position:absolute;left:${inset}px;top:${inset}px;width:${width - 2 * inset}px;`,
+    `font-family:'Montserrat';font-weight:900;font-size:${fontSize}px;line-height:1.1;color:#111111">`,
+    escapeHtml(title),
+    '</div></div></body></html>',
+  ].join('')
+}
+
 export function createStubProvider(onUsage?: (usage: ProviderUsage) => void): AiProvider {
   const delay = Number(Deno.env.get('AI_STUB_DELAY_MS') ?? DEFAULT_DELAY_MS)
 
@@ -277,6 +298,14 @@ export function createStubProvider(onUsage?: (usage: ProviderUsage) => void): Ai
     async directCard(): Promise<Record<string, unknown>> {
       recordZeroCost(onUsage, 'directCard', 0)
       return {}
+    },
+
+    // Минимальная страница по форме скила-жанра (ADR-0019, п. 3): холст, кадр и одна надпись
+    // заголовком продавца — ровно то, без чего транспилятору нечего переводить. Вызов
+    // мгновенный и бесплатный, но строка затрат пишется, как у живого вендора.
+    async authorCard({ seller, canvas }): Promise<{ html: string }> {
+      recordZeroCost(onUsage, 'authorCard', 0)
+      return { html: stubAuthoredHtml(seller.title, canvas) }
     },
 
     async nameGeneration({ product }): Promise<string> {
