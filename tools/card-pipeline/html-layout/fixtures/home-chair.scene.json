@@ -1,0 +1,552 @@
+{
+  "canvas": {
+    "width": 896,
+    "height": 1200
+  },
+  "background": "rgba(0, 0, 0, 0)",
+  "elements": [
+    {
+      "kind": "frame",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "w": 896,
+        "h": 1200
+      },
+      "style": {
+        "opacity": 1,
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "backgroundImage": "none",
+        "borderWidth": 0,
+        "borderColor": "rgb(0, 0, 0)",
+        "borderRadius": 0,
+        "boxShadow": "none",
+        "objectFit": "cover",
+        "objectPosition": "50% 50%"
+      },
+      "order": 0,
+      "selector": "#card > img:nth-child(1)"
+    },
+    {
+      "kind": "text",
+      "rect": {
+        "x": 325.5,
+        "y": 48,
+        "w": 245,
+        "h": 38
+      },
+      "style": {
+        "opacity": 1,
+        "backgroundColor": "rgb(200, 16, 46)",
+        "backgroundImage": "none",
+        "borderWidth": 0,
+        "borderColor": "rgb(255, 255, 255)",
+        "borderRadius": 19,
+        "boxShadow": "none",
+        "fontFamily": "Montserrat, sans-serif",
+        "fontSize": 22,
+        "fontWeight": 700,
+        "fontStyle": "normal",
+        "color": "rgb(255, 255, 255)",
+        "textAlign": "start",
+        "lineHeight": "38px",
+        "letterSpacing": "0.5px",
+        "textTransform": "none",
+        "textShadow": "none"
+      },
+      "lines": [
+        {
+          "text": "Кресло с ушами",
+          "rect": {
+            "x": 347.5,
+            "y": 53,
+            "w": 201,
+            "h": 27
+          }
+        }
+      ],
+      "order": 1,
+      "selector": "#card > div.kicker:nth-child(2) > span:nth-child(1)"
+    },
+    {
+      "kind": "text",
+      "rect": {
+        "x": 36,
+        "y": 92,
+        "w": 824,
+        "h": 100
+      },
+      "style": {
+        "opacity": 1,
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "backgroundImage": "none",
+        "borderWidth": 0,
+        "borderColor": "rgb(17, 17, 17)",
+        "borderRadius": 0,
+        "boxShadow": "none",
+        "fontFamily": "Montserrat, sans-serif",
+        "fontSize": 104,
+        "fontWeight": 900,
+        "fontStyle": "normal",
+        "color": "rgb(17, 17, 17)",
+        "textAlign": "center",
+        "lineHeight": "100px",
+        "letterSpacing": "2px",
+        "textTransform": "uppercase",
+        "textShadow": "none"
+      },
+      "lines": [
+        {
+          "text": "Кресло",
+          "rect": {
+            "x": 206.5,
+            "y": 78,
+            "w": 483,
+            "h": 127
+          }
+        }
+      ],
+      "order": 2,
+      "selector": "#card > div.title:nth-child(3)"
+    },
+    {
+      "kind": "shape",
+      "rect": {
+        "x": 36,
+        "y": 1044,
+        "w": 265.328125,
+        "h": 108
+      },
+      "style": {
+        "opacity": 1,
+        "backgroundColor": "rgb(241, 241, 241)",
+        "backgroundImage": "none",
+        "borderWidth": 0,
+        "borderColor": "rgb(0, 0, 0)",
+        "borderRadius": 20,
+        "boxShadow": "none"
+      },
+      "order": 3,
+      "selector": "#card > div.row:nth-child(4) > div.mod:nth-child(1)"
+    },
+    {
+      "kind": "text",
+      "rect": {
+        "x": 52,
+        "y": 1081,
+        "w": 34,
+        "h": 34
+      },
+      "style": {
+        "opacity": 1,
+        "backgroundColor": "rgb(200, 16, 46)",
+        "backgroundImage": "none",
+        "borderWidth": 0,
+        "borderColor": "rgb(255, 255, 255)",
+        "borderRadius": 17,
+        "boxShadow": "none",
+        "fontFamily": "Montserrat, sans-serif",
+        "fontSize": 18,
+        "fontWeight": 700,
+        "fontStyle": "normal",
+        "color": "rgb(255, 255, 255)",
+        "textAlign": "start",
+        "lineHeight": "normal",
+        "letterSpacing": "normal",
+        "textTransform": "none",
+        "textShadow": "none"
+      },
+      "lines": [
+        {
+          "text": "1",
+          "rect": {
+            "x": 65.5,
+            "y": 1087,
+            "w": 7,
+            "h": 22
+          }
+        }
+      ],
+      "order": 4,
+      "selector": "#card > div.row:nth-child(4) > div.mod:nth-child(1) > div.num:nth-child(1)"
+    },
+    {
+      "kind": "text",
+      "rect": {
+        "x": 98,
+        "y": 1075.5,
+        "w": 158,
+        "h": 17
+      },
+      "style": {
+        "opacity": 1,
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "backgroundImage": "none",
+        "borderWidth": 0,
+        "borderColor": "rgb(107, 107, 107)",
+        "borderRadius": 0,
+        "boxShadow": "none",
+        "fontFamily": "Montserrat, sans-serif",
+        "fontSize": 14,
+        "fontWeight": 600,
+        "fontStyle": "normal",
+        "color": "rgb(107, 107, 107)",
+        "textAlign": "start",
+        "lineHeight": "17px",
+        "letterSpacing": "0.4px",
+        "textTransform": "uppercase",
+        "textShadow": "none"
+      },
+      "lines": [
+        {
+          "text": "Тип товара",
+          "rect": {
+            "x": 98,
+            "y": 1074.5,
+            "w": 102,
+            "h": 18
+          }
+        }
+      ],
+      "order": 5,
+      "selector": "#card > div.row:nth-child(4) > div.mod:nth-child(1) > div.txt:nth-child(2) > div.lab:nth-child(1)"
+    },
+    {
+      "kind": "text",
+      "rect": {
+        "x": 98,
+        "y": 1096.5,
+        "w": 158,
+        "h": 24
+      },
+      "style": {
+        "opacity": 1,
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "backgroundImage": "none",
+        "borderWidth": 0,
+        "borderColor": "rgb(17, 17, 17)",
+        "borderRadius": 0,
+        "boxShadow": "none",
+        "fontFamily": "Montserrat, sans-serif",
+        "fontSize": 20,
+        "fontWeight": 700,
+        "fontStyle": "normal",
+        "color": "rgb(17, 17, 17)",
+        "textAlign": "start",
+        "lineHeight": "24px",
+        "letterSpacing": "normal",
+        "textTransform": "none",
+        "textShadow": "none"
+      },
+      "lines": [
+        {
+          "text": "Кресло-крыло",
+          "rect": {
+            "x": 98,
+            "y": 1096.5,
+            "w": 158,
+            "h": 24
+          }
+        }
+      ],
+      "order": 6,
+      "selector": "#card > div.row:nth-child(4) > div.mod:nth-child(1) > div.txt:nth-child(2) > div.val:nth-child(2)"
+    },
+    {
+      "kind": "shape",
+      "rect": {
+        "x": 315.328125,
+        "y": 1044,
+        "w": 265.34375,
+        "h": 108
+      },
+      "style": {
+        "opacity": 1,
+        "backgroundColor": "rgb(241, 241, 241)",
+        "backgroundImage": "none",
+        "borderWidth": 0,
+        "borderColor": "rgb(0, 0, 0)",
+        "borderRadius": 20,
+        "boxShadow": "none"
+      },
+      "order": 7,
+      "selector": "#card > div.row:nth-child(4) > div.mod:nth-child(2)"
+    },
+    {
+      "kind": "text",
+      "rect": {
+        "x": 331.328125,
+        "y": 1081,
+        "w": 34,
+        "h": 34
+      },
+      "style": {
+        "opacity": 1,
+        "backgroundColor": "rgb(200, 16, 46)",
+        "backgroundImage": "none",
+        "borderWidth": 0,
+        "borderColor": "rgb(255, 255, 255)",
+        "borderRadius": 17,
+        "boxShadow": "none",
+        "fontFamily": "Montserrat, sans-serif",
+        "fontSize": 18,
+        "fontWeight": 700,
+        "fontStyle": "normal",
+        "color": "rgb(255, 255, 255)",
+        "textAlign": "start",
+        "lineHeight": "normal",
+        "letterSpacing": "normal",
+        "textTransform": "none",
+        "textShadow": "none"
+      },
+      "lines": [
+        {
+          "text": "2",
+          "rect": {
+            "x": 342.828125,
+            "y": 1087,
+            "w": 11,
+            "h": 22
+          }
+        }
+      ],
+      "order": 8,
+      "selector": "#card > div.row:nth-child(4) > div.mod:nth-child(2) > div.num:nth-child(1)"
+    },
+    {
+      "kind": "text",
+      "rect": {
+        "x": 377.328125,
+        "y": 1063.5,
+        "w": 187.34375,
+        "h": 17
+      },
+      "style": {
+        "opacity": 1,
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "backgroundImage": "none",
+        "borderWidth": 0,
+        "borderColor": "rgb(107, 107, 107)",
+        "borderRadius": 0,
+        "boxShadow": "none",
+        "fontFamily": "Montserrat, sans-serif",
+        "fontSize": 14,
+        "fontWeight": 600,
+        "fontStyle": "normal",
+        "color": "rgb(107, 107, 107)",
+        "textAlign": "start",
+        "lineHeight": "17px",
+        "letterSpacing": "0.4px",
+        "textTransform": "uppercase",
+        "textShadow": "none"
+      },
+      "lines": [
+        {
+          "text": "Дизайн обивки",
+          "rect": {
+            "x": 377.328125,
+            "y": 1062.5,
+            "w": 141.203125,
+            "h": 18
+          }
+        }
+      ],
+      "order": 9,
+      "selector": "#card > div.row:nth-child(4) > div.mod:nth-child(2) > div.txt:nth-child(2) > div.lab:nth-child(1)"
+    },
+    {
+      "kind": "text",
+      "rect": {
+        "x": 377.328125,
+        "y": 1084.5,
+        "w": 187.34375,
+        "h": 48
+      },
+      "style": {
+        "opacity": 1,
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "backgroundImage": "none",
+        "borderWidth": 0,
+        "borderColor": "rgb(17, 17, 17)",
+        "borderRadius": 0,
+        "boxShadow": "none",
+        "fontFamily": "Montserrat, sans-serif",
+        "fontSize": 20,
+        "fontWeight": 700,
+        "fontStyle": "normal",
+        "color": "rgb(17, 17, 17)",
+        "textAlign": "start",
+        "lineHeight": "24px",
+        "letterSpacing": "normal",
+        "textTransform": "none",
+        "textShadow": "none"
+      },
+      "lines": [
+        {
+          "text": "Три цветных",
+          "rect": {
+            "x": 377.328125,
+            "y": 1084.5,
+            "w": 140,
+            "h": 24
+          }
+        },
+        {
+          "text": "блока",
+          "rect": {
+            "x": 377.328125,
+            "y": 1108.5,
+            "w": 64,
+            "h": 24
+          }
+        }
+      ],
+      "order": 10,
+      "selector": "#card > div.row:nth-child(4) > div.mod:nth-child(2) > div.txt:nth-child(2) > div.val:nth-child(2)"
+    },
+    {
+      "kind": "shape",
+      "rect": {
+        "x": 594.671875,
+        "y": 1044,
+        "w": 265.328125,
+        "h": 108
+      },
+      "style": {
+        "opacity": 1,
+        "backgroundColor": "rgb(241, 241, 241)",
+        "backgroundImage": "none",
+        "borderWidth": 0,
+        "borderColor": "rgb(0, 0, 0)",
+        "borderRadius": 20,
+        "boxShadow": "none"
+      },
+      "order": 11,
+      "selector": "#card > div.row:nth-child(4) > div.mod:nth-child(3)"
+    },
+    {
+      "kind": "text",
+      "rect": {
+        "x": 610.671875,
+        "y": 1081,
+        "w": 34,
+        "h": 34
+      },
+      "style": {
+        "opacity": 1,
+        "backgroundColor": "rgb(200, 16, 46)",
+        "backgroundImage": "none",
+        "borderWidth": 0,
+        "borderColor": "rgb(255, 255, 255)",
+        "borderRadius": 17,
+        "boxShadow": "none",
+        "fontFamily": "Montserrat, sans-serif",
+        "fontSize": 18,
+        "fontWeight": 700,
+        "fontStyle": "normal",
+        "color": "rgb(255, 255, 255)",
+        "textAlign": "start",
+        "lineHeight": "normal",
+        "letterSpacing": "normal",
+        "textTransform": "none",
+        "textShadow": "none"
+      },
+      "lines": [
+        {
+          "text": "3",
+          "rect": {
+            "x": 622.171875,
+            "y": 1087,
+            "w": 11,
+            "h": 22
+          }
+        }
+      ],
+      "order": 12,
+      "selector": "#card > div.row:nth-child(4) > div.mod:nth-child(3) > div.num:nth-child(1)"
+    },
+    {
+      "kind": "text",
+      "rect": {
+        "x": 656.671875,
+        "y": 1075.5,
+        "w": 140.203125,
+        "h": 17
+      },
+      "style": {
+        "opacity": 1,
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "backgroundImage": "none",
+        "borderWidth": 0,
+        "borderColor": "rgb(107, 107, 107)",
+        "borderRadius": 0,
+        "boxShadow": "none",
+        "fontFamily": "Montserrat, sans-serif",
+        "fontSize": 14,
+        "fontWeight": 600,
+        "fontStyle": "normal",
+        "color": "rgb(107, 107, 107)",
+        "textAlign": "start",
+        "lineHeight": "17px",
+        "letterSpacing": "0.4px",
+        "textTransform": "uppercase",
+        "textShadow": "none"
+      },
+      "lines": [
+        {
+          "text": "Материал опор",
+          "rect": {
+            "x": 656.671875,
+            "y": 1074.5,
+            "w": 140.203125,
+            "h": 18
+          }
+        }
+      ],
+      "order": 13,
+      "selector": "#card > div.row:nth-child(4) > div.mod:nth-child(3) > div.txt:nth-child(2) > div.lab:nth-child(1)"
+    },
+    {
+      "kind": "text",
+      "rect": {
+        "x": 656.671875,
+        "y": 1096.5,
+        "w": 140.203125,
+        "h": 24
+      },
+      "style": {
+        "opacity": 1,
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "backgroundImage": "none",
+        "borderWidth": 0,
+        "borderColor": "rgb(17, 17, 17)",
+        "borderRadius": 0,
+        "boxShadow": "none",
+        "fontFamily": "Montserrat, sans-serif",
+        "fontSize": 20,
+        "fontWeight": 700,
+        "fontStyle": "normal",
+        "color": "rgb(17, 17, 17)",
+        "textAlign": "start",
+        "lineHeight": "24px",
+        "letterSpacing": "normal",
+        "textTransform": "none",
+        "textShadow": "none"
+      },
+      "lines": [
+        {
+          "text": "Дерево",
+          "rect": {
+            "x": 656.671875,
+            "y": 1096.5,
+            "w": 82,
+            "h": 24
+          }
+        }
+      ],
+      "order": 14,
+      "selector": "#card > div.row:nth-child(4) > div.mod:nth-child(3) > div.txt:nth-child(2) > div.val:nth-child(2)"
+    }
+  ],
+  "rejected": []
+}
