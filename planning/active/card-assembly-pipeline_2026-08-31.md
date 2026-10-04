@@ -1,6 +1,6 @@
 # Конвейер сборки карточки слоями — веха M7
 
-Status: ACTIVE (с 2026-08-31) · фаза A, шаги B0–B4, B6, B7.1–B7.7, B5.0–B5.6, B5.11, C1 исполнены (B5.3 — код, деплой за владельцем); открыты B7.8, B5.7–B5.10, C2–C4 · аудит `/validate-plan` 2026-10-03
+Status: ACTIVE (с 2026-08-31) · фаза A, шаги B0–B4, B6, B7.1–B7.7, B5.0–B5.8, B5.11, C1 исполнены (B5.3 — код, деплой за владельцем); открыты B7.8, B5.9, B5.10, C2–C4 · аудит `/validate-plan` 2026-10-03
 
 > Закон дробления — `AGENTS.md` «Изоморфное дробление» и
 > [ADR-T0011](../../docs/adr/T0011-isomorphic-fragmentation-of-plans.md); рубрика модели —
@@ -77,6 +77,7 @@ M7 меняет.
 | B5.1 | Пересчёт долей кадра в доли холста | `card-layout/occupancy.ts` (`frameToCanvas`, `canvasBoxToFrame`) |
 | C1 | Механическая приёмка: заголовок и описание в кадре дословны, иначе генерация падает с возвратом баллов; SVG и PNG сборки детерминированы | `card-layout/text-check.ts`, `svg.test.ts` |
 | B7.5, B7.6 | Бесплатная пересборка `card-rebuild` (размер — из `generation_assets` собранной карточки) и «Изменить текст» на экране результата | `supabase/functions/card-rebuild/`, `src/screens/Generation.tsx` |
+| B5.7, B5.8 | Арт-директор: цикл по ступеням и вызов в воркере при `CARD_DIRECTOR=on`; итоговый патч — `generation_cards.direction` (`record_card_direction`), `null` — ступень 4; общий обмерщик `measureText` | `card-layout/director-run.ts`, `generation-worker/index.ts`, `render.ts`, миграция `20261004110000_generation_cards_direction.sql` |
 | B7.7 | Тяжёлые макеты (`dress-summer`, `tires-formula-ice`) вне подбора; универсальный — почищенный `school-shirt-girls-dark`; профиль больше 896×1200 собирается в `min_width`×`min_height` | миграции `20261003130000_card_layouts_edge_heavy.sql`, `20261004100000_edge_heavy_layouts.sql`; `card-layout/selection.ts` (`layoutQueries`); `_shared/card-size.ts` (`cardAssemblySize`) |
 
 **Состояние воркера на сегодня** (`supabase/functions/generation-worker/index.ts`): у генерации
@@ -597,7 +598,7 @@ M7 меняет.
     `operation: 'directCard'`. pgTAP: `'directCard'` вставляется, `'foo'` отвергается. `npm test`,
     `npm run lint`, `npm run test:db` — каждая отдельно.
 
-- [ ] **B5.7. Цикл арт-директора по ступеням — чистая функция с внедрёнными зависимостями.**
+- [x] **B5.7. Цикл арт-директора по ступеням — чистая функция с внедрёнными зависимостями.** Исполнено и сведено 2026-10-04 (`f65c84a`).
   - **Целевой файл(ы):** `supabase/functions/_shared/card-layout/director-run.ts` (новый),
     `director-run.test.ts` (новый).
   - **Файлы-контракты:** ADR-0018, пп. 2, 3, 5 · `direction.ts`, `direction-check.ts`,
@@ -643,7 +644,7 @@ M7 меняет.
     вызван с размером кадра, а не холста); без маски — режим `'content'` при гнёздах в макете.
     `npm test`, `npm run lint` — отдельно. Мутационная проверка.
 
-- [ ] **B5.8. Арт-директор в воркере и запись патча.**
+- [x] **B5.8. Арт-директор в воркере и запись патча.** Исполнено и сведено 2026-10-04 (`dc98aa4`). Решения исполнителя, принятые ревью: падение первого вызова — ступень 4 без сдвига (ADR-0018); в `generation_cards.content` — содержимое без правки, `direction` отдельно; сдвиг дописывается к `direction.boxes` после боксов модели (у `applyDirection` последний бокс слоя главный); иконки — 24×24 из `card_icons.content` (`bytea`).
   - **Целевой файл(ы):** `supabase/functions/generation-worker/index.ts`,
     `supabase/functions/_shared/card-layout/render.ts`, новая миграция
     `supabase/migrations/<метка>_generation_cards_direction.sql`, тест
@@ -808,7 +809,7 @@ M7 меняет.
 | M7-7m ✓ код сведён 2026-10-03, деплой — владелец | B5.3 (репозиторий `cutout_runner`) | Sonnet · medium | консервативная | `feature/mask-samples` (в `cutout_runner`) | M7-2 сведена; деплой и включение коробки — владелец | M7-7a, M7-7b, M7-7c |
 | M7-7b ✓ сведена 2026-10-03 | B5.4, B5.5, B5.11 | Sonnet · high | консервативная | `feature/m7-director-core` | M7-2 сведена | M7-7a, M7-7m, M7-7c |
 | M7-7c ✓ сведена 2026-10-03 | B5.6 | Sonnet · high | консервативная | `feature/m7-director-provider` | M7-2 сведена; держит стенд (`test:db`) | M7-7a, M7-7b, M7-7m; со стендом — по времени |
-| M7-7d | B5.7, B5.8 | Sonnet · high | консервативная | `feature/m7-director-worker` | M7-7a, M7-7b, M7-7c сведены; держит стенд | — |
+| M7-7d ✓ сведена 2026-10-04 | B5.7, B5.8 | Sonnet · high | консервативная | `feature/m7-director-worker` | M7-7a, M7-7b, M7-7c сведены; держит стенд | — |
 | M7-6b | B7.8 | Sonnet · high | консервативная | `feature/m7-title-fit` | M7-7d сведена (`measureText`, воркер); держит стенд | M7-7e |
 | M7-7e | B5.9 | Sonnet · medium | консервативная | `feature/m7-director-rebuild` | M7-4 и M7-7d сведены | M7-7f, M7-6b |
 | M7-7f | B5.10 | Sonnet · high | консервативная | `feature/m7-director-probe` | M7-7d сведена; M7-7m задеплоена; слово владельца на запуск (бюджет разрешён) | M7-7e |
