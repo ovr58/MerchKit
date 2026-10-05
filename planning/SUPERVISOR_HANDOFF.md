@@ -103,7 +103,8 @@ https://claude.ai/artifact/KeuEKA4PHF9r57nDGf9J7W (`verdicts/b28-unit` — А, `
 | Сведены 2026-10-05 | H-3: B4, B5 · H-5: C2 | Opus 5.5 · medium | доверенная | — |
 | Сведены 2026-10-05 | H-3b: B7 · H-8: C7 | Opus 5.5 · medium | доверенная · `claude/glyph-case-wordforms` (MK + `cutout_runner`) · `claude/drop-card-preview` | H-3b: `card-layout/html/`, `tools/card-pipeline/fonts/`, `html-layout/`, скил-жанр `ai-provider`, места загрузки шрифтов сборки, `cutout_runner`; H-8: `src/screens/Wizard.tsx`, `src/features/generation/`, `supabase/functions/card-preview/`, `docs/SPEC.md`, `CONTEXT.md`, `docs/ANALYTICS.md`. Швы сверить по диффам до запуска. Стенд не нужен ни одной |
 | Сведена и на стейдже 2026-10-05 | H-6: C3 (воркер) | Opus 5.5 · medium | доверенная · `claude/author-card-worker` (`30821e9` + носители) | после мёрджа — деплой в стейдж вне auto-режима: `db push` миграции `20261005120000`, секрет `CUTOUT_LAYOUT_ENDPOINT=https://cutout.mekit.ru/layout`, `generation-worker`; `CARD_AUTHOR` не включать до C6 |
-| После H-6 на стейдже | H-7: C5, C6 (⚠️ платно) | Opus 5.5 · medium | доверенная · `claude/author-card-probe` | после B39 + B40 на стейдже; бюджет — баланс шлюза 500 ₽, прогон строго последовательный (владелец, 2026-10-05); логи шлюза до прогона; полное название — в задание модели (шаг C6) |
+| Следующая | H-7: C5, C6 (⚠️ платно) | Opus 5.5 · medium | доверенная · `claude/author-card-probe` | B39 + B40 на стейдже — да; шлюз — 500 ₽, запись включена; прогон строго последовательный; полное название — в задание модели (шаг C6). До платного прогона в стейдже: наполнить каталог референсов, `CARD_AUTHOR=on` — супервизор вне auto-режима по слову владельца |
+| Когда стенд свободен | B41 (снять `record_card_authored`) | Opus 5.5 · medium | доверенная · `claude/drop-record-card-authored` | миграция + `generation_cards_origin.test.sql`; с H-7 файлов не делит, стенд — по очереди; деплой миграции — супервизор вне auto-режима по слову владельца |
 | Последними | H-D2: D2 · C4 (M7-10) | Opus 5.5 · medium | доверенная · `claude/html-authoring-wrap` · `claude/m7-blind-acceptance` | всё выше сведено |
 
 B37 и B38 в BACKLOG помечены `→ заведён план html-layout-authoring_2026-10-05.md`; отдельных
@@ -128,10 +129,13 @@ B37 и B38 в BACKLOG помечены `→ заведён план html-layout-
 
 ## Что ждёт владельца
 
-- **Баланс шлюза AITunnel:** 182 ₽ на 2026-10-05; шлюз резервирует на запрос с картинками по
-  `max_tokens` (Sonnet — 200 ₽, Opus — 338–400 ₽) и отвечает 402 ниже резерва. Владелец
-  2026-10-05: на балансе будет 500 ₽, остальное по H-7 решает супервизор — прогон строго
-  последовательный, останов ниже 250 ₽. Владелец 2026-10-05: шлюз пополнен, запись запросов включена.
+- **Шлюз AITunnel к H-7 готов** (владелец 2026-10-05): пополнен до 500 ₽, запись запросов
+  включена; остальное по H-7 решает супервизор. Шлюз резервирует на запрос с картинками по
+  `max_tokens` (Sonnet — 200 ₽) и отвечает 402 ниже резерва — прогон строго последовательный,
+  останов ниже 250 ₽; баланс сверить в начале прогона.
+- **Дерево сессии mk-32** (`.claude/worktrees/flow-check-redelivery`, ветка
+  `claude/flow-check-redelivery`, сведена) — сессия жива, дерево не снято; снять (`git status`,
+  junction, `worktree remove`, `branch -d`), когда владелец скажет, что сессия закрыта.
 - **B34, B35, B36** (BACKLOG, заведены 2026-10-04) — решения владельца нет; запуск только по его
   слову. Швы: B36 — разведка без кода, файлов не делит; B34 — `samples/wb-174941.json`
   (возможно `card-layout/svg.ts`); B35 — `card-layout/selection.ts`. Все три идут параллельно;
