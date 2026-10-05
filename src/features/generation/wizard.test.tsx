@@ -146,7 +146,10 @@ describe('Шаг запуска без превью (Q-H4)', () => {
       categoryId: 'clothing',
       marketplaceId: 'wildberries',
       presetId: 'on-model',
-      productProperties: [{ id: 'p1', label: 'Сезон', value: 'Зима' }],
+      productProperties: [
+        { id: 'p1', label: 'Материал', value: 'Хлопок' },
+        { id: 'p2', label: 'Сезон', value: 'Демисезон' },
+      ],
     })
 
     render(
@@ -163,6 +166,8 @@ describe('Шаг запуска без превью (Q-H4)', () => {
     expect(await screen.findByText('Проверьте и запускайте')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /превью/i })).not.toBeInTheDocument()
     expect(screen.queryByText(/превью|Как ляжет вёрстка/i)).not.toBeInTheDocument()
+    // Свойства ушли из шага вместе с панелью превью, но перед оплатой их видно в сводке.
+    expect(screen.getByText('Свойства').nextElementSibling).toHaveTextContent('Материал — Хлопок, Сезон — Демисезон')
 
     await userEvent.click(screen.getByRole('button', { name: 'Запустить' }))
 

@@ -720,6 +720,15 @@ export default function Wizard() {
                 <SummaryRow label="Товар" value={draft.productTitle || null} />
                 <SummaryRow label="Категория" value={categoryTitle} />
                 <SummaryRow label="Описание" value={draft.productDescription || null} />
+                <SummaryRow
+                  label="Свойства"
+                  value={
+                    draft.productProperties
+                      .map((property) => [property.label, property.value].filter(Boolean).join(' — '))
+                      .filter(Boolean)
+                      .join(', ') || null
+                  }
+                />
                 <SummaryRow label="Площадка" value={marketplaceTitle} />
                 <SummaryRow label="Тип" value={draft.kind === 'card' ? 'Карточка' : 'Фото'} />
                 <SummaryRow label="Как показать" value={presetTitle} />
