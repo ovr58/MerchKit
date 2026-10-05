@@ -19,7 +19,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 
 import { chromium } from 'playwright'
 
-import { dropForeignFontFaces, FONT_FACES, missingFonts, sceneInPage } from '../../../supabase/functions/_shared/card-layout/html/extract-browser.ts'
+import { addStyle, dropForeignFontFaces, FONT_FACES, missingFonts, sceneInPage } from '../../../supabase/functions/_shared/card-layout/html/extract-browser.ts'
 import type { HtmlScene } from './scene.ts'
 
 const fontDir = fileURLToPath(new URL('../fonts/', import.meta.url))
@@ -38,7 +38,7 @@ export async function extractScene(
     const page = await browser.newPage({ viewport: canvas, deviceScaleFactor: 1 })
     await page.goto(pathToFileURL(htmlPath).href)
     await page.evaluate(dropForeignFontFaces)
-    await page.addStyleTag({ content: fontCss })
+    await page.evaluate(addStyle, fontCss)
     const missing = await page.evaluate(missingFonts, FONT_FACES)
     if (missing.length > 0) throw new Error(`шрифты не загрузились: ${missing.join(', ')}`)
 

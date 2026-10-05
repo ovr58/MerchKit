@@ -33,10 +33,29 @@ export const FONT_FACES: [file: string, family: string, weight: number][] = [
  */
 export function dropForeignFontFaces(): void {
   for (const sheet of Array.from(document.styleSheets)) {
-    for (let at = sheet.cssRules.length - 1; at >= 0; at--) {
-      if (sheet.cssRules[at] instanceof CSSFontFaceRule) sheet.deleteRule(at)
+    let rules: CSSRuleList
+    try {
+      rules = sheet.cssRules
+    } catch {
+      // Таблица с чужого адреса (`<link>` на внешний CSS): правил не прочесть — и не применить,
+      // на коробке запрос к ней оборван, офлайн она чужая по origin.
+      continue
+    }
+    for (let at = rules.length - 1; at >= 0; at--) {
+      if (rules[at] instanceof CSSFontFaceRule) sheet.deleteRule(at)
     }
   }
+}
+
+/**
+ * Подключает CSS элементом `<style>`. Не `page.addStyleTag`: тот ждёт события `load` элемента, а
+ * при `javaScriptEnabled: false` (коробка) обработчики событий страницы не исполняются и ожидание
+ * не кончается никогда.
+ */
+export function addStyle(css: string): void {
+  const style = document.createElement('style')
+  style.textContent = css
+  document.head.append(style)
 }
 
 /** Ждёт загрузки своих шрифтов; возвращает файлы тех, что так и не загрузились. */
