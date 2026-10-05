@@ -26,7 +26,7 @@ const ROW = {
   product_description: '',
   wishes: '',
   product_properties: [],
-  price: 55,
+  price: 130,
   title: 'Куртка',
   card_title: 'Старый заголовок',
   card_description: 'Старое описание',

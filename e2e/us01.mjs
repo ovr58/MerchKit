@@ -166,7 +166,7 @@ try {
   await page.getByRole('button', { name: 'Далее' }).click()
 
   await page.getByRole('heading', { name: 'Проверьте и запускайте' }).waitFor()
-  check('FR-11 цена показана до запуска', await page.getByText('55 баллов').first().isVisible())
+  check('FR-11 цена показана до запуска', await page.getByText('130 баллов').first().isVisible())
 
   // B6 (K-1): вёрстка показана ДО списания, и список свойств правится там же, где человек
   // узнал, что в макет поместилось. Собирается превью на нашем сборщике, вендор не зовётся.

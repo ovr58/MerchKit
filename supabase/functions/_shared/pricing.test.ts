@@ -14,14 +14,14 @@ import {
  * тест закрепляет сами числа из docs/TZ.md §11, а не совпадение двух копий формулы.
  */
 describe('Цена генерации (docs/TZ.md §11)', () => {
-  it('объект стоит 50 баллов, карточка — на 5 дороже', () => {
+  it('объект стоит 50 баллов, карточка с сочинением — 130 (Q-H3)', () => {
     expect(generationPrice('photo', 1)).toBe(50)
-    expect(generationPrice('card', 1)).toBe(55)
+    expect(generationPrice('card', 1)).toBe(130)
   })
 
   it('числа прайса не разъезжаются с формулой', () => {
     expect(OBJECT_PRICE).toBe(50)
-    expect(CARD_SURCHARGE).toBe(5)
+    expect(CARD_SURCHARGE).toBe(80)
     expect(generationPrice('card', 1) - generationPrice('photo', 1)).toBe(CARD_SURCHARGE)
   })
 

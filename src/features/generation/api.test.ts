@@ -50,7 +50,7 @@ const FAILED = {
   productDescription: 'Хлопок, цвет хаки',
   wishes: '',
   productProperties: [],
-  price: 55,
+  price: 130,
   title: null,
   cardTitle: null,
   cardDescription: null,
