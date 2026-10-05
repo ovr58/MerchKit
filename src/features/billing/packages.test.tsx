@@ -49,7 +49,7 @@ describe('Ключ идемпотентности пополнения (NFR-03)'
   // на сервере: любая клиентская схема, где клик может сменить ключ, ломается вторым
   // кликом. Тест закрепляет клиентское поведение, а не выдаёт его за защиту.
   it('после успешного зачисления следующая попытка получает новый ключ', async () => {
-    invoke.mockResolvedValue({ data: { balance: 1120 }, error: null })
+    invoke.mockResolvedValue({ data: { balance: 1300 }, error: null })
 
     const { result } = renderHook(() => useTopUp('user-1'), { wrapper })
 

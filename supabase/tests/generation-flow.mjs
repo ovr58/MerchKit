@@ -195,7 +195,7 @@ const stamp = Date.now()
 const password = 'password123'
 
 const seller = await register(`seller.${stamp}@example.com`, password)
-check('FR-19 стартовые 120 баллов на месте', (await balanceOf(seller.token)) === 120)
+check('FR-19 стартовые 300 баллов на месте', (await balanceOf(seller.token)) === 300)
 
 // --- гость проходит мастер, но запустить не может (FR-12) ---------------------
 const asGuest = await fetch(`${REST}/marketplace_output_profiles?select=*&marketplace_id=eq.ozon`, {
@@ -272,14 +272,7 @@ check(
 )
 
 // --- US-01: главный путь ------------------------------------------------------
-// Карточка (130 баллов, Q-H3) дороже стартовых 120: пополняемся тем же путём, что и пользователь
-// (FR-23), иначе главный путь упрётся в US-E3. Пакета хватает и на сбои ниже — они возвращают баллы.
-const topped = await callFunction('topup', seller.token, {
-  packageId: 'start',
-  idempotencyKey: crypto.randomUUID(),
-})
-check('FR-23 пакет пополнения зачислен до карточки', topped.status === 200 && (await balanceOf(seller.token)) === 420, JSON.stringify(topped.body))
-
+// Карточка стоит 130 баллов (Q-H3), стартовых 300: новый продавец берёт её без пополнения.
 const started = await launch(seller.token, { photoPaths: [uploaded.path] })
 check(
   'US-01 заявка принята и вернула generationId',
@@ -287,7 +280,7 @@ check(
   JSON.stringify(started.body),
 )
 check('FR-11 сервер посчитал цену карточки сам: 130 баллов', started.body.price === 130)
-check('V-07 баллы списаны при приёме заявки', (await balanceOf(seller.token)) === 290)
+check('V-07 баллы списаны при приёме заявки', (await balanceOf(seller.token)) === 170)
 
 const done = await settle(seller.token, started.body.generationId)
 check('US-01 генерация дошла до готового результата', done?.status === 'done', done?.status ?? 'нет ответа')
@@ -328,8 +321,17 @@ check(
 const again = await downloadResult(seller.token, asset.storage_path)
 check(
   'FR-17 повторное скачивание из каталога не списывает баллы',
-  again !== null && (await balanceOf(seller.token)) === 290,
+  again !== null && (await balanceOf(seller.token)) === 170,
 )
+
+// Остаток 170: фото ниже (50) оставит 120 — меньше карточки (130), а сбои после него запускают
+// именно карточки. Пополняемся тем же путём, что и пользователь (FR-23); пакета «Старт» (+300)
+// хватает на всё, сами сбои баллы возвращают.
+const topped = await callFunction('topup', seller.token, {
+  packageId: 'start',
+  idempotencyKey: crypto.randomUUID(),
+})
+check('FR-23 пакет пополнения зачислен', topped.status === 200 && (await balanceOf(seller.token)) === 470, JSON.stringify(topped.body))
 
 // --- FR-25 на исключении: Ozon Fresh показывает товар квадратом ---------------
 const square = await launch(seller.token, {
@@ -413,8 +415,9 @@ check(
 // --- US-E3: баллов не хватает --------------------------------------------------
 const poor = await register(`poor.${stamp}@example.com`, password)
 const drain = []
+// Две карточки по 130 съедают 260 из 300: остаётся 40 — меньше любой заявки.
 for (let attempt = 0; attempt < 2; attempt++) {
-  const spent = await launch(poor.token, { kind: 'photo', presetId: 'clothing-studio' })
+  const spent = await launch(poor.token)
   drain.push(spent.status)
   if (spent.body.generationId) await settle(poor.token, spent.body.generationId)
 }
@@ -482,8 +485,6 @@ if (process.env.CARD_AUTHOR === 'on') {
 
   const author = await register(`author.${stamp}@example.com`, password)
   const authorPhoto = await uploadPhoto(author, 'photo-1.jpg')
-  // Карточка дороже стартовых баллов — пополнение, как у продавца выше.
-  await callFunction('topup', author.token, { packageId: 'start', idempotencyKey: crypto.randomUUID() })
   const chair = await launch(author.token, {
     categoryId: 'home',
     presetId: 'home-studio',

@@ -56,7 +56,7 @@ export default function SignUp() {
   return (
     <AuthLayout headerLink={{ label: 'Войти', to: '/signin' }} headerText="Уже есть аккаунт?">
       <AuthHeading
-        description="После подтверждения email на баланс придут 120 стартовых баллов — это две пробные генерации."
+        description="После подтверждения email на баланс придут 300 стартовых баллов — хватит на две карточки."
         title="Регистрация"
       />
 

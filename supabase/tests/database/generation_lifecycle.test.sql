@@ -22,8 +22,8 @@ update auth.users set email_confirmed_at = now()
 
 select is(
   (select balance from public.profiles where id = 'aaaaaaaa-0000-4000-8000-000000000001'),
-  120,
-  'Стартовый баланс — 120 стартовых баллов'
+  300,
+  'Стартовый баланс — 300 стартовых баллов'
 );
 
 create temporary table run (id uuid);
@@ -32,12 +32,12 @@ insert into run
 select public.create_generation(
   'aaaaaaaa-0000-4000-8000-000000000001', 'card', 'ozon', 'clothing', 'clothing-model',
   'Куртка-бомбер', 'Плащёвка на синтепоне, хаки, S–XXL', '',
-  array['aaaaaaaa-0000-4000-8000-000000000001/photo-1.jpg'], 55);
+  array['aaaaaaaa-0000-4000-8000-000000000001/photo-1.jpg'], 130);
 
 select is(
   (select balance from public.profiles where id = 'aaaaaaaa-0000-4000-8000-000000000001'),
-  65,
-  'Заявка принята — списано 55 баллов (V-07, статус queued)'
+  170,
+  'Заявка принята — списано 130 баллов (V-07, статус queued)'
 );
 
 select is(
@@ -65,7 +65,7 @@ select throws_ok(
 
 select is(
   (select balance from public.profiles where id = 'aaaaaaaa-0000-4000-8000-000000000001'),
-  65,
+  170,
   'Отклонённая заявка не списала баллов: откатилась вся транзакция'
 );
 
@@ -122,7 +122,7 @@ select is(
 
 select is(
   (select balance from public.profiles where id = 'aaaaaaaa-0000-4000-8000-000000000001'),
-  65,
+  170,
   'Успешная генерация баланс не трогает: списание уже прошло при приёме заявки'
 );
 
@@ -149,7 +149,7 @@ select is(
 select is(
   public.fail_generation('aaaaaaaa-0000-4000-8000-000000000001', (select id from run),
                          'передумал'),
-  65,
+  170,
   'Завершённую генерацию не завалить задним числом: возврата нет'
 );
 
@@ -160,7 +160,7 @@ create temporary table broken (id uuid);
 insert into broken
 select public.create_generation(
   'aaaaaaaa-0000-4000-8000-000000000001', 'card', 'wildberries', 'tech', 'tech-studio',
-  'Наушники накладные', '', 'тёплый свет', '{}'::text[], 55);
+  'Наушники накладные', '', 'тёплый свет', '{}'::text[], 130);
 
 select public.start_generation((select id from broken));
 
@@ -169,14 +169,14 @@ select public.start_generation((select id from broken));
 select is(
   public.fail_generation('aaaaaaaa-0000-4000-8000-000000000001', (select id from broken),
                          'Карточка не собралась целиком'),
-  65,
+  170,
   'Неуспех вернул все списанные баллы: баланс равен балансу до запуска (FR-13, US-E4)'
 );
 
 select is(
   public.fail_generation('aaaaaaaa-0000-4000-8000-000000000001', (select id from broken),
                          'то же событие ещё раз'),
-  65,
+  170,
   'Повторная доставка события неуспеха не возвращает баллы дважды (NFR-03)'
 );
 

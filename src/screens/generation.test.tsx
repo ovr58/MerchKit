@@ -85,7 +85,7 @@ vi.mock('@/features/auth', () => ({
 }))
 
 vi.mock('@/features/billing', () => ({
-  useBalance: () => ({ isSuccess: true, data: 120 }),
+  useBalance: () => ({ isSuccess: true, data: 300 }),
 }))
 
 vi.mock('@/features/taxonomy', () => ({

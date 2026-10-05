@@ -39,8 +39,8 @@ describe('Цена генерации (docs/TZ.md §11)', () => {
 
 describe('Подсказка «хватит на N объектов»', () => {
   it('считает по базовой цене объекта и округляет вниз', () => {
-    // 120 стартовых баллов — ровно тот случай, что стоит на артборде D1 «Профиль».
-    expect(affordableObjects(120)).toBe(2)
+    // 300 стартовых баллов — ровно тот случай, что стоит на артборде D1 «Профиль».
+    expect(affordableObjects(300)).toBe(6)
     expect(affordableObjects(100)).toBe(2)
     expect(affordableObjects(49)).toBe(0)
     expect(affordableObjects(0)).toBe(0)

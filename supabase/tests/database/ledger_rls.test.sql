@@ -12,7 +12,7 @@ insert into auth.users (id, email) values
   ('aaaaaaaa-0000-4000-8000-000000000001', 'seller-a@example.com'),
   ('bbbbbbbb-0000-4000-8000-000000000002', 'seller-b@example.com');
 
--- Журнал наполняет тот же путь, что и в облаке: подтверждение email начисляет 120.
+-- Журнал наполняет тот же путь, что и в облаке: подтверждение email начисляет 300.
 update auth.users set email_confirmed_at = now()
  where id in ('aaaaaaaa-0000-4000-8000-000000000001',
               'bbbbbbbb-0000-4000-8000-000000000002');

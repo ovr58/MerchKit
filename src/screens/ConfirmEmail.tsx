@@ -68,7 +68,7 @@ export default function ConfirmEmail() {
           <h1 className="text-2xl font-semibold tracking-tight">Подтвердите email</h1>
           <p className="text-muted-foreground text-sm leading-5">
             Мы отправили письмо на <span className="text-foreground font-medium">{email}</span>.
-            Перейдите по ссылке из него — и на баланс придут 120 стартовых баллов.
+            Перейдите по ссылке из него — и на баланс придут 300 стартовых баллов.
           </p>
         </div>
 

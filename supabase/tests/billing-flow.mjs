@@ -116,14 +116,14 @@ const password = 'password123'
 const mailbox = `seller.${stamp}`
 const first = await register(`${mailbox}@gmail.com`, password)
 
-check('FR-19 подтверждение email начислило 120 баллов', (await balanceOf(first.token)) === 120)
+check('FR-19 подтверждение email начислило 300 баллов', (await balanceOf(first.token)) === 300)
 
 const history = await (
   await rest('ledger?select=kind,delta,balance_after&order=id', first.token)
 ).json()
 check(
   'US-05 операция видна в истории баланса',
-  history.length === 1 && history[0].kind === 'signup_bonus' && history[0].delta === 120,
+  history.length === 1 && history[0].kind === 'signup_bonus' && history[0].delta === 300,
   JSON.stringify(history),
 )
 
@@ -131,7 +131,7 @@ check(
 // Тот же ящик, записанный иначе: точки в локальной части и «+хвост» Gmail игнорирует.
 const twin = await register(`${mailbox.replace('.', '')}+promo@googlemail.com`, password)
 check(
-  'Плюс-адресация того же ящика второй раз 120 баллов не даёт',
+  'Плюс-адресация того же ящика второй раз 300 баллов не даёт',
   (await balanceOf(twin.token)) === 0,
 )
 
@@ -148,7 +148,7 @@ const forgedBalance = await fetch(`${REST}/profiles?id=eq.${first.id}`, {
 })
 check(
   'NFR-05 клиентская попытка изменить баланс отклонена базой',
-  forgedBalance.status >= 400 || (await balanceOf(first.token)) === 120,
+  forgedBalance.status >= 400 || (await balanceOf(first.token)) === 300,
   `HTTP ${forgedBalance.status}`,
 )
 
@@ -187,7 +187,7 @@ const topUp = await callFunction('topup', first.token, {
 })
 check(
   'FR-23 пакет зачислен мгновенно и без шага оплаты',
-  topUp.status === 200 && topUp.body.balance === 1120,
+  topUp.status === 200 && topUp.body.balance === 1300,
   JSON.stringify(topUp.body),
 )
 
@@ -197,7 +197,7 @@ const doubleClick = await callFunction('topup', first.token, {
 })
 check(
   'NFR-03 двойной клик по кнопке пакета не зачисляет дважды',
-  doubleClick.body.balance === 1120 && (await balanceOf(first.token)) === 1120,
+  doubleClick.body.balance === 1300 && (await balanceOf(first.token)) === 1300,
   JSON.stringify(doubleClick.body),
 )
 
@@ -209,7 +209,7 @@ const secondClick = await callFunction('topup', first.token, {
 })
 check(
   'Очередь кликов с разными ключами попытки не зачисляет пакет дважды',
-  secondClick.body.balance === 1120 && (await balanceOf(first.token)) === 1120,
+  secondClick.body.balance === 1300 && (await balanceOf(first.token)) === 1300,
   JSON.stringify(secondClick.body),
 )
 

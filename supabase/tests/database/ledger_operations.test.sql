@@ -26,8 +26,8 @@ update auth.users set email_confirmed_at = now()
 
 select is(
   (select balance from public.profiles where id = 'aaaaaaaa-0000-4000-8000-000000000001'),
-  120,
-  'Подтверждение email начислило 120 стартовых баллов (FR-19)'
+  300,
+  'Подтверждение email начислило 300 стартовых баллов (FR-19)'
 );
 
 -- Повторный переход по ссылке подтверждения: GoTrue снова проставляет дату.
@@ -36,8 +36,8 @@ update auth.users set email_confirmed_at = now()
 
 select is(
   (select balance from public.profiles where id = 'aaaaaaaa-0000-4000-8000-000000000001'),
-  120,
-  'Повторное подтверждение не начисляет 120 второй раз (NFR-03)'
+  300,
+  'Повторное подтверждение не начисляет 300 второй раз (NFR-03)'
 );
 
 -- Та самая дыра, найденная на живом стейдже 2026-08-28: плюс-адресация и точки дают одному
@@ -50,7 +50,7 @@ update auth.users set email_confirmed_at = now()
 select is(
   (select balance from public.profiles where id = 'bbbbbbbb-0000-4000-8000-000000000002'),
   0,
-  'Тот же ящик через плюс-адресацию и точки второй раз 120 баллов не получает'
+  'Тот же ящик через плюс-адресацию и точки второй раз 300 баллов не получает'
 );
 
 -- А другой ящик — получает: нормализация не должна склеивать разных людей.
@@ -61,8 +61,8 @@ update auth.users set email_confirmed_at = now()
 
 select is(
   (select balance from public.profiles where id = 'dddddddd-0000-4000-8000-000000000004'),
-  120,
-  'У не-Gmail точки и «+» значимы: это другой ящик, и он получает свои 120'
+  300,
+  'У не-Gmail точки и «+» значимы: это другой ящик, и он получает свои 300'
 );
 
 select is(
@@ -80,13 +80,13 @@ select is(
 -- Пополнение (FR-23, US-05).
 select is(
   public.topup_balance('aaaaaaaa-0000-4000-8000-000000000001', 'standard', 'attempt-1'),
-  1120,
+  1300,
   'Пакет «Стандарт» зачислил 1000 баллов из справочника'
 );
 
 select is(
   public.topup_balance('aaaaaaaa-0000-4000-8000-000000000001', 'standard', 'attempt-1'),
-  1120,
+  1300,
   'Двойной клик по кнопке пакета не даёт двойного зачисления (NFR-03)'
 );
 
@@ -94,7 +94,7 @@ select is(
 -- после успеха. Для сервера он неотличим от новой покупки — если не смотреть на окно.
 select is(
   public.topup_balance('aaaaaaaa-0000-4000-8000-000000000001', 'standard', 'attempt-2'),
-  1120,
+  1300,
   'Второй клик по пакету с другим ключом попытки не зачисляет пакет второй раз'
 );
 
@@ -116,23 +116,23 @@ select throws_ok(
 -- проверяется контракт журнала, а не приёмка заявки — её проверяет generation_lifecycle.
 insert into public.generations (id, user_id, kind, marketplace_id, category_id, product_title, price) values
   ('cccccccc-0000-4000-8000-000000000009', 'aaaaaaaa-0000-4000-8000-000000000001',
-   'card', 'ozon', 'clothing', 'Куртка-бомбер', 55),
+   'card', 'ozon', 'clothing', 'Куртка-бомбер', 130),
   ('cccccccc-0000-4000-8000-000000000008', 'bbbbbbbb-0000-4000-8000-000000000002',
    'photo', 'wildberries', 'tech', 'Наушники', 50);
 
 select is(
   public.charge_for_generation(
     'aaaaaaaa-0000-4000-8000-000000000001',
-    'cccccccc-0000-4000-8000-000000000009', 55),
-  1065,
+    'cccccccc-0000-4000-8000-000000000009', 130),
+  1170,
   'Заявка принята — баллы списаны (V-07, статус queued)'
 );
 
 select is(
   public.charge_for_generation(
     'aaaaaaaa-0000-4000-8000-000000000001',
-    'cccccccc-0000-4000-8000-000000000009', 55),
-  1065,
+    'cccccccc-0000-4000-8000-000000000009', 130),
+  1170,
   'Повторная доставка того же события не списывает дважды (NFR-03)'
 );
 
@@ -147,8 +147,8 @@ select is(
 select is(
   public.refund_for_generation(
     'aaaaaaaa-0000-4000-8000-000000000001',
-    'cccccccc-0000-4000-8000-000000000009', 55),
-  1120,
+    'cccccccc-0000-4000-8000-000000000009', 130),
+  1300,
   'Провайдер недоступен — возврат восстановил баланс ровно до исходного (V-07, failed)'
 );
 

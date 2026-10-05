@@ -18,7 +18,7 @@ const SESSION = {
 }
 
 const ROWS: Record<string, unknown> = {
-  profiles: { balance: 120 },
+  profiles: { balance: 300 },
   credit_packages: [
     { id: 'start', title: 'Старт', credits: 300, price_rub: 390, is_featured: false },
     { id: 'standard', title: 'Стандарт', credits: 1000, price_rub: 1090, is_featured: true },
@@ -29,8 +29,8 @@ const ROWS: Record<string, unknown> = {
       id: 1,
       created_at: '2026-08-27T10:00:00Z',
       kind: 'signup_bonus',
-      delta: 120,
-      balance_after: 120,
+      delta: 300,
+      balance_after: 300,
       context: {},
     },
   ],
@@ -93,9 +93,9 @@ describe('Профиль (US-05, артборд D1 Profile)', () => {
 
     // Ждём именно подсказку: плитка баланса есть на экране и до ответа выборки, с прочерком.
     expect(
-      await screen.findByText('Хватит на 2 объекта — один объект стоит 50 баллов'),
+      await screen.findByText('Хватит на 6 объектов — один объект стоит 50 баллов'),
     ).toBeInTheDocument()
-    expect(screen.getByTestId('balance')).toHaveTextContent('120')
+    expect(screen.getByTestId('balance')).toHaveTextContent('300')
   })
 
   it('показывает три пакета в порядке справочника с ценой за балл', async () => {
@@ -121,7 +121,7 @@ describe('Профиль (US-05, артборд D1 Profile)', () => {
     expect(
       await screen.findByText('Стартовые баллы за подтверждение email'),
     ).toBeInTheDocument()
-    expect(screen.getByText('+120')).toBeInTheDocument()
+    expect(screen.getByText('+300')).toBeInTheDocument()
     expect(screen.queryByText(/Раздел готовится/)).not.toBeInTheDocument()
   })
 
