@@ -84,7 +84,7 @@ const summaryPanel = ({ photos = '—', product = '—', category = '—', marke
 /* ---------- 1. Мастер, шаг «фото» — пусто ---------- */
 
 write('WizardPhotoEmpty', shell({
-  header: appHeader('new', '120 баллов'),
+  header: appHeader('new', '300 баллов'),
   body: `${h1('Создать генерацию')}
       ${columns(
     panel(`${stepper(0)}
@@ -105,7 +105,7 @@ const photoGrid = (kinds, withAdd) => `<div style="display: grid; grid-template-
         </div>`;
 
 write('WizardPhotoFilled', shell({
-  header: appHeader('new', '120 баллов'),
+  header: appHeader('new', '300 баллов'),
   body: `${h1('Создать генерацию')}
       ${columns(
     panel(`${stepper(0)}
@@ -124,7 +124,7 @@ write('WizardPhotoFilled', shell({
 /* ---------- 3. Мастер, шаг «фото» — US-E1 ---------- */
 
 write('WizardPhotoError', shell({
-  header: appHeader('new', '120 баллов'),
+  header: appHeader('new', '300 баллов'),
   body: `${h1('Создать генерацию')}
       ${columns(
     panel(`${stepper(0)}
@@ -150,7 +150,7 @@ const thumbStrip = (kinds) => `<div style="display: flex; gap: 8px">${kinds.map(
 const productDesc = 'Мужская куртка-бомбер, плащёвка на синтепоне, цвет хаки. Два боковых кармана на молнии, внутренний карман. Размерный ряд S–XXL.';
 
 write('WizardProduct', shell({
-  header: appHeader('new', '120 баллов'),
+  header: appHeader('new', '300 баллов'),
   body: `${h1('Создать генерацию')}
       ${columns(
     panel(`${stepper(1)}
@@ -175,7 +175,7 @@ write('WizardProduct', shell({
 /* ---------- 5. Мастер, шаг «товар» — US-E2 ---------- */
 
 write('WizardProductUnknown', shell({
-  header: appHeader('new', '120 баллов'),
+  header: appHeader('new', '300 баллов'),
   body: `${h1('Создать генерацию')}
       ${columns(
     panel(`${stepper(1)}
@@ -220,7 +220,7 @@ const MARKETS = [
 ];
 
 write('WizardMarketplace', shell({
-  header: appHeader('new', '120 баллов'),
+  header: appHeader('new', '300 баллов'),
   body: `${h1('Создать генерацию')}
       ${columns(
     panel(`${stepper(2)}
@@ -239,7 +239,7 @@ write('WizardMarketplace', shell({
 /* ---------- 7. Мастер, шаг «тип» ---------- */
 
 write('WizardType', shell({
-  header: appHeader('new', '120 баллов'),
+  header: appHeader('new', '300 баллов'),
   body: `${h1('Создать генерацию')}
       ${columns(
     panel(`${stepper(3)}
@@ -256,14 +256,14 @@ write('WizardType', shell({
           ${typeCard({
       title: 'Карточка',
       desc: 'Изображение с вёрсткой поверх фото — название, свойства, размеры. Плюс заголовок и описание текстом.',
-      price: '55 баллов',
+      price: '130 баллов',
       preview: cardShot(168, 0.92),
       selected: true
     })}
         </div>
         <span style="font-size: 13px; line-height: 18px; color: ${C.mutedFg}">Карточка — <b style="color: ${C.fg}">одно</b> изображение, а не набор слайдов.</span>
         ${stepFooter('Шаг 4 из 6', `${backBtn}${nextBtn()}`)}`),
-    `${resultsWaiting()}${summaryPanel({ photos: '3 из 4', product: 'Куртка-бомбер', category: 'Одежда и обувь', market: 'Ozon', type: 'Карточка', total: '55 баллов' })}`
+    `${resultsWaiting()}${summaryPanel({ photos: '3 из 4', product: 'Куртка-бомбер', category: 'Одежда и обувь', market: 'Ozon', type: 'Карточка', total: '130 баллов' })}`
   )}`
 }));
 
@@ -277,7 +277,7 @@ const PRESETS = [
 ];
 
 write('WizardScenario', shell({
-  header: appHeader('new', '120 баллов'),
+  header: appHeader('new', '300 баллов'),
   body: `${h1('Создать генерацию')}
       ${columns(
     panel(`${stepper(4)}
@@ -293,7 +293,7 @@ write('WizardScenario', shell({
       hint: 'Необязательно. Дополняет выбранный сценарий, а для категории «Прочее» заменяет его.'
     })}
         ${stepFooter('Шаг 5 из 6', `${backBtn}${nextBtn()}`)}`),
-    `${resultsWaiting()}${summaryPanel({ photos: '3 из 4', product: 'Куртка-бомбер', category: 'Одежда и обувь', market: 'Ozon', type: 'Карточка', preset: 'На модели', total: '55 баллов' })}`
+    `${resultsWaiting()}${summaryPanel({ photos: '3 из 4', product: 'Куртка-бомбер', category: 'Одежда и обувь', market: 'Ozon', type: 'Карточка', preset: 'На модели', total: '130 баллов' })}`
   )}`
 }));
 
@@ -312,7 +312,7 @@ const launchSummary = () => `<div style="display: flex; flex-direction: column; 
         ${outputParams(OUT, OUT_NOTE)}`;
 
 write('WizardLaunch', shell({
-  header: appHeader('new', '120 баллов'),
+  header: appHeader('new', '300 баллов'),
   body: `${h1('Создать генерацию')}
       ${columns(
     panel(`${stepper(5)}
@@ -320,16 +320,16 @@ write('WizardLaunch', shell({
         ${sectionTitle('Проверьте и запускайте')}
         ${launchSummary()}
         ${priceBox(`${priceRow('Объект', '50 баллов')}
-          ${priceRow('Надбавка за карточку', '+5 баллов')}
+          ${priceRow('Надбавка за карточку', '+80 баллов')}
           ${divider}
-          ${priceRow('К списанию', '55 баллов', 'total')}
-          ${priceRow('Баланс после списания', '65 баллов')}`)}
+          ${priceRow('К списанию', '130 баллов', 'total')}
+          ${priceRow('Баланс после списания', '170 баллов')}`)}
         <div style="display: flex; gap: 10px; align-items: center">
           ${backBtn}
-          <div style="flex: 1">${btn('Запустить генерацию за 55 баллов')}</div>
+          <div style="flex: 1">${btn('Запустить генерацию за 130 баллов')}</div>
         </div>
         <span style="font-size: 13px; line-height: 18px; color: ${C.mutedFg}">Одна генерация — один объект: вся мощность вызова идёт на один результат.</span>`),
-    `${resultsWaiting()}${summaryPanel({ photos: '3 из 4', product: 'Куртка-бомбер', category: 'Одежда и обувь', market: 'Ozon', type: 'Карточка', preset: 'На модели', total: '55 баллов' })}`
+    `${resultsWaiting()}${summaryPanel({ photos: '3 из 4', product: 'Куртка-бомбер', category: 'Одежда и обувь', market: 'Ozon', type: 'Карточка', preset: 'На модели', total: '130 баллов' })}`
   )}`
 }));
 
@@ -342,18 +342,18 @@ write('WizardLaunchNoCredits', shell({
     panel(`${stepper(5)}
         ${divider}
         ${sectionTitle('Проверьте и запускайте')}
-        ${alertBox('error', '<span>Не хватает <b>25 баллов</b>. Генерация стоит 55, на балансе — 30. Баллы не списаны, настройки сохранены.</span>')}
+        ${alertBox('error', '<span>Не хватает <b>100 баллов</b>. Генерация стоит 130, на балансе — 30. Баллы не списаны, настройки сохранены.</span>')}
         ${launchSummary()}
-        ${priceBox(`${priceRow('К списанию', '55 баллов', 'total')}
+        ${priceBox(`${priceRow('К списанию', '130 баллов', 'total')}
           ${priceRow('На балансе', '30 баллов')}
           ${divider}
-          ${priceRow('Не хватает', '25 баллов', 'short')}`)}
+          ${priceRow('Не хватает', '100 баллов', 'short')}`)}
         <div style="display: flex; gap: 10px; align-items: center">
           <div style="flex: 1">${btn('Пополнить баланс')}</div>
           <div style="flex: 1">${btn('Запустить генерацию', 'disabled')}</div>
         </div>
         <span style="font-size: 13px; line-height: 18px; color: ${C.mutedFg}">Пакет «Старт» — 300 баллов за 390 ₽. Баллы зачисляются сразу, без оплаты.</span>`),
-    `${resultsWaiting()}${summaryPanel({ photos: '3 из 4', product: 'Куртка-бомбер', category: 'Одежда и обувь', market: 'Ozon', type: 'Карточка', preset: 'На модели', total: '55 баллов' })}`
+    `${resultsWaiting()}${summaryPanel({ photos: '3 из 4', product: 'Куртка-бомбер', category: 'Одежда и обувь', market: 'Ozon', type: 'Карточка', preset: 'На модели', total: '130 баллов' })}`
   )}`
 }));
 
@@ -365,7 +365,7 @@ const guestModal = `<div style="position: absolute; inset: 0; background: rgba(9
         <h2 style="margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.02em; color: ${C.fg}">Нужен аккаунт, чтобы запустить</h2>
         <p style="margin: 0; font-size: 14px; line-height: 20px; color: ${C.mutedFg}">Настройки генерации сохранены. После регистрации вы вернётесь на этот шаг — фото, товар и сценарий останутся на месте.</p>
       </div>
-      ${alertBox('success', '<span><b>120 стартовых баллов</b> после подтверждения email — это две пробные генерации.</span>')}
+      ${alertBox('success', '<span><b>300 стартовых баллов</b> после подтверждения email — хватит на две карточки.</span>')}
       <div style="display: flex; flex-direction: column; gap: 10px">
         ${btn('Зарегистрироваться')}
         ${btn('У меня уже есть аккаунт', 'outline')}
@@ -383,14 +383,14 @@ write('WizardLaunchGuest', shell({
         ${sectionTitle('Проверьте и запускайте')}
         ${launchSummary()}
         ${priceBox(`${priceRow('Объект', '50 баллов')}
-          ${priceRow('Надбавка за карточку', '+5 баллов')}
+          ${priceRow('Надбавка за карточку', '+80 баллов')}
           ${divider}
-          ${priceRow('К списанию', '55 баллов', 'total')}`)}
+          ${priceRow('К списанию', '130 баллов', 'total')}`)}
         <div style="display: flex; gap: 10px; align-items: center">
           ${backBtn}
-          <div style="flex: 1">${btn('Запустить генерацию за 55 баллов')}</div>
+          <div style="flex: 1">${btn('Запустить генерацию за 130 баллов')}</div>
         </div>`),
-    `${resultsWaiting()}${summaryPanel({ photos: '3 из 4', product: 'Куртка-бомбер', category: 'Одежда и обувь', market: 'Ozon', type: 'Карточка', preset: 'На модели', total: '55 баллов' })}`
+    `${resultsWaiting()}${summaryPanel({ photos: '3 из 4', product: 'Куртка-бомбер', category: 'Одежда и обувь', market: 'Ozon', type: 'Карточка', preset: 'На модели', total: '130 баллов' })}`
   )}`
 }));
 
@@ -415,10 +415,10 @@ const WIDE = 'minmax(0, 1fr) minmax(0, 2fr)';
 /* ---------- 11. «Идёт генерация» (NFR-02, V-07) ---------- */
 
 write('GenerationRunning', shell({
-  header: appHeader('new', '65 баллов'),
+  header: appHeader('new', '170 баллов'),
   body: `${h1('Куртка-бомбер хаки, мужская')}
       ${columns(
-    requestPanel('Списано 55 баллов · баланс 65'),
+    requestPanel('Списано 130 баллов · баланс 170'),
     panel(`<div style="display: flex; align-items: center; justify-content: space-between">
           ${sectionTitle('Результаты')}
           ${statusPill('Идёт генерация', 'neutral')}
@@ -428,7 +428,7 @@ write('GenerationRunning', shell({
           <span style="font-size: 16px; font-weight: 500; color: ${C.fg}">Провайдер рисует изображение</span>
         </div>
         <div style="display: flex; flex-direction: column; gap: 12px">
-          ${progressStep('Заявка принята, списано 55 баллов', 'done')}
+          ${progressStep('Заявка принята, списано 130 баллов', 'done')}
           ${progressStep('Собран промпт по сценарию «На модели»', 'done')}
           ${progressStep('Провайдер рисует изображение', 'active')}
           ${progressStep('Сохраняем результат в каталог', 'pending')}
@@ -454,10 +454,10 @@ const cardTexts = `${textBlock('Заголовок карточки', 'Курт�
           ${textBlock('Описание', 'Тёплый бомбер из плотной плащёвки на синтепоне. Два боковых кармана на молнии и внутренний карман для документов. Держит форму, не мнётся в дороге. Размерный ряд S–XXL.')}`;
 
 write('ResultsDone', shell({
-  header: appHeader('new', '65 баллов'),
+  header: appHeader('new', '170 баллов'),
   body: `${h1('Куртка-бомбер хаки, мужская')}
       ${columns(
-    requestPanel('Списано 55 баллов · баланс 65', `<div style="display: flex; flex-direction: column; gap: 10px">${btn('Создать ещё одну', 'outline')}</div>`),
+    requestPanel('Списано 130 баллов · баланс 170', `<div style="display: flex; flex-direction: column; gap: 10px">${btn('Создать ещё одну', 'outline')}</div>`),
     panel(`<div style="display: flex; align-items: center; justify-content: space-between">
           ${sectionTitle('Результаты')}
           ${statusPill('Готово', 'success')}
@@ -484,15 +484,15 @@ write('ResultsDone', shell({
 // Неполная карточка (изображение есть, тексты нет) — тот же сбой: полный возврат, клиент
 // не получает ничего, ему предлагается повторить генерацию с теми же параметрами.
 write('ResultsFailed', shell({
-  header: appHeader('new', '120 баллов'),
+  header: appHeader('new', '300 баллов'),
   body: `${h1('Генерация не удалась')}
       ${columns(
-    requestPanel('Списано 55 · возврат 55 · баланс 120', `<div style="display: flex; flex-direction: column; gap: 10px">${btn('Изменить настройки', 'outline')}</div>`),
+    requestPanel('Списано 130 · возврат 130 · баланс 300', `<div style="display: flex; flex-direction: column; gap: 10px">${btn('Изменить настройки', 'outline')}</div>`),
     panel(`<div style="display: flex; align-items: center; justify-content: space-between">
           ${sectionTitle('Результаты')}
           ${statusPill('Сбой', 'neutral')}
         </div>
-        ${alertBox('error', '<span>Карточка не собралась целиком. Вернули все <b>55 баллов</b> — баланс снова 120, платить дважды за одну попытку не придётся.</span>')}
+        ${alertBox('error', '<span>Карточка не собралась целиком. Вернули все <b>130 баллов</b> — баланс снова 300, платить дважды за одну попытку не придётся.</span>')}
         <div style="height: 300px; border: 1px dashed ${C.border}; border-radius: 8px; background: ${C.muted}; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; padding: 24px">
           <div style="width: 56px; height: 56px; border-radius: 28px; background: ${C.red50}; border: 1px solid ${C.red200}; display: flex; align-items: center; justify-content: center">
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="${C.red700}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 20h20L12 3Z"></path><path d="M12 10v4M12 17h.01"></path></svg>
@@ -502,7 +502,7 @@ write('ResultsFailed', shell({
             <span style="font-size: 13px; line-height: 18px; color: ${C.mutedFg}">Половину карточки не отдаём: если не получилось изображение или не получились тексты — не получилась вся генерация. В каталог она не попадает и списка не засоряет.</span>
           </div>
           <div style="width: 320px; margin-top: 4px">${btn('Повторить с теми же параметрами')}</div>
-          <span style="font-size: 13px; color: ${C.mutedFg}">Повторный запуск стоит те же 55 баллов</span>
+          <span style="font-size: 13px; color: ${C.mutedFg}">Повторный запуск стоит те же 130 баллов</span>
         </div>`),
     WIDE
   )}`
@@ -522,7 +522,7 @@ const CATALOG = [
 ];
 
 write('CatalogData', shell({
-  header: appHeader('catalog', '120 баллов'),
+  header: appHeader('catalog', '300 баллов'),
   body: `<div style="display: flex; align-items: center; justify-content: space-between">
         ${h1('Каталог генераций')}
         <div style="width: 200px">${btn('Создать генерацию')}</div>
@@ -582,7 +582,7 @@ const mobileBottomBar = (price, action) => `<div style="flex: none; background: 
   </div>`;
 
 write('MobileWizard', mobileShell(
-  mobileHeader('120'),
+  mobileHeader('300'),
   `${mh1('Создать генерацию')}
     ${mStepRow(1, 'Фото', '3 из 4', 'done')}
     ${mStepRow(2, 'Товар', 'Куртка-бомбер', 'done')}
@@ -599,11 +599,11 @@ write('MobileWizard', mobileShell(
       ${textarea({ label: 'Пожелания к генерации', placeholder: 'Например: тёплый вечерний свет', height: 56 })}
     </section>
     ${mStepRow(6, 'Запуск', '', 'upcoming')}`,
-  mobileBottomBar('55 баллов', 'Далее')
+  mobileBottomBar('130 баллов', 'Далее')
 ));
 
 write('MobileCatalog', mobileShell(
-  mobileHeader('120'),
+  mobileHeader('300'),
   `${mh1('Каталог генераций')}
     <div style="height: 48px">
       <div style="height: 48px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 500; background: ${C.primary}; color: ${C.primaryFg}; border: 1px solid ${C.primary}">Создать генерацию</div>

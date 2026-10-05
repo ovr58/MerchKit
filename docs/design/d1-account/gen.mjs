@@ -152,7 +152,7 @@ write('SignInError', authPage(headerRight('Нет аккаунта?', 'Реги�
 
 /* ---------- 3. Регистрация ---------- */
 write('SignUp', authPage(headerRight('Уже есть аккаунт?', 'Войти'), `
-      ${cardHead('Регистрация', 'После подтверждения email на баланс придут 120 стартовых баллов — это две пробные генерации.')}
+      ${cardHead('Регистрация', 'После подтверждения email на баланс придут 300 стартовых баллов — хватит на две карточки.')}
       ${field({ label: 'Email', value: '', placeholder: 'you@example.com' })}
       ${field({ label: 'Пароль', value: '', placeholder: 'Минимум 8 символов', icon: eyeIcon })}
       ${field({ label: 'Подтверждение пароля', value: '', placeholder: 'Повторите пароль', icon: eyeIcon })}
@@ -161,7 +161,7 @@ write('SignUp', authPage(headerRight('Уже есть аккаунт?', 'Вой�
 
 /* ---------- 4. Регистрация — ошибки полей ---------- */
 write('SignUpErrors', authPage(headerRight('Уже есть аккаунт?', 'Войти'), `
-      ${cardHead('Регистрация', 'После подтверждения email на баланс придут 120 стартовых баллов — это две пробные генерации.')}
+      ${cardHead('Регистрация', 'После подтверждения email на баланс придут 300 стартовых баллов — хватит на две карточки.')}
       ${field({ label: 'Email', value: 'seller@example.com', error: 'Этот email уже зарегистрирован. Войдите или восстановите пароль.' })}
       ${field({ label: 'Пароль', value: '••••••••••', icon: eyeIcon })}
       ${field({ label: 'Подтверждение пароля', value: '••••••••', error: 'Подтверждение не совпадает с паролем', icon: eyeIcon })}
@@ -178,7 +178,7 @@ write('ConfirmEmail', authPage(headerRight('Не тот адрес?', 'Выйт�
         ${mailArt(C.green700)}
         <div style="display: flex; flex-direction: column; gap: 8px">
           <h1 style="margin: 0; font-size: 24px; font-weight: 600; letter-spacing: -0.02em; color: ${C.fg}">Подтвердите email</h1>
-          <p style="margin: 0; font-size: 14px; line-height: 20px; color: ${C.mutedFg}">Мы отправили письмо на <span style="color: ${C.fg}; font-weight: 500">seller@example.com</span>. Перейдите по ссылке из него — и на баланс придут 120 стартовых баллов.</p>
+          <p style="margin: 0; font-size: 14px; line-height: 20px; color: ${C.mutedFg}">Мы отправили письмо на <span style="color: ${C.fg}; font-weight: 500">seller@example.com</span>. Перейдите по ссылке из него — и на баланс придут 300 стартовых баллов.</p>
         </div>
         <div style="width: 100%; display: flex; flex-direction: column; gap: 10px">
           ${btn('Отправить письмо повторно', 'outline')}
@@ -269,7 +269,7 @@ const accountPanel = () => panel(`
 // Артборда «профиль до подтверждения» здесь нет намеренно: подтверждение email закрывает
 // вход целиком, и неподтверждённый пользователь профиля не видит (ADR-0008).
 const profilePage = () => `<div style="width: 1440px; height: 1024px; background: ${C.muted}; display: flex; flex-direction: column">
-  ${appHeader('profile', '120 баллов')}
+  ${appHeader('profile', '300 баллов')}
   <main style="flex: 1; overflow: hidden; padding: 32px 40px">
     <div style="max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px">
       <h1 style="margin: 0; font-size: 30px; font-weight: 600; letter-spacing: -0.02em; color: ${C.fg}">Профиль</h1>
@@ -280,10 +280,10 @@ const profilePage = () => `<div style="width: 1440px; height: 1024px; background
             <div style="display: flex; flex-direction: column; gap: 6px">
               ${sectionTitle('Баланс')}
               <div style="display: flex; align-items: baseline; gap: 8px">
-                <span style="font-size: 40px; font-weight: 600; letter-spacing: -0.03em; color: ${C.fg}">120</span>
+                <span style="font-size: 40px; font-weight: 600; letter-spacing: -0.03em; color: ${C.fg}">300</span>
                 <span style="font-size: 16px; color: ${C.mutedFg}">баллов</span>
               </div>
-              <span style="font-size: 13px; color: ${C.mutedFg}">Хватит на 2 объекта — один объект стоит 50 баллов</span>
+              <span style="font-size: 13px; color: ${C.mutedFg}">Хватит на 6 объектов — один объект стоит 50 баллов</span>
             </div>
             <div style="width: 180px">${btn('Пополнить баланс', 'primary')}</div>
           </div>`)}
@@ -300,7 +300,7 @@ const profilePage = () => `<div style="width: 1440px; height: 1024px; background
             <div style="display: grid; grid-template-columns: 120px minmax(0, 1fr) 90px 90px; gap: 16px; padding-bottom: 10px; font-size: 12px; font-weight: 500; letter-spacing: 0.03em; text-transform: uppercase; color: ${C.mutedFg}">
               <span>Дата</span><span>Операция</span><span style="text-align: right">Баллы</span><span style="text-align: right">Баланс</span>
             </div>
-            ${historyRow('27.08.2026', 'Стартовые баллы за подтверждение email', '+120', '120', true)}
+            ${historyRow('27.08.2026', 'Стартовые баллы за подтверждение email', '+300', '300', true)}
           </div>
           <p style="margin: 0; font-size: 13px; color: ${C.mutedFg}">Списания за генерации и возвраты по неудачным объектам появятся здесь же.</p>`)}
         </div>
@@ -314,7 +314,7 @@ write('Profile', profilePage());
 
 /* ---------- Каталог ---------- */
 const catalogPage = (inner) => `<div style="width: 1440px; height: 900px; background: ${C.muted}; display: flex; flex-direction: column">
-  ${appHeader('catalog', '120 баллов')}
+  ${appHeader('catalog', '300 баллов')}
   <main style="flex: 1; overflow: hidden; padding: 32px 40px">
     <div style="max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; height: 100%">
       <div style="display: flex; align-items: center; justify-content: space-between">
