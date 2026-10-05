@@ -7,7 +7,6 @@
 export {
   downloadResult,
   launchGeneration,
-  previewCard,
   rebuildCard,
   restoreDraftFrom,
   signedResultUrl,
@@ -17,8 +16,7 @@ export {
   useInvalidateAfterLaunch,
   type CardEdit,
   type CardFontMap,
-  type CardPreview,
-  type CardPreviewOverflow,
+  type CardOverflow,
   type CardRebuild,
   type CardRebuildOutcome,
   type DraftRestore,

@@ -176,15 +176,15 @@ describe('Server-side card-layout selection (M7 B2)', () => {
     expect(fromSecondOrder.id).toBe(fromFirstOrder.id)
   })
 
-  // The free preview (B6) must name the very layout the paid run will assemble: it is
-  // computed before the generation row exists, so the tie-break may not depend on its id.
-  it('gives the same layout to the same input, so the preview can promise it before payment', () => {
+  // Selection depends on the input alone: the tie-break may not lean on anything outside it,
+  // such as the id of the generation row.
+  it('gives the same layout to the same input', () => {
     const library = [candidate('a-layout', { propSlots: 2 }), candidate('b-layout', { propSlots: 2 })]
 
-    const preview = selectCardLayout(library, candidate('fallback'), INPUT)
-    const paidRun = selectCardLayout(library, candidate('fallback'), { ...INPUT })
+    const first = selectCardLayout(library, candidate('fallback'), INPUT)
+    const second = selectCardLayout(library, candidate('fallback'), { ...INPUT })
 
-    expect(paidRun.id).toBe(preview.id)
+    expect(second.id).toBe(first.id)
   })
 
   it('may pick another layout once the input changes, tie or not', () => {
@@ -224,6 +224,10 @@ describe('Server-side card-layout selection (M7 B2)', () => {
   })
 })
 
+// A path in a constant, not a literal: Vite rewrites `new URL('<literal>', import.meta.url)`
+// into an asset URL, and readFileSync then refuses it.
+const WORKER = '../../generation-worker/index.ts'
+
 describe('Selection skips layouts whose title box cannot take the seller title (B32)', () => {
   const rejects = (...ids: string[]) => (layout: { id: string }) => !ids.includes(layout.id)
 
@@ -252,7 +256,7 @@ describe('Selection skips layouts whose title box cannot take the seller title (
     expect(selected).toMatchObject({ id: 'universal-fallback', isFallback: true })
   })
 
-  it('gives the preview and the paid run the same layout for the same filter', () => {
+  it('gives the same layout for the same filter whatever the library order', () => {
     const library = [candidate('a-layout', { propSlots: 2 }), candidate('b-layout', { propSlots: 2 })]
     const accepts = rejects('a-layout')
 
@@ -260,11 +264,9 @@ describe('Selection skips layouts whose title box cannot take the seller title (
     expect(selectCardLayout([...library].reverse(), candidate('fallback'), INPUT, accepts).id).toBe('b-layout')
   })
 
-  it('asks the same question in the worker and in the preview', () => {
-    for (const file of ['../../generation-worker/index.ts', '../../card-preview/index.ts']) {
-      const source = readFileSync(new URL(file, import.meta.url), 'utf8')
-      expect(source, file).toContain('firstWordFits(')
-    }
+  it('asks the worker the first-word question', () => {
+    const source = readFileSync(new URL(WORKER, import.meta.url), 'utf8')
+    expect(source).toContain('firstWordFits(')
   })
 })
 
@@ -278,11 +280,9 @@ describe('Selection queries keep heavy layouts out of the library read (M7 B7.7)
     expect(fallback).toContain('is_fallback=is.true')
   })
 
-  it('leaves the worker and the preview no query of their own, so one filter governs both', () => {
-    for (const file of ['../../generation-worker/index.ts', '../../card-preview/index.ts']) {
-      const source = readFileSync(new URL(file, import.meta.url), 'utf8')
-      expect(source, file).not.toContain('card_layouts?')
-      expect(source, file).toContain('layoutQueries(')
-    }
+  it('leaves the worker no query of its own, so the shared filter governs it', () => {
+    const source = readFileSync(new URL(WORKER, import.meta.url), 'utf8')
+    expect(source).not.toContain('card_layouts?')
+    expect(source).toContain('layoutQueries(')
   })
 })

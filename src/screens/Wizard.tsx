@@ -34,10 +34,8 @@ import {
   STEPS,
   useInvalidateAfterLaunch,
   useWizard,
-  type CardPreview,
   type DraftLogo,
   type DraftPhoto,
-  type ProductProperty,
 } from '@/features/generation'
 import {
   FREEFORM_CATEGORY,
@@ -47,7 +45,6 @@ import {
   useTaxonomy,
 } from '@/features/taxonomy'
 import { plural } from '@/lib/plural'
-import { cn } from '@/lib/utils'
 
 /**
  * Мастер генерации — шесть шагов по артбордам захода D2 и состояниям
@@ -96,147 +93,6 @@ function useLogoUrl(logo: DraftLogo | null): string | null {
   )
 
   return url
-}
-
-/**
- * Бесплатное превью карточки до оплаты — шаг B6, коррекция K-1.
- *
- * **Показывает три вещи, и все три обязательные:** что не поместилось, почему (ёмкость
- * выбранного макета) и где это чинится — список свойств стоит здесь же. Молчаливо пропавшая
- * характеристика и есть тот брак, ради которого шаг заведён: узнать о ней по оплаченному
- * кадру продавец не должен.
- *
- * **Заглушки названы заглушками.** Кадра вендора до оплаты нет, заголовок карточки сочинит
- * модель, — и превью говорит об этом словами, а не оставляет продавца гадать, почему в
- * кадре штриховка и слово «Подзаголовок».
- */
-function CardPreviewPanel({
-  onChangeProperties,
-  preview,
-  previewFailed,
-  previewStale,
-  previewing,
-  properties,
-  refresh,
-}: {
-  onChangeProperties: (properties: ProductProperty[]) => void
-  preview: CardPreview | null
-  previewFailed: boolean
-  previewStale: boolean
-  previewing: boolean
-  properties: ProductProperty[]
-  refresh: () => void
-}) {
-  // Переполнение на свойстве продавец чинит сам — это его текст, он попадёт в кадр дословно.
-  // Переполнение на подстановке чинить нечем: настоящий заголовок сочинит модель.
-  const ownOverflows = (preview?.overflows ?? []).filter((overflow) => overflow.bind?.kind === 'prop')
-  const titleOverflow = (preview?.overflows ?? []).some(
-    (overflow) => overflow.bind?.kind === 'text' && overflow.bind.slot === 'title',
-  )
-
-  return (
-    <section aria-labelledby="card-preview-title" className="flex flex-col gap-3">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className="text-sm font-medium" id="card-preview-title">
-            Как ляжет вёрстка
-          </h2>
-          <p className="text-muted-foreground text-[13px] leading-[18px]">
-            Бесплатно и без списания: собрано нашим сборщиком на заглушках.
-          </p>
-        </div>
-        <Button
-          disabled={previewing}
-          onClick={refresh}
-          size="sm"
-          type="button"
-          variant={previewStale ? 'default' : 'outline'}
-        >
-          {previewing ? 'Собираем…' : preview === null ? 'Собрать превью' : 'Обновить превью'}
-        </Button>
-      </div>
-
-      {previewFailed && (
-        <Notice tone="error">
-          <span>Не удалось собрать превью. Запуску это не мешает, но проверить вёрстку заранее не выйдет.</span>
-        </Notice>
-      )}
-
-      {preview !== null && (
-        <>
-          <div className="border-border bg-muted flex justify-center rounded-lg border p-3">
-            <img
-              alt="Превью карточки на заглушках"
-              className={cn('max-h-[420px] w-auto rounded-md', previewStale && 'opacity-50')}
-              src={preview.png}
-            />
-          </div>
-
-          {previewStale && (
-            <Notice tone="info">
-              <span>Настройки изменились после сборки. Обновите превью, чтобы увидеть нынешнюю вёрстку.</span>
-            </Notice>
-          )}
-
-          {preview.cut.length > 0 && (
-            <Notice tone="error">
-              <span>
-                В кадр {plural(preview.cut.length, 'не попадёт', 'не попадут', 'не попадут')}{' '}
-                <b>
-                  {preview.cut.length} {plural(preview.cut.length, 'свойство', 'свойства', 'свойств')}
-                </b>
-                : {preview.cut.map((property) => property.label || property.value).join(', ')}.
-              </span>
-              <span>
-                Причина — ёмкость макета «{preview.layout.title}»: {preview.capacity}{' '}
-                {plural(preview.capacity, 'модуль', 'модуля', 'модулей')}. Отбрасывается хвост списка,
-                а порядок задаёте вы — поднимите наверх то, что важнее.
-              </span>
-            </Notice>
-          )}
-
-          {ownOverflows.length > 0 && (
-            <Notice tone="error">
-              <span>Не помещается в свой модуль — текст обрежется краем плашки:</span>
-              <span>
-                {ownOverflows
-                  .map((overflow) => `«${overflow.text}» — на ${Math.round(overflow.over * 100)}% длиннее`)
-                  .join('; ')}
-                .
-              </span>
-            </Notice>
-          )}
-
-          <Notice tone="info">
-            <span>
-              Штриховка — заглушка кадра: сцену нарисует модель после запуска.
-              {preview.stubbed.length > 0 && ' Подписи-рыба тоже подберёт она — ваши здесь только наименование и свойства.'}
-            </span>
-            {titleOverflow && (
-              <span>
-                Наименование длиннее заголовка в этом макете. Это не ошибка заявки: в карточке
-                заголовок сочинит модель, и он будет короче.
-              </span>
-            )}
-          </Notice>
-        </>
-      )}
-
-      <div className="flex flex-col gap-1">
-        <h3 className="text-sm font-medium">Свойства товара</h3>
-        <p className="text-muted-foreground text-[13px] leading-[18px]">
-          Порядок задаёт важность: в кадр попадают первые
-          {preview === null ? ' — столько, сколько модулей у макета' : ` ${preview.capacity}`}.
-        </p>
-      </div>
-
-      <ProductPropertyList
-        capacity={preview?.capacity ?? null}
-        onChange={onChangeProperties}
-        properties={properties}
-      />
-    </section>
-  )
 }
 
 function Textarea({
@@ -857,18 +713,6 @@ export default function Wizard() {
                     показать».
                   </span>
                 </Notice>
-              )}
-
-              {draft.kind === 'card' && (
-                <CardPreviewPanel
-                  onChangeProperties={(properties) => wizard.update({ productProperties: properties })}
-                  preview={wizard.preview}
-                  previewFailed={wizard.previewFailed}
-                  previewStale={wizard.previewStale}
-                  previewing={wizard.previewing}
-                  properties={draft.productProperties}
-                  refresh={wizard.refreshPreview}
-                />
               )}
 
               <dl className="flex flex-col gap-2.5">
