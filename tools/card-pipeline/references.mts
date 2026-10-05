@@ -17,16 +17,20 @@
  *   npm run cards:references               — что в каталоге
  *   npm run cards:references -- push       — загрузить новые файлы и завести строки
  *   npm run cards:references -- pull       — выложить каталог в bench/samples/references/
+ *   npm run cards:references -- retire --unlisted          — какие активные строки текущий набор
+ *                                            файлов не выводит (сухой прогон)
+ *   npm run cards:references -- retire --unlisted --apply  — перевести их в `retired`; объекты
+ *                                            в бакете остаются
  *   … --target staging                     — то же на стейдже (`node --env-file=.env`)
  *
  * Ключи берутся из `supabase status`; в репозитории их нет и быть не должно.
  */
 
-import { createHash } from 'node:crypto'
 import { mkdir, readdir, readFile, stat, writeFile } from 'node:fs/promises'
 import { dirname, extname, join, relative, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
+import { CONTENT_TYPES, isReferenceFile, storagePathOf, unlistedRows } from './references-lib.ts'
 import { connect } from './target.ts'
 
 const ROOT = fileURLToPath(new URL('../../', import.meta.url))
@@ -35,13 +39,6 @@ const WB_STARTER_DIR = join(ROOT, 'bench', 'samples', 'wb-starter')
 const BUCKET = 'references'
 /** Тот же предел, что `file_size_limit` бакета: отказ здесь — с подсказкой, а не HTTP 413. */
 const MAX_BYTES = 2 * 1024 * 1024
-
-const CONTENT_TYPES: Record<string, string> = {
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.png': 'image/png',
-  '.webp': 'image/webp',
-}
 
 /** Разделы стартового набора WB → категории справочника (`public.categories`). */
 const WB_STARTER_CATEGORIES: Record<string, string> = {
@@ -100,7 +97,7 @@ async function walk(dir: string): Promise<string[]> {
   const nested = await Promise.all(entries.map((entry) => {
     const path = join(dir, entry.name)
     if (entry.isDirectory()) return walk(path)
-    return Promise.resolve(CONTENT_TYPES[extname(entry.name).toLowerCase()] ? [path] : [])
+    return Promise.resolve(isReferenceFile(entry.name) ? [path] : [])
   }))
   return nested.flat()
 }
@@ -170,8 +167,7 @@ async function push(): Promise<void> {
 
     const bytes = await readFile(candidate.file)
     const ext = extname(candidate.file).toLowerCase()
-    const hash = createHash('sha256').update(bytes).digest('hex')
-    const storagePath = `${candidate.marketplaceId}/${candidate.categoryId}/${hash}${ext === '.jpeg' ? '.jpg' : ext}`
+    const storagePath = storagePathOf(candidate.marketplaceId, candidate.categoryId, bytes, ext)
     if (known.has(storagePath)) {
       console.log(`= ${name}`)
       continue
@@ -198,6 +194,37 @@ async function push(): Promise<void> {
 
   for (const line of skipped) console.log(`! ${line}`)
   console.log(`\nзаведено ${added}, пропущено ${skipped.length}, всего в каталоге ${known.size}`)
+}
+
+/**
+ * Выводит из выбора активные строки, которых текущий набор файлов не даёт: путь каждого кандидата
+ * считается так же, как в `push`. Без `--apply` — только печать. Объекты в бакете не удаляются:
+ * `retired` обратим правкой статуса, удаление — нет.
+ */
+async function retireUnlisted(apply: boolean): Promise<void> {
+  const rows = await loadRows()
+  const { found } = await candidates()
+  const listed = new Set(
+    await Promise.all(found.map(async (candidate) =>
+      storagePathOf(candidate.marketplaceId, candidate.categoryId, await readFile(candidate.file), extname(candidate.file)))),
+  )
+  const unlisted = unlistedRows(rows, listed)
+
+  for (const row of unlisted) console.log(`${apply ? '○' : '?'} ${row.storage_path}  [${row.tags.join(' › ')}]`)
+  if (apply && unlisted.length > 0) {
+    await rest(`card_references?id=in.(${unlisted.map((row) => row.id).join(',')})`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: 'retired' }),
+    })
+  }
+  const active = rows.filter((row) => row.status === 'active').length
+  console.log(
+    apply
+      ? `
+выведено из выбора ${unlisted.length}, в выборе ${active - unlisted.length}`
+      : `
+вне набора ${unlisted.length} из ${active} активных; запись — с --apply`,
+  )
 }
 
 async function pull(): Promise<void> {
@@ -228,6 +255,10 @@ switch (command ?? 'list') {
   case 'pull':
     await pull()
     break
+  case 'retire':
+    if (!argv.includes('--unlisted')) throw new Error('retire работает только с --unlisted: что выводить из выбора — то, чего нет в наборе.')
+    await retireUnlisted(argv.includes('--apply'))
+    break
   default:
-    throw new Error(`Не знаю команды «${command}». Есть list, push, pull.`)
+    throw new Error(`Не знаю команды «${command}». Есть list, push, pull, retire --unlisted.`)
 }
