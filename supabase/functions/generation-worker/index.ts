@@ -38,11 +38,13 @@ import {
 import { mimeOf, readImageInfo } from '../_shared/image.ts'
 import { cardAssemblySize } from '../_shared/card-size.ts'
 import { describeProfileMismatch } from '../_shared/output-profile.ts'
-import { createCutoutRunner, createMaskRunner } from '../_shared/card-layout/cutout.ts'
+import { createCutoutRunner, createLayoutRunner, createMaskRunner } from '../_shared/card-layout/cutout.ts'
 import type { CardDirection } from '../_shared/card-layout/direction.ts'
 import { directorLogLine, runDirector, type DirectorResult } from '../_shared/card-layout/director-run.ts'
 import { usesCutout } from '../_shared/card-layout/features.ts'
 import { cardFilling, imageBytes, imageRef, storedContent } from '../_shared/card-layout/filling.ts'
+import { authorLayout } from '../_shared/card-layout/html/author.ts'
+import { pickReferences, type ReferenceRow } from '../_shared/card-layout/html/references.ts'
 import { readIcons } from '../_shared/card-layout/icons.ts'
 import { occupancyOf, type MaskSamples } from '../_shared/card-layout/occupancy.ts'
 import { measureText, renderCard } from '../_shared/card-layout/render.ts'
@@ -370,6 +372,9 @@ type Assembly = {
   fonts: FontFamilies
   /** Итоговый патч арт-директора и сдвига; `null` — ступень 4 или арт-директор выключен. */
   direction: CardDirection | null
+  /** Транспилированный макет принятого сочинения (ADR-0019, п. 6); `null` — карточка по макету
+   *  библиотеки: сочинение выключено или откатилось. */
+  authored: CardLayout | null
 }
 
 /**
@@ -396,10 +401,14 @@ async function assembleCard(
   const endpoint = Deno.env.get('CUTOUT_ENDPOINT')
   const secret = Deno.env.get('CUTOUT_SECRET')
 
+  // Сочинение карточки включается секретом `CARD_AUTHOR=on` (ADR-0019, п. 2), а не деплоем; при
+  // нём арт-директор не зовётся — ни маски, ни `directCard`.
+  const authorOn = Deno.env.get('CARD_AUTHOR') === 'on'
+
   // Арт-директор включается секретом `CARD_DIRECTOR=on` (ADR-0018, п. 3), а не деплоем. Выключен —
   // маски нет, вызова нет, сборка как раньше. Маска и вырез идут вместе: оба — по инференсу на
   // коробке, и ждать их друг за другом значило бы складывать время.
-  const directorOn = Deno.env.get('CARD_DIRECTOR') === 'on'
+  const directorOn = !authorOn && Deno.env.get('CARD_DIRECTOR') === 'on'
   const maskEndpoint = Deno.env.get('CUTOUT_MASK_ENDPOINT')
 
   const [cutout, maskSamples] = await Promise.all([
@@ -422,6 +431,22 @@ async function assembleCard(
   })
 
   const size = { width: profile.width, height: profile.height }
+
+  const authored = authorOn
+    ? await authorCard({ generation, card, properties, frame, size, fonts, provider })
+    : null
+  if (authored !== null) {
+    return {
+      bytes: authored.bytes,
+      frame: frameBytes,
+      cutout: cutout === null ? null : imageBytes(cutout),
+      content: authored.content,
+      fonts,
+      direction: null,
+      authored: authored.layout,
+    }
+  }
+
   const directed = directorOn
     ? await directCard({ generation, layout, content, card, properties, frame, cutout, maskSamples, size, fonts, provider })
     : null
@@ -450,7 +475,79 @@ async function assembleCard(
     content,
     fonts,
     direction: directed?.direction ?? null,
+    authored: null,
   }
+}
+
+/**
+ * Сочинение карточки на сборке (шаг C3, ADR-0019): референсы → `authorCard` → сцена `/layout` →
+ * слои → растр. Приём — целиком; **любой** отказ — `null` и причина строкой в журнал, и сборка
+ * идёт по макету библиотеки, как без сочинения (п. 6): генерация из-за сочинения не падает.
+ * Затраты вызова `authorCard` пишет провайдер в `usage` — на обоих исходах.
+ */
+async function authorCard(args: {
+  generation: GenerationRow
+  card: CardTexts
+  properties: { label: string; value: string }[]
+  frame: ImageRef
+  size: { width: number; height: number }
+  fonts: FontFamilies
+  provider: AiProvider
+}): Promise<{ layout: CardLayout; content: CardContent; bytes: Uint8Array } | null> {
+  const fallback = (reason: string): null => {
+    console.error('Сочинение: откат на макет библиотеки —', reason, '· генерация', args.generation.id)
+    return null
+  }
+
+  // Адрес — своей переменной, по образцу `CUTOUT_MASK_ENDPOINT`; секрет — общий с вырезом.
+  const endpoint = Deno.env.get('CUTOUT_LAYOUT_ENDPOINT')
+  const secret = Deno.env.get('CUTOUT_SECRET')
+  if (!endpoint || !secret) return fallback('не заданы CUTOUT_LAYOUT_ENDPOINT / CUTOUT_SECRET')
+
+  try {
+    const outcome = await authorLayout({
+      frame: args.frame,
+      references: await readReferences(args.generation),
+      // Тексты — те же, что лягут в поля карточки (FR-07): короткий заголовок и описание, как в
+      // пробе (`bench/html-probe.mts`); полное название — словами без привязки.
+      seller: {
+        title: args.card.title,
+        description: args.card.description,
+        properties: args.properties,
+        wishes: args.generation.wishes,
+      },
+      extra: [args.generation.product_title],
+      marketplaceId: args.generation.marketplace_id,
+      categoryId: args.generation.category_id,
+      canvas: args.size,
+      families: args.fonts,
+      author: (input) => args.provider.authorCard(input),
+      scene: createLayoutRunner({ endpoint, secret }),
+    })
+    if (outcome.origin === 'library') return fallback(outcome.reason)
+
+    // Дословность сочинения уже сверил `toLayout` (регистр — сцены, Q-H5); сверка C1 с `card`
+    // отказала бы здесь на регистре, поэтому её нет.
+    const rendered = await renderCard(outcome.layout, outcome.content, args.size, args.fonts)
+    console.info('Сочинение принято · генерация', args.generation.id,
+      rendered.dropped.length > 0 ? `· снятые слои: ${rendered.dropped.join(', ')}` : '')
+    return { layout: outcome.layout, content: outcome.content, bytes: rendered.bytes }
+  } catch (error: unknown) {
+    return fallback(error instanceof Error ? error.message : String(error))
+  }
+}
+
+/** До четырёх референсов каталога по площадке и категории, ротацией по генерации (C4). */
+async function readReferences(generation: GenerationRow): Promise<Uint8Array[]> {
+  const rows = (await selectFromDatabase(
+    'card_references?select=id,storage_path,marketplace_id,category_id&status=eq.active',
+  )) as ReferenceRow[]
+  const picked = pickReferences(rows, {
+    marketplaceId: generation.marketplace_id,
+    categoryId: generation.category_id,
+    seed: generation.id,
+  })
+  return Promise.all(picked.map((row) => downloadFile('references', row.storage_path)))
 }
 
 /**
@@ -515,6 +612,14 @@ async function storeAssembly(generation: GenerationRow, assembly: Assembly): Pro
     upload('frame-1', assembly.frame),
     assembly.cutout === null ? undefined : upload('cutout-1', assembly.cutout),
   ])
+
+  // Принятое сочинение — в снимок до записи содержимого: после неё снимок не перезаписывается.
+  if (assembly.authored !== null) {
+    await callDatabase('record_card_authored', {
+      target_generation: generation.id,
+      authored_layout: assembly.authored,
+    })
+  }
 
   await callDatabase('record_card_assembly', {
     target_generation: generation.id,

@@ -439,6 +439,71 @@ check(
   `HTTP ${outsider.status}`,
 )
 
+// --- C3: сочинение карточки (ADR-0019, п. 6) -------------------------------------
+// Выключатель — у функций, не у этого скрипта: `CARD_AUTHOR=on` передаётся обоим (функциям —
+// файлом `--env-file`, скрипту — окружением), иначе проверяется только путь без сочинения.
+// Заглушка провайдера сочиняет фикстуру B2 — кресло; у куртки из US-01 этих слов нет.
+const cardOf = async (generationId) => {
+  const rows = await (
+    await fetch(`${REST}/generation_cards?generation_id=eq.${generationId}&select=origin,layout_id,layout`, {
+      headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}` },
+    })
+  ).json()
+  return Array.isArray(rows) ? rows[0] : undefined
+}
+const jacketCard = await cardOf(started.body.generationId)
+
+if (process.env.CARD_AUTHOR === 'on') {
+  check(
+    'C3 сочинение не словами продавца — откат: генерация done, снимок — макет библиотеки',
+    done?.status === 'done' && jacketCard?.origin === 'library' && jacketCard?.layout?.id === jacketCard?.layout_id,
+    `${done?.status} · ${jacketCard?.origin} · ${jacketCard?.layout?.id}`,
+  )
+
+  const author = await register(`author.${stamp}@example.com`, password)
+  const authorPhoto = await uploadPhoto(author, 'photo-1.jpg')
+  const chair = await launch(author.token, {
+    categoryId: 'home',
+    presetId: 'home-studio',
+    productTitle: 'Кресло с ушами',
+    productDescription: 'Кресло-крыло, обивка — три цветных блока, опоры — дерево.',
+    productProperties: [
+      { label: 'Тип товара', value: 'Кресло-крыло' },
+      { label: 'Дизайн обивки', value: 'Три цветных блока' },
+      { label: 'Материал опор', value: 'Дерево' },
+    ],
+    photoPaths: [authorPhoto.path],
+  })
+  const chairDone = await settle(author.token, chair.body.generationId)
+  const chairCard = await cardOf(chair.body.generationId)
+  check(
+    'C3 сочинение словами продавца — карточка по транспилированному макету, origin = author',
+    chairDone?.status === 'done' && chairCard?.origin === 'author' && chairCard?.layout?.id === 'html-author',
+    `${chairDone?.status} · ${chairCard?.origin} · ${chairCard?.layout?.id} · генерация ${chair.body.generationId}`,
+  )
+  const [chairAsset] = await (
+    await rest(`generation_assets?generation_id=eq.${chair.body.generationId}&select=*`, author.token)
+  ).json()
+  check('C3 карточка сочинения сохранена изображением', Boolean(chairAsset), chairAsset?.storage_path)
+
+  // Посмотреть карточку глазами: `C3_PNG_OUT=<файл>` — сюда ляжет результат до уборки.
+  if (process.env.C3_PNG_OUT && chairAsset) {
+    const chairFile = await downloadResult(author.token, chairAsset.storage_path)
+    if (chairFile) (await import('node:fs')).writeFileSync(process.env.C3_PNG_OUT, chairFile.bytes)
+  }
+
+  await fetch(`${API}/admin/users/${author.id}`, {
+    method: 'DELETE',
+    headers: { apikey: SECRET, Authorization: `Bearer ${SECRET}` },
+  })
+} else {
+  check(
+    'C3 без CARD_AUTHOR=on снимок карточки — макет библиотеки',
+    jacketCard?.origin === 'library' && jacketCard?.layout?.id === jacketCard?.layout_id,
+    `${jacketCard?.origin} · ${jacketCard?.layout?.id}`,
+  )
+}
+
 // --- уборка --------------------------------------------------------------------
 for (const id of [seller.id, poor.id].filter(Boolean)) {
   await fetch(`${API}/admin/users/${id}`, {

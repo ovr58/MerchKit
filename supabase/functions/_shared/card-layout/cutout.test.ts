@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { createCutoutRunner, createMaskRunner } from './cutout.ts'
+import scene from '../../../../tools/card-pipeline/html-layout/fixtures/home-chair.scene.json'
+import { readJpegSize } from '../jpeg.ts'
+import { createCutoutRunner, createLayoutRunner, createMaskRunner } from './cutout.ts'
 import { occupancyOf } from './occupancy.ts'
 import type { ImageRef } from './types.ts'
 
@@ -173,6 +175,61 @@ describe('Раннер маски', () => {
     expect(await runner(frameOf(1440, 1920))).toBeNull()
     expect(logged).toHaveBeenCalledTimes(1)
     expect(String(logged.mock.calls[0][0])).toMatch(/^Маска: /)
+    expect(String(logged.mock.calls[0][0])).toContain(reason)
+  })
+})
+
+describe('Раннер сцены /layout (ADR-0019, п. 4)', () => {
+  const endpoint = 'https://cutout.example.ru/layout'
+  const page = { html: '<div id="card"></div>', canvas: { width: 896, height: 1200 }, frame: { width: 1536, height: 2048 } }
+
+  it('шлёт страницу, холст и одноцветный кадр размера кадра; отдаёт сцену', async () => {
+    const seen: { url: string; init: RequestInit }[] = []
+    const runner = createLayoutRunner({
+      endpoint,
+      secret: 'общий-секрет',
+      fetch: async (url, init) => {
+        seen.push({ url: String(url), init: init as RequestInit })
+        return Response.json(scene)
+      },
+    })
+
+    expect(await runner(page)).toEqual(scene)
+
+    expect(seen).toHaveLength(1)
+    expect(seen[0].url).toBe(endpoint)
+    const headers = seen[0].init.headers as Record<string, string>
+    expect(headers.authorization).toBe('Bearer общий-секрет')
+    expect(headers['content-type']).toBe('application/json')
+    const body = JSON.parse(String(seen[0].init.body)) as { html: string; canvas: unknown; frame: string }
+    expect(body.html).toBe(page.html)
+    expect(body.canvas).toEqual(page.canvas)
+    const match = /^data:image\/jpeg;base64,(.+)$/.exec(body.frame)
+    expect(match).not.toBeNull()
+    const bytes = Uint8Array.from(atob(match![1]), (char) => char.charCodeAt(0))
+    expect(readJpegSize(bytes)).toEqual({ width: 1536, height: 2048 })
+    // Лимит тела коробки — 2 МиБ вместе с кадром: заглушка кадра обязана быть малой.
+    expect(String(seen[0].init.body).length).toBeLessThan(256 * 1024)
+  })
+
+  it.each([
+    ['422 script', async () => Response.json({ reason: 'script' }, { status: 422 }), 'script'],
+    ['422 timeout', async () => Response.json({ reason: 'timeout' }, { status: 422 }), 'timeout'],
+    ['413 тело', async () => new Response('', { status: 413 }), '413'],
+    ['503 очередь', async () => new Response('', { status: 503 }), '503'],
+    ['сети нет', async () => { throw new TypeError('fetch failed') }, 'не ответил'],
+    ['таймаут', async () => { throw new DOMException('timeout', 'TimeoutError') }, 'не ответил'],
+    ['200 без элементов', async () => Response.json({ ...scene, elements: 'нет' }), 'не сцена'],
+    ['200 без отказов', async () => Response.json({ ...scene, rejected: undefined }), 'не сцена'],
+    ['200 без холста', async () => Response.json({ ...scene, canvas: null }), 'не сцена'],
+    ['200 не JSON', async () => new Response('<html>', { status: 200 }), 'не сцена'],
+  ])('на отказе «%s» отдаёт null и пишет причину один раз', async (_name, fetch, reason) => {
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const runner = createLayoutRunner({ endpoint, secret: 's', fetch: fetch as typeof globalThis.fetch })
+
+    expect(await runner(page)).toBeNull()
+    expect(logged).toHaveBeenCalledTimes(1)
+    expect(String(logged.mock.calls[0][0])).toMatch(/^Сцена: /)
     expect(String(logged.mock.calls[0][0])).toContain(reason)
   })
 })

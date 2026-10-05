@@ -32,6 +32,8 @@
  */
 
 import { mimeOf, readImageInfo } from '../image.ts'
+import { encodeBlockJpeg } from '../jpeg.ts'
+import type { HtmlScene } from './html/scene.ts'
 import type { MaskSamples } from './occupancy.ts'
 import type { ImageRef } from './types.ts'
 
@@ -178,6 +180,80 @@ export function createMaskRunner(config: CutoutServiceConfig): MaskRunner {
       return { width, height, alpha }
     } catch (error) {
       console.error('Маска: сервис не ответил', error)
+      return null
+    }
+  }
+}
+
+/** Страница сочинения для `POST /layout`: HTML, холст карточки и размер кадра в пикселях. */
+export type LayoutPage = {
+  html: string
+  canvas: { width: number; height: number }
+  frame: { width: number; height: number }
+}
+
+export type LayoutRunner = (page: LayoutPage) => Promise<HtmlScene | null>
+
+/** Потолок вызова сцены. Коробка снимает страницу не дольше 10 с (свой таймаут, ответ 422
+ *  `timeout`) и пускает одну тяжёлую работу за раз — сверху очередь за вырезом (~1 с) и сеть.
+ *  Ниже 10 с ставить нельзя: оборвали бы ответ, который коробка ещё вправе дать. */
+const LAYOUT_TIMEOUT_MS = 15_000
+
+/** Цвет заглушки кадра. Сцене нужны только размеры: боксы снимает CSS, а не пиксели кадра. */
+const PLACEHOLDER_GREY = [128, 128, 128] as const
+
+/**
+ * Сцена страницы сочинения от `POST /layout` коробки выреза —
+ * [ADR-0019](../../../../docs/adr/0019-html-authoring-transpiled-to-layers.md), п. 4; контракт —
+ * `docs/SPEC.md` §5 репозитория `cutout_runner`.
+ *
+ * **Кадр по сети не едет.** Лимит тела коробки — 2 МиБ вместе с кадром в data-URI, а сцене нужны
+ * только размеры: вместо фото уходит одноцветный JPEG того же размера (решение супервизора
+ * 2026-10-05). JPEG, а не PNG: кодировщик блочного JPEG у нас уже есть (`jpeg.ts`), а коробка
+ * принимает оба.
+ *
+ * Отказы — как у выреза и маски: `null` и одна строка причины в журнал, исключение наружу не
+ * уходит. Решает вызывающий: `null` значит откат на макет библиотеки (ADR-0019, п. 6).
+ */
+export function createLayoutRunner(config: CutoutServiceConfig): LayoutRunner {
+  const call = config.fetch ?? globalThis.fetch
+  const timeoutMs = config.timeoutMs ?? LAYOUT_TIMEOUT_MS
+
+  return async (page: LayoutPage): Promise<HtmlScene | null> => {
+    try {
+      const placeholder = encodeBlockJpeg(page.frame.width, page.frame.height, () => PLACEHOLDER_GREY)
+      const response = await call(config.endpoint, {
+        method: 'POST',
+        headers: { authorization: `Bearer ${config.secret}`, 'content-type': 'application/json' },
+        body: JSON.stringify({
+          html: page.html,
+          canvas: page.canvas,
+          frame: `data:image/jpeg;base64,${toBase64(placeholder)}`,
+        }),
+        signal: AbortSignal.timeout(timeoutMs),
+      })
+
+      if (!response.ok) {
+        // 422 несёт причину из закрытого списка (`script` · `url` · `timeout`) — она и есть диагноз.
+        const refusal = response.status === 422
+          ? ((await response.json().catch(() => null)) as { reason?: unknown } | null)?.reason
+          : undefined
+        console.error(`Сцена: сервис ответил ${response.status}${typeof refusal === 'string' ? ` (${refusal})` : ''}`)
+        return null
+      }
+
+      const scene = (await response.json().catch(() => null)) as HtmlScene | null
+      if (
+        scene === null || typeof scene !== 'object' || !Array.isArray(scene.elements) ||
+        !Array.isArray(scene.rejected) || typeof scene.canvas !== 'object' || scene.canvas === null
+      ) {
+        console.error('Сцена: ответ 200 — не сцена')
+        return null
+      }
+
+      return scene
+    } catch (error) {
+      console.error('Сцена: сервис не ответил', error)
       return null
     }
   }
