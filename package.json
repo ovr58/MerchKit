@@ -20,6 +20,7 @@
     "test:ui": "node e2e/us01.mjs",
     "bench": "node bench/run.mjs",
     "cards:roundtrip": "node --experimental-strip-types tools/card-pipeline/roundtrip.mts",
+    "cards:html-roundtrip": "node --experimental-strip-types tools/card-pipeline/html-layout/roundtrip.mts",
     "cards:parse": "node --env-file=.env --experimental-strip-types tools/card-pipeline/parse.mts",
     "cards:assets": "node --experimental-strip-types tools/card-pipeline/assets.mts",
     "cards:layouts": "node --experimental-strip-types tools/card-pipeline/layouts.mts",

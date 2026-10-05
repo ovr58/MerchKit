@@ -29,6 +29,7 @@ import type {
   TextLayer,
   TextValign,
 } from '../types.ts'
+import { textMismatches } from '../text-check.ts'
 import { validateLayout } from '../validate.ts'
 import type { HtmlScene, SceneElement, SceneRect } from './scene.ts'
 
@@ -38,6 +39,11 @@ export type SellerTexts = {
   title: string
   body: string
   props: { label?: string; value?: string }[]
+  /**
+   * Прочие тексты продавца, что видела модель (полное название, пожелания): из них можно брать
+   * слова (B5), но слой к ним не привязывается.
+   */
+  extra?: string[]
 }
 
 export type ToLayoutResult = { layout: CardLayout; content: CardContent; problems: string[] }
@@ -101,8 +107,37 @@ export function toLayout(
   }
 
   problems.push(...validateLayout(layout))
+  problems.push(...wordProblems(layers, seller))
+  for (const slot of textMismatches(layout, content, { title: [seller.title], body: [seller.body] })) {
+    problems.push(`гнездо «${slot}» легло не словами продавца`)
+  }
 
   return { layout, content, problems }
+}
+
+/** Слово — буквы и цифры подряд; `ё` = `е`, регистр не важен. */
+const wordsOf = (text: string): string[] =>
+  text.toLowerCase().replace(/ё/g, 'е').match(/[\p{L}\p{N}]+/gu) ?? []
+
+/**
+ * Дословность статических строк (B5, решение 4 плана M7): каждое слово с буквами должно
+ * встречаться во входных текстах продавца. Чистые числа (номера модулей «1», «2») не
+ * проверяются: это вёрстка, а не слова. Привязанные слои — слова продавца по построению,
+ * их сверяет `textMismatches`.
+ */
+function wordProblems(layers: Layer[], seller: SellerTexts): string[] {
+  const known = new Set(
+    [seller.title, seller.body, ...seller.props.flatMap((prop) => [prop.label ?? '', prop.value ?? '']), ...(seller.extra ?? [])]
+      .flatMap(wordsOf),
+  )
+  const problems: string[] = []
+  for (const layer of layers) {
+    if (layer.type !== 'text' || layer.lines === undefined) continue
+    const text = layer.lines.map((line) => (typeof line === 'string' ? line : line.map((run) => run.text ?? '').join(''))).join(' ')
+    const unknown = wordsOf(text).filter((word) => /\p{L}/u.test(word) && !known.has(word))
+    if (unknown.length > 0) problems.push(`${layer.id}: слова не из текстов продавца — ${unknown.map((word) => `«${word}»`).join(', ')}`)
+  }
+  return problems
 }
 
 function frameLayer(element: SceneElement, layerBox: Box, note: (m: string) => void): FrameLayer {

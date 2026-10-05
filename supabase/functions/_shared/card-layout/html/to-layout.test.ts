@@ -19,6 +19,8 @@ const seller = {
     { label: 'Дизайн обивки', value: 'Разделена на три цветных блока' },
     { label: 'Материал опор', value: 'Дерево' },
   ],
+  // Полное название — тоже вход модели: из него «Кресло с ушами» на плашке фикстуры.
+  extra: ['Кресло с ушами триколор студия'],
 }
 
 const texts = (layers: Layer[]) => layers.filter((layer): layer is TextLayer => layer.type === 'text')
@@ -140,6 +142,19 @@ describe('B3: сцена HTML → макет и содержимое', () => {
         { at: 1, color: '#000000' },
       ],
     })
+  })
+
+  it('B5: слово не из текстов продавца — в problems, слова продавца — нет', () => {
+    const element = fixture.elements[2]
+    const withLine = (text: string) => sceneWith({ kind: 'text', lines: [{ ...element.lines![0], text }] })
+
+    expect(toLayout(withLine('ХИТ ПРОДАЖ'), canvas, seller, fonts).problems.join('\n')).toMatch(/«хит»[\s\S]*«продаж»/)
+    expect(toLayout(withLine('Три цветных'), canvas, seller, fonts).problems).toEqual([])
+
+    // Слова полного названия (`extra`) — тоже слова продавца; без него «ушами» выдумано.
+    expect(toLayout(withLine('Кресло с ушами'), canvas, seller, fonts).problems).toEqual([])
+    const bare = { ...seller, extra: undefined }
+    expect(toLayout(withLine('Кресло с ушами'), canvas, bare, fonts).problems.join('\n')).toMatch(/«ушами»/)
   })
 
   it('то, что не легло, — в problems', () => {
