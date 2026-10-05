@@ -13,6 +13,8 @@
 
 import { execFileSync } from 'node:child_process'
 
+import { cardAssemblySize } from '../functions/_shared/card-size.ts'
+
 function localEnv() {
   const raw = execFileSync('npx', ['supabase', 'status', '-o', 'env'], {
     encoding: 'utf8',
@@ -117,6 +119,14 @@ function jpegSize(bytes) {
     at += 2 + ((bytes[at + 2] << 8) | bytes[at + 3])
   }
   return null
+}
+
+/** Размер изображения из заголовка PNG (IHDR) — своими глазами, по той же причине, что `jpegSize`. */
+function pngSize(bytes) {
+  const signature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]
+  if (bytes.length < 24 || signature.some((byte, at) => bytes[at] !== byte)) return null
+  const view = new DataView(bytes.buffer, bytes.byteOffset)
+  return { width: view.getUint32(16), height: view.getUint32(20) }
 }
 
 /** Фото, которое стоит отправить: заглушке важен только размер, содержимое ей безразлично. */
@@ -286,13 +296,24 @@ const [asset] = await (
 check('FR-14 результат сохранён одним изображением', Boolean(asset))
 
 const file = await downloadResult(seller.token, asset.storage_path)
-const size = file ? jpegSize(file.bytes) : null
+const size = file ? pngSize(file.bytes) : null
+// С M7 пользователю уходит не кадр вендора, а собранная карточка PNG — в размер сборки, который
+// воркер берёт из профиля пары через `cardAssemblySize` (Q-2 шага B7.7): у Ozon × «Одежда и
+// обувь» это порог площадки, а не целевой кадр 1792 × 2400.
+const [clothingProfile] = await (
+  await fetch(`${REST}/marketplace_output_profiles?marketplace_id=eq.ozon&category_id=eq.clothing&select=*`, {
+    headers: { apikey: KEY },
+  })
+).json()
+const cardSize = cardAssemblySize({
+  width: clothingProfile.width,
+  height: clothingProfile.height,
+  minWidth: clothingProfile.min_width,
+  minHeight: clothingProfile.min_height,
+})
 check(
-  // Числа сменились на M5: профиль описан порогом площадки и целевым кадром, достижимым
-  // бакетом вендора. У пары Ozon × «Одежда и обувь» порог 900 × 1200, а бакет 1K даёт
-  // 896 × 1200 — на четыре пикселя ниже, поэтому здесь остаётся 2K (миграция 20260829140000).
-  'FR-25 файл соответствует профилю пары Ozon × «Одежда и обувь»: 3 : 4, 1792 × 2400, JPEG',
-  size?.width === 1792 && size?.height === 2400 && file?.type === 'image/jpeg',
+  `FR-25 карточка соответствует профилю пары Ozon × «Одежда и обувь»: размер сборки ${cardSize.width} × ${cardSize.height}, PNG`,
+  size?.width === cardSize.width && size?.height === cardSize.height && file?.type === 'image/png',
   `${size?.width} × ${size?.height}, ${file?.type}`,
 )
 
