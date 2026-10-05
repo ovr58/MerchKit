@@ -24,6 +24,7 @@ const frame: ImageRef = { dataUri: 'data:image/png;base64,AAAA', width: 1536, he
 /** Слова фикстуры есть в текстах продавца: «Кресло с ушами», свойства модулей. */
 const chair: AuthorSeller = {
   title: 'Кресло с ушами',
+  fullTitle: 'Кресло с ушами',
   description: 'Кресло-крыло, обивка — три цветных блока.',
   properties: [
     { label: 'Тип товара', value: 'Кресло-крыло' },
@@ -36,6 +37,7 @@ const chair: AuthorSeller = {
 /** Слов фикстуры у продавца нет: перевод обязан дать проблемы «слова не из текстов продавца». */
 const lamp: AuthorSeller = {
   title: 'Настольная лампа',
+  fullTitle: 'Настольная лампа',
   description: 'Лампа с тканевым абажуром.',
   properties: [{ label: 'Цоколь', value: 'E27' }],
   wishes: '',
@@ -50,7 +52,6 @@ function attempt(overrides: Partial<Parameters<typeof authorLayout>[0]> = {}) {
       frame,
       references: [new Uint8Array([1])],
       seller: chair,
-      extra: [],
       marketplaceId: 'ozon',
       categoryId: 'home',
       canvas,
@@ -92,6 +93,13 @@ describe('C3: сочинение → сцена → слои', () => {
     expect(outcome.origin).toBe('library')
     if (outcome.origin !== 'library') return
     expect(outcome.reason).toContain('слова не из текстов продавца')
+  })
+
+  it('слова полного названия проходят сверку слов: модель видела его в задании', async () => {
+    const words = [chair.title, chair.description, ...chair.properties.flatMap(({ label, value }) => [label, value])]
+    const outcome = await attempt({ seller: { ...lamp, fullTitle: words.join(' ') } }).run
+
+    expect(outcome.origin).toBe('author')
   })
 
   it('отказ /layout (раннер вернул null) — откат на библиотеку', async () => {

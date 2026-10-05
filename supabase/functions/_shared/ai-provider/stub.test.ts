@@ -19,7 +19,7 @@ describe('Заглушка: операция authorCard', () => {
   const input = {
     frame: new Uint8Array([1, 2, 3]),
     references: [],
-    seller: { title: 'Кресло', description: '', properties: [], wishes: '' },
+    seller: { title: 'Кресло', fullTitle: 'Кресло', description: '', properties: [], wishes: '' },
     marketplaceId: 'ozon',
     categoryId: 'home',
     canvas: { width: 896, height: 1200 },

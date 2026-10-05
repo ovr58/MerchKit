@@ -508,15 +508,15 @@ async function authorCard(args: {
     const outcome = await authorLayout({
       frame: args.frame,
       references: await readReferences(args.generation),
-      // Тексты — те же, что лягут в поля карточки (FR-07): короткий заголовок и описание, как в
-      // пробе (`bench/html-probe.mts`); полное название — словами без привязки.
+      // Тексты — как в пробе (`bench/html-probe.mts`): полное название, короткий заголовок и
+      // описание, что лягут в поля карточки (FR-07); к полному названию слой не привязывается.
       seller: {
         title: args.card.title,
+        fullTitle: args.generation.product_title,
         description: args.card.description,
         properties: args.properties,
         wishes: args.generation.wishes,
       },
-      extra: [args.generation.product_title],
       marketplaceId: args.generation.marketplace_id,
       categoryId: args.generation.category_id,
       canvas: args.size,

@@ -313,6 +313,7 @@ describe('Операция authorCard', () => {
     references: [new Uint8Array([0xff, 0xd8, 0xff]), new Uint8Array([0xff, 0xd8, 0xff])],
     seller: {
       title: 'Куртка-бомбер',
+      fullTitle: 'Куртка-бомбер мужская зимняя с капюшоном',
       description: 'Тёплая куртка',
       properties: [{ label: 'Утеплитель', value: 'синтепон' }],
       wishes: '',
@@ -362,6 +363,9 @@ describe('Операция authorCard', () => {
     expect(parts[3].text).toContain('Холст: 900×1200 px')
     expect(parts[3].text).toContain('первый референс — ведущий: возьми его композицию')
     expect(parts[3].text).toContain('Утеплитель — синтепон')
+    // Полное название — в задании, как в пробе с вердиктом 8 из 8 (C6): модель видит товар целиком.
+    expect(parts[3].text).toContain('Название товара (полное): Куртка-бомбер мужская зимняя с капюшоном')
+    expect(parts[3].text).toContain('Короткий заголовок: Куртка-бомбер')
   })
 
   it('без блока html — отказ, но вызов записан в затраты', async () => {

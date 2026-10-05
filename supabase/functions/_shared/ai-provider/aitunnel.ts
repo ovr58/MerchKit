@@ -432,7 +432,8 @@ function authorBrief(input: Parameters<AiProvider['authorCard']>[0]): string {
 
   return [
     `Площадка: ${input.marketplaceId}. Категория: ${input.categoryId}. Холст: ${canvas.width}×${canvas.height} px (W×H).`,
-    `Название товара: ${seller.title}`,
+    `Название товара (полное): ${seller.fullTitle}`,
+    `Короткий заголовок: ${seller.title}`,
     `Описание продавца: ${seller.description.trim() || '—'}`,
     `Свойства (по порядку важности): ${properties.join('; ') || '—'}`,
     `Пожелания продавца: ${seller.wishes.trim() || '—'}`,

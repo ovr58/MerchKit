@@ -33,8 +33,6 @@ export async function authorLayout(args: {
   /** Не больше четырёх, первый — ведущий (`pickReferences`). */
   references: ImageInput[]
   seller: AuthorSeller
-  /** Прочие тексты продавца (полное название): из них можно брать слова, привязки к ним нет. */
-  extra: string[]
   marketplaceId: string
   categoryId: string
   canvas: { width: number; height: number }
@@ -63,7 +61,7 @@ export async function authorLayout(args: {
       title: args.seller.title,
       body: args.seller.description,
       props: args.seller.properties.map(({ label, value }) => ({ label, value })),
-      extra: [args.seller.wishes, ...args.extra],
+      extra: [args.seller.wishes, args.seller.fullTitle],
     }
     const { layout, content, problems } = toLayout(scene, args.canvas, texts, args.families)
 
