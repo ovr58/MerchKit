@@ -311,7 +311,7 @@ async function run(generation: GenerationRow, usage: ProviderUsage[]): Promise<s
     }),
   )
 
-  if (assembly !== null) await storeAssembly(generation, assembly)
+  if (assembly !== null && layout !== null) await storeAssembly(generation, layout, assembly)
 
   await callDatabase('finish_generation', {
     target_generation: generation.id,
@@ -599,7 +599,7 @@ async function directCard(args: {
 }
 
 /** Исходники пересборки — в `results` рядом с карточкой, содержимое — в снимок (B7.4). */
-async function storeAssembly(generation: GenerationRow, assembly: Assembly): Promise<void> {
+async function storeAssembly(generation: GenerationRow, layout: CardLayout, assembly: Assembly): Promise<void> {
   const folder = `${generation.user_id}/${generation.id}`
   const upload = async (name: string, bytes: Uint8Array): Promise<string> => {
     const info = readImageInfo(bytes)!
@@ -613,16 +613,13 @@ async function storeAssembly(generation: GenerationRow, assembly: Assembly): Pro
     assembly.cutout === null ? undefined : upload('cutout-1', assembly.cutout),
   ])
 
-  // Принятое сочинение — в снимок до записи содержимого: после неё снимок не перезаписывается.
-  if (assembly.authored !== null) {
-    await callDatabase('record_card_authored', {
-      target_generation: generation.id,
-      authored_layout: assembly.authored,
-    })
-  }
-
+  // Макет, по которому собрано, и его происхождение — той же записью, что содержимое (B40):
+  // повтор доставки события переписывает снимок целиком, и сочинение с содержимым библиотеки
+  // (или наоборот) в нём не сойдутся. Правка арт-директора в снимок не идёт — он библиотечный.
   await callDatabase('record_card_assembly', {
     target_generation: generation.id,
+    assembled_layout: assembly.authored ?? layout,
+    assembled_origin: assembly.authored !== null ? 'author' : 'library',
     assembled_content: storedContent(assembly.content, {
       frames: [framePath],
       cutout: cutoutPath,
