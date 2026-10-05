@@ -536,7 +536,7 @@ async function storeAssembly(generation: GenerationRow, assembly: Assembly): Pro
   }
 }
 
-/** Карта «роль → гарнитура» — тем же запросом, что у превью (`card-preview`). */
+/** Карта «роль → гарнитура». */
 async function readFonts(): Promise<FontFamilies> {
   const rows = (await selectFromDatabase('card_font_roles?select=role,family')) as FontRoleRow[]
   return Object.fromEntries(rows.map((row) => [row.role, row.family])) as FontFamilies

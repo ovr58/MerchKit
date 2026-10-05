@@ -1,4 +1,4 @@
-# SUPERVISOR HANDOFF — состояние на 2026-10-05 (M7 на стейдже; план сочинения карточки в HTML: H-1…H-5, H-D1 сведены, следующая волна H-3b ‖ H-8)
+# SUPERVISOR HANDOFF — состояние на 2026-10-05 (M7 на стейдже; план сочинения карточки в HTML: H-1…H-5, H-3b, H-8, H-D1 сведены, следующее — деплой `/layout` и стейджа)
 
 > Читать первым при открытии сессии супервизора. Утверждения о состоянии, а не состояние: каждую
 > строку проверять по названному в ней носителю. Держать коротким и переписывать на месте.
@@ -28,6 +28,8 @@
   `cutout_runner` `main` = `d30e8c6`, запушен. Итог и проверки — план `html-layout-authoring`, «Что
   реально сделано». Деревья и ветки сняты. `/layout` на коробку **не задеплоен** — деплой после H-3b:
   она меняет копию кода страницы и шрифты на коробке, деплой одним заходом.
+- **Волна H-3b ‖ H-8 сведена 2026-10-05** по слову владельца, запушена: MK `main` — вершина этой правки носителей, `cutout_runner` `main` — шапка копии после `908b55f`. Итог и проверки — план `html-layout-authoring`, «Что реально сделано». Превью до оплаты убрано из кода; функция `card-preview` на стейдже ещё живёт — снять после деплоя фронтенда. Деревья и ветки сняты.
+- **Деплой выполняет супервизор** в ручном режиме сессии, каждую команду одобряет владелец (владелец, 2026-10-05).
 - **Ответы владельца 2026-10-05 на вопросы перед H-6** — страница
   https://claude.ai/artifact/AeWRNaxVUXaeJKmQsohckz (коллекция `verdicts`), переписаны в план
   `html-layout-authoring` строками Q-H4…Q-H7: превью до оплаты убрать во всех флоу (K-1 плана M7
@@ -95,8 +97,8 @@ https://claude.ai/artifact/KeuEKA4PHF9r57nDGf9J7W (`verdicts/b28-unit` — А, `
 | По разрешению | C2 (M7-8), C3 (M7-9) — параллельно | Sonnet · high / medium | консервативная · `feature/m7-hands-measure`, `feature/m7-library-ozon-ym` | C2: разрешение и бюджет; C3: образцы владельца + Batch API |
 | Сведены 2026-10-05 | H-1 (A1, A2) · H-2 (B1–B3) · H-4 (C1, C4) · H-D1 (D1) | Opus 5.5 · medium | доверенная | — |
 | Сведены 2026-10-05 | H-3: B4, B5 · H-5: C2 | Opus 5.5 · medium | доверенная | — |
-| Сразу — параллельно | H-3b: B7 · H-8: C7 | Opus 5.5 · medium | доверенная · `claude/glyph-case-wordforms` (MK + `cutout_runner`) · `claude/drop-card-preview` | H-3b: `card-layout/html/`, `tools/card-pipeline/fonts/`, `html-layout/`, скил-жанр `ai-provider`, места загрузки шрифтов сборки, `cutout_runner`; H-8: `src/screens/Wizard.tsx`, `src/features/generation/`, `supabase/functions/card-preview/`, `docs/SPEC.md`, `CONTEXT.md`, `docs/ANALYTICS.md`. Швы сверить по диффам до запуска. Стенд не нужен ни одной |
-| После H-3b | деплой `/layout` на коробку | владелец, вне auto-режима | — | блок — `cutout_runner` `deploy/README.md`, «Включение POST /layout» + проверка 4б |
+| Сведены 2026-10-05 | H-3b: B7 · H-8: C7 | Opus 5.5 · medium | доверенная · `claude/glyph-case-wordforms` (MK + `cutout_runner`) · `claude/drop-card-preview` | H-3b: `card-layout/html/`, `tools/card-pipeline/fonts/`, `html-layout/`, скил-жанр `ai-provider`, места загрузки шрифтов сборки, `cutout_runner`; H-8: `src/screens/Wizard.tsx`, `src/features/generation/`, `supabase/functions/card-preview/`, `docs/SPEC.md`, `CONTEXT.md`, `docs/ANALYTICS.md`. Швы сверить по диффам до запуска. Стенд не нужен ни одной |
+| Сразу | деплой `/layout` на коробку (`cutout_runner` `main`), `cards:render-assets` в стейдж, миграции `20261005100000`, `20261005110000`, секрет `AI_PROVIDER_AUTHOR_MODEL=claude-sonnet-5.5`; после деплоя фронтенда — `supabase functions delete card-preview` | супервизор, ручной режим, одобряет владелец | — | блок — `cutout_runner` `deploy/README.md`, «Включение POST /layout» + проверка 4б |
 | После деплоя `/layout`, миграций и секрета в стейдже | H-6: C3 (воркер) | Opus 5.5 · medium | доверенная · `claude/author-card-worker` | держит стенд; может идти рядом с H-8 |
 | После H-6 на стейдже | H-7: C5, C6 (⚠️ платно) | Opus 5.5 · medium | доверенная · `claude/author-card-probe` | слово владельца на бюджет; логи шлюза; баланс шлюза ≥ 2 000 ₽ |
 | Последними | H-D2: D2 · C4 (M7-10) | Opus 5.5 · medium | доверенная · `claude/html-authoring-wrap` · `claude/m7-blind-acceptance` | всё выше сведено |
