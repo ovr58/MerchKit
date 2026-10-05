@@ -1,4 +1,4 @@
-# SUPERVISOR HANDOFF — состояние на 2026-10-05 (M7 на стейдже; план сочинения карточки в HTML: H-1, H-2, H-4, H-D1 сведены, следующая волна H-3 ‖ H-5)
+# SUPERVISOR HANDOFF — состояние на 2026-10-05 (M7 на стейдже; план сочинения карточки в HTML: H-1…H-5, H-D1 сведены, следующая волна H-3b ‖ H-8)
 
 > Читать первым при открытии сессии супервизора. Утверждения о состоянии, а не состояние: каждую
 > строку проверять по названному в ней носителю. Держать коротким и переписывать на месте.
@@ -24,6 +24,14 @@
   расхождения и проверки супервизора — план `html-layout-authoring`, «Что реально сделано».
   Деревья и ветки сняты. Миграции `20261005100000`, `20261005110000` в стейдж не накатаны,
   секрет `AI_PROVIDER_AUTHOR_MODEL` в стейдже не заведён — до H-6, командой владельца.
+- **Волна H-3 ‖ H-5 сведена 2026-10-05** по слову владельца: MK `main` = `1cf2d4b` (+ правка носителей),
+  `cutout_runner` `main` = `d30e8c6`, запушен. Итог и проверки — план `html-layout-authoring`, «Что
+  реально сделано». Деревья и ветки сняты. `/layout` на коробку **не задеплоен** — деплой после H-3b:
+  она меняет копию кода страницы и шрифты на коробке, деплой одним заходом.
+- **Ответы владельца 2026-10-05 на вопросы перед H-6** — страница
+  https://claude.ai/artifact/AeWRNaxVUXaeJKmQsohckz (коллекция `verdicts`), переписаны в план
+  `html-layout-authoring` строками Q-H4…Q-H7: превью до оплаты убрать во всех флоу (K-1 плана M7
+  переписан), регистр — как у модели, словоформы — слова продавца, значки — подключить шрифт.
 - **Сведены 2026-10-03 в локальный `main`:** волна 1 (B26, B5.1, B7.1–B7.4) и из волны 2 —
   M7-2 / ADR-0018, B18 (`de8aa01`), M7-5 / C1 (`922bcfb`), M7-7a / B5.2 (`ee8726f`), M7-7b /
   B5.4, B5.5, B5.11 (`004fea6`), M7-7c / B5.6 (`83f3456`). M7-7m / B5.3 — в `main`
@@ -34,9 +42,8 @@
   34 макета, функции с кода `b9f1e8e` (B28, B32); макеты перезалиты после B29 (`d485344`) —
   стейдж совпадает с `main`.
   Ключ стейджа для скриптов — `supabase projects api-keys --reveal`, в окружение процесса.
-- `main` запушен в `origin` 2026-10-05 по слову владельца до `fefa025` (H-1); волна H-2 ‖ H-4 ‖
-  H-D1 и правка носителей после неё — не запушены, слова на пуш не было; очередь пуша —
-  `git rev-list --count origin/main..main`. Vercel собирает фронтенд из GitHub; волна 3
+- `main` запушен в `origin` 2026-10-05 по слову владельца вместе с волной H-3 ‖ H-5 и этой правкой
+  носителей; очередь пуша — `git rev-list --count origin/main..main`. Vercel собирает фронтенд из GitHub; волна 3
   фронтенд не меняла, бэкенд стейджа с 2026-10-04 на уровне M7 — UI и стейдж согласованы.
   Исполнители первым ходом догоняют `main` (контракт `.claude/agents/plan-executor.md`).
 - **Токен CLI для стейджа** — `SUPABASE_ACCESS_TOKEN` в `.env` (личный токен аккаунта `sbp_…`,
@@ -87,8 +94,10 @@ https://claude.ai/artifact/KeuEKA4PHF9r57nDGf9J7W (`verdicts/b28-unit` — А, `
 | --- | --- | --- | --- | --- |
 | По разрешению | C2 (M7-8), C3 (M7-9) — параллельно | Sonnet · high / medium | консервативная · `feature/m7-hands-measure`, `feature/m7-library-ozon-ym` | C2: разрешение и бюджет; C3: образцы владельца + Batch API |
 | Сведены 2026-10-05 | H-1 (A1, A2) · H-2 (B1–B3) · H-4 (C1, C4) · H-D1 (D1) | Opus 5.5 · medium | доверенная | — |
-| Сразу — параллельно | H-3: B4, B5 · H-5: C2 (репозиторий `cutout_runner`) | Opus 5.5 · medium | доверенная · `claude/html-roundtrip` · `claude/layout-endpoint` (в `cutout_runner`) | H-3: `tools/card-pipeline/html-layout/`, `card-layout/html/to-layout*`, `package.json`, README; H-5: `cutout_runner` + в MK только `card-layout/html/extract-browser.ts` (и, возможно, `extract.mts` — вынос `sceneInPage`; H-3 его не правит). Стенд не нужен ни одной. H-5 деплоит владелец вне auto-режима |
-| После H-3, H-4, H-5 и деплоя `/layout` | H-6: C3 (воркер) | Opus 5.5 · medium | доверенная · `claude/author-card-worker` | держит стенд |
+| Сведены 2026-10-05 | H-3: B4, B5 · H-5: C2 | Opus 5.5 · medium | доверенная | — |
+| Сразу — параллельно | H-3b: B7 · H-8: C7 | Opus 5.5 · medium | доверенная · `claude/glyph-case-wordforms` (MK + `cutout_runner`) · `claude/drop-card-preview` | H-3b: `card-layout/html/`, `tools/card-pipeline/fonts/`, `html-layout/`, скил-жанр `ai-provider`, места загрузки шрифтов сборки, `cutout_runner`; H-8: `src/screens/Wizard.tsx`, `src/features/generation/`, `supabase/functions/card-preview/`, `docs/SPEC.md`, `CONTEXT.md`, `docs/ANALYTICS.md`. Швы сверить по диффам до запуска. Стенд не нужен ни одной |
+| После H-3b | деплой `/layout` на коробку | владелец, вне auto-режима | — | блок — `cutout_runner` `deploy/README.md`, «Включение POST /layout» + проверка 4б |
+| После деплоя `/layout`, миграций и секрета в стейдже | H-6: C3 (воркер) | Opus 5.5 · medium | доверенная · `claude/author-card-worker` | держит стенд; может идти рядом с H-8 |
 | После H-6 на стейдже | H-7: C5, C6 (⚠️ платно) | Opus 5.5 · medium | доверенная · `claude/author-card-probe` | слово владельца на бюджет; логи шлюза; баланс шлюза ≥ 2 000 ₽ |
 | Последними | H-D2: D2 · C4 (M7-10) | Opus 5.5 · medium | доверенная · `claude/html-authoring-wrap` · `claude/m7-blind-acceptance` | всё выше сведено |
 
