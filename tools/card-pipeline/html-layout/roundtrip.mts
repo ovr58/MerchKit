@@ -26,31 +26,18 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { chromium } from 'playwright'
 import type { Browser } from 'playwright'
 
+import { addStyle, dropForeignFontFaces, FONT_FACES, missingFonts } from '../../../supabase/functions/_shared/card-layout/html/extract-browser.ts'
 import { toLayout } from '../../../supabase/functions/_shared/card-layout/html/to-layout.ts'
 import type { SellerTexts } from '../../../supabase/functions/_shared/card-layout/html/to-layout.ts'
 import type { FontFamilies } from '../../../supabase/functions/_shared/card-layout/svg.ts'
 import { image, render } from '../render.mts'
-import { extractScene } from './extract.mts'
+import { extractScene, fontCss } from './extract.mts'
 
 const ROOT = fileURLToPath(new URL('../../../', import.meta.url))
 const fontDir = fileURLToPath(new URL('../fonts/', import.meta.url))
 
 /** Порог из плана (B4): доля пикселей и разница яркости после уменьшения до ширины. */
 export const THRESHOLD = { share: 0.02, luma: 32, width: 256 }
-
-/** Те же файлы и насыщенности, что подключает `extractScene`: скриншот и сцена — один вид. */
-const FONT_FACES: [file: string, family: string, weight: number][] = [
-  ['montserrat-regular.ttf', 'Montserrat', 400],
-  ['montserrat-semibold.ttf', 'Montserrat', 600],
-  ['montserrat-bold.ttf', 'Montserrat', 700],
-  ['montserrat-black.ttf', 'Montserrat', 900],
-  ['marck-script.ttf', 'Marck Script', 400],
-]
-
-const fontCss = FONT_FACES.map(
-  ([file, family, weight]) =>
-    `@font-face{font-family:'${family}';font-weight:${weight};src:url('${pathToFileURL(join(fontDir, file)).href}') format('truetype')}`,
-).join('\n')
 
 type ProbeContent = {
   title: string
@@ -66,18 +53,10 @@ async function screenshot(browser: Browser, htmlPath: string, canvas: { width: n
   const page = await browser.newPage({ viewport: canvas, deviceScaleFactor: 1 })
   try {
     await page.goto(pathToFileURL(htmlPath).href)
-    await page.evaluate(() => {
-      for (const sheet of Array.from(document.styleSheets)) {
-        for (let at = sheet.cssRules.length - 1; at >= 0; at--) {
-          if (sheet.cssRules[at] instanceof CSSFontFaceRule) sheet.deleteRule(at)
-        }
-      }
-    })
-    await page.addStyleTag({ content: fontCss })
-    await page.evaluate(async (faces) => {
-      await Promise.all(faces.map(([, family, weight]) => document.fonts.load(`${weight} 16px '${family}'`)))
-      await document.fonts.ready
-    }, FONT_FACES)
+    await page.evaluate(dropForeignFontFaces)
+    await page.evaluate(addStyle, fontCss)
+    const missing = await page.evaluate(missingFonts, FONT_FACES)
+    if (missing.length > 0) throw new Error(`шрифты не загрузились: ${missing.join(', ')}`)
     const card = await page.locator('#card').boundingBox()
     if (card === null) throw new Error(`${htmlPath}: нет #card`)
     return await page.screenshot({ clip: { x: card.x, y: card.y, ...canvas } })

@@ -14,18 +14,52 @@
 
 import type { HtmlScene } from './scene.ts'
 
+/** Грань шрифта: файл · семейство · насыщенность · знаки, если грань только для них. */
+export type FontFace = [file: string, family: string, weight: number, glyphs?: string]
+
 /**
- * Свои шрифты страницы: файл · семейство · насыщенность. Те же файлы, что у сборки по слоям
- * (`tools/card-pipeline/fonts/`); на коробке — их копия в `assets/fonts/`. Данные, а не код
- * страницы, но живут здесь, чтобы список уезжал на коробку той же копией.
+ * Значки, которых нет в Montserrat, — их рисует шрифт значков (Q-H7): подмножество Noto Sans
+ * Symbols 2 ровно на эти знаки. Остальные значки скила-жанра (`•`, `→`, `■` …) есть в
+ * Montserrat; полный допустимый набор — `DRAWN` в `to-layout.ts`, перечень — `SUBSET.md`.
  */
-export const FONT_FACES: [file: string, family: string, weight: number][] = [
+export const SYMBOL_GLYPHS = '✓✔★☆●○►➔➜➤'
+
+/**
+ * Свои шрифты страницы. Те же файлы, что у сборки по слоям (`tools/card-pipeline/fonts/`); на
+ * коробке — их копия в `assets/fonts/`. Данные, а не код страницы, но живут здесь, чтобы
+ * список уезжал на коробку той же копией.
+ *
+ * Шрифт значков подключён гранями семейств карточки с `unicode-range` на `SYMBOL_GLYPHS`, по
+ * грани на насыщенность: страница пишет `font-family` карточки, и без своей грани Chromium взял
+ * бы значок из системного шрифта, а resvg нашёл бы его в шрифте значков — два разных рисунка.
+ */
+export const FONT_FACES: FontFace[] = [
   ['montserrat-regular.ttf', 'Montserrat', 400],
   ['montserrat-semibold.ttf', 'Montserrat', 600],
   ['montserrat-bold.ttf', 'Montserrat', 700],
   ['montserrat-black.ttf', 'Montserrat', 900],
   ['marck-script.ttf', 'Marck Script', 400],
+  ['noto-sans-symbols-2.ttf', 'Montserrat', 400, SYMBOL_GLYPHS],
+  ['noto-sans-symbols-2.ttf', 'Montserrat', 600, SYMBOL_GLYPHS],
+  ['noto-sans-symbols-2.ttf', 'Montserrat', 700, SYMBOL_GLYPHS],
+  ['noto-sans-symbols-2.ttf', 'Montserrat', 900, SYMBOL_GLYPHS],
+  ['noto-sans-symbols-2.ttf', 'Marck Script', 400, SYMBOL_GLYPHS],
 ]
+
+/**
+ * CSS граней `faces`; `base` — адрес каталога шрифтов с `/` на конце. Исполняется не в
+ * странице, а там, где её открывают (офлайн-инструмент, коробка), — одна запись на обе среды.
+ */
+export function fontFaceCss(faces: FontFace[], base: string): string {
+  return faces
+    .map(([file, family, weight, glyphs]) => {
+      const range = glyphs === undefined
+        ? ''
+        : `;unicode-range:${Array.from(glyphs, (char) => `U+${(char.codePointAt(0) ?? 0).toString(16)}`).join(',')}`
+      return `@font-face{font-family:'${family}';font-weight:${weight};src:url('${base}${file}') format('truetype')${range}}`
+    })
+    .join('\n')
+}
 
 /**
  * Шрифты — только наши: чужой `@font-face` страницы (модель его писать не должна, а записи
@@ -58,12 +92,15 @@ export function addStyle(css: string): void {
   document.head.append(style)
 }
 
-/** Ждёт загрузки своих шрифтов; возвращает файлы тех, что так и не загрузились. */
-export async function missingFonts(faces: [file: string, family: string, weight: number][]): Promise<string[]> {
-  await Promise.all(faces.map(([, family, weight]) => document.fonts.load(`${weight} 16px '${family}'`)))
+/**
+ * Ждёт загрузки своих шрифтов; возвращает файлы тех, что так и не загрузились. Грань со
+ * знаками грузится их текстом: `fonts.load` без текста берёт только грани, покрывающие пробел.
+ */
+export async function missingFonts(faces: FontFace[]): Promise<string[]> {
+  await Promise.all(faces.map(([, family, weight, glyphs]) => document.fonts.load(`${weight} 16px '${family}'`, glyphs)))
   await document.fonts.ready
   return faces
-    .filter(([, family, weight]) => !document.fonts.check(`${weight} 16px '${family}'`))
+    .filter(([, family, weight, glyphs]) => !document.fonts.check(`${weight} 16px '${family}'`, glyphs))
     .map(([file]) => file)
 }
 

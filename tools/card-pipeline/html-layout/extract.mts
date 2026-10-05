@@ -14,20 +14,15 @@
  *   node --experimental-strip-types tools/card-pipeline/html-layout/extract.mts <html> <W>x<H>
  */
 
-import { join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 
 import { chromium } from 'playwright'
 
-import { addStyle, dropForeignFontFaces, FONT_FACES, missingFonts, sceneInPage } from '../../../supabase/functions/_shared/card-layout/html/extract-browser.ts'
+import { addStyle, dropForeignFontFaces, FONT_FACES, fontFaceCss, missingFonts, sceneInPage } from '../../../supabase/functions/_shared/card-layout/html/extract-browser.ts'
 import type { HtmlScene } from './scene.ts'
 
-const fontDir = fileURLToPath(new URL('../fonts/', import.meta.url))
-
-const fontCss = FONT_FACES.map(
-  ([file, family, weight]) =>
-    `@font-face{font-family:'${family}';font-weight:${weight};src:url('${pathToFileURL(join(fontDir, file)).href}') format('truetype')}`,
-).join('\n')
+/** Свои шрифты страницы из `tools/card-pipeline/fonts/`; тот же CSS подключает round-trip. */
+export const fontCss = fontFaceCss(FONT_FACES, new URL('../fonts/', import.meta.url).href)
 
 export async function extractScene(
   htmlPath: string,

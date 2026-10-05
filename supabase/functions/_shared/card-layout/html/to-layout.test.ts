@@ -91,22 +91,24 @@ describe('B3: сцена HTML → макет и содержимое', () => {
     expect(layout.layers.find((layer) => layer.id === 'shape-3')?.z).toBe(30)
   })
 
-  it('прописные без text-transform при смешанном регистре продавца — transform upper', () => {
+  it('Q-H5: привязанное гнездо — регистром Chromium, слова продавца; регистр не даёт отказа', () => {
     const element = fixture.elements[2]
-    const caps = sceneWith({
-      kind: 'text',
-      style: { ...element.style, textTransform: 'none' },
-      lines: [{ ...element.lines![0], text: 'КРЕСЛО' }],
-    })
+    const typed = (text: string) =>
+      sceneWith({ kind: 'text', style: { ...element.style, textTransform: 'none' }, lines: [{ ...element.lines![0], text }] })
 
-    const { layout, content, problems } = toLayout(caps, canvas, seller, fonts)
+    // Продавец написал строчными, модель — с прописной: на карточке то, что сверстала модель.
+    const lower = toLayout(typed('Кресло'), canvas, { ...seller, title: 'кресло' }, fonts)
+    expect(lower.problems).toEqual([])
+    expect(texts(lower.layout.layers)[0].bind).toEqual({ kind: 'text', slot: 'title' })
+    expect(lower.content.texts.title).toEqual(['Кресло'])
 
-    expect(problems).toEqual([])
-    expect(texts(layout.layers)[0].style.transform).toBe('upper')
-    expect(content.texts.title).toEqual(['Кресло'])
+    // Прописными без text-transform — прописными и в содержимом.
+    const caps = toLayout(typed('КРЕСЛО'), canvas, seller, fonts)
+    expect(caps.problems).toEqual([])
+    expect(caps.content.texts.title).toEqual(['КРЕСЛО'])
   })
 
-  it('перенесённое описание привязано, строки содержимого — словами продавца по переносам', () => {
+  it('перенесённое описание привязано, строки содержимого — по переносам Chromium', () => {
     const element = fixture.elements[2]
     const words = seller.body.split(' ')
     const wrapped = sceneWith({
@@ -120,7 +122,7 @@ describe('B3: сцена HTML → макет и содержимое', () => {
     const { layout, content } = toLayout(wrapped, canvas, seller, fonts)
 
     expect(texts(layout.layers)[0].bind).toEqual({ kind: 'text', slot: 'body' })
-    expect(content.texts.body).toEqual([words.slice(0, 4).join(' '), words.slice(4).join(' ')])
+    expect(content.texts.body).toEqual([words.slice(0, 4).join(' ').toLowerCase(), words.slice(4).join(' ')])
   })
 
   it('линейный градиент вниз — две точки в долях бокса', () => {
@@ -155,6 +157,28 @@ describe('B3: сцена HTML → макет и содержимое', () => {
     expect(toLayout(withLine('Кресло с ушами'), canvas, seller, fonts).problems).toEqual([])
     const bare = { ...seller, extra: undefined }
     expect(toLayout(withLine('Кресло с ушами'), canvas, bare, fonts).problems.join('\n')).toMatch(/«ушами»/)
+  })
+
+  it('Q-H6: другая форма слова продавца — его слово, выдуманное — отказ', () => {
+    const element = fixture.elements[2]
+    const withLine = (text: string) => sceneWith({ kind: 'text', lines: [{ ...element.lines![0], text }] })
+
+    // «опор» → «опоры», «дерево» → «дерева», «цветных блоков» → «цветной блок».
+    expect(toLayout(withLine('Опоры из дерева'), canvas, seller, fonts).problems).toEqual([])
+    expect(toLayout(withLine('Цветной блок'), canvas, seller, fonts).problems).toEqual([])
+    // Общий корень — ещё не форма слова: «кресельный» не «кресло».
+    expect(toLayout(withLine('Кресельный'), canvas, seller, fonts).problems.join('\n')).toMatch(/«кресельный»/)
+    // Основа короче трёх букв не сравнивается: иначе «не» сошлось бы с «на» через «н».
+    expect(toLayout(withLine('Не на дереве'), canvas, seller, fonts).problems.join('\n')).toMatch(/«не»/)
+  })
+
+  it('Q-H7: значок из набора проходит, символ вне шрифтов карточки — в problems', () => {
+    const element = fixture.elements[2]
+    const withLine = (text: string) => sceneWith({ kind: 'text', lines: [{ ...element.lines![0], text }] })
+
+    expect(toLayout(withLine('✓'), canvas, seller, fonts).problems).toEqual([])
+    expect(toLayout(withLine('★ Дерево →'), canvas, seller, fonts).problems).toEqual([])
+    expect(toLayout(withLine('☃'), canvas, seller, fonts).problems.join('\n')).toMatch(/«☃»/)
   })
 
   it('то, что не легло, — в problems', () => {

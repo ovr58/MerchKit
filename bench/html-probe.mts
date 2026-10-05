@@ -20,6 +20,8 @@ import { pathToFileURL } from 'node:url'
 
 import { chromium } from 'playwright'
 
+import { FONT_FACES, fontFaceCss } from '../supabase/functions/_shared/card-layout/html/extract-browser.ts'
+
 const ROOT = process.cwd()
 const STOP = { totalRub: 200, failuresInRow: 3, timeoutMs: 180_000 }
 const DEFAULT_MODELS = ['claude-sonnet-5.5', 'claude-opus-5.5']
@@ -60,15 +62,8 @@ const dataUri = (path: string) => {
 
 const GENRE = readFileSync(join(ROOT, 'bench', 'html-probe', 'CARD_GENRE.md'), 'utf8')
 const fontDir = join(ROOT, 'tools', 'card-pipeline', 'fonts')
-const FONT_FACES = [
-  ['montserrat-regular.ttf', 'Montserrat', 400],
-  ['montserrat-semibold.ttf', 'Montserrat', 600],
-  ['montserrat-bold.ttf', 'Montserrat', 700],
-  ['montserrat-black.ttf', 'Montserrat', 900],
-  ['marck-script.ttf', 'Marck Script', 400],
-]
-  .map(([file, family, weight]) => `@font-face{font-family:'${family}';font-weight:${weight};src:url('${pathToFileURL(join(fontDir, String(file))).href}') format('truetype')}`)
-  .join('\n')
+// Те же грани, что у снятия сцены (`extract-browser.ts`), со шрифтом значков.
+const FONT_CSS = fontFaceCss(FONT_FACES, `${pathToFileURL(fontDir).href}/`)
 
 type Content = {
   caseId: string; marketplaceId: string; categoryId: string; canvas: { width: number; height: number }
@@ -127,7 +122,7 @@ async function callModel(model: string, content: Content, framePath: string): Pr
 }
 
 function withFonts(html: string): string {
-  const style = `<style>${FONT_FACES}</style>`
+  const style = `<style>${FONT_CSS}</style>`
   return html.includes('</head>') ? html.replace('</head>', `${style}</head>`) : html.replace(/<html[^>]*>/i, (m) => `${m}<head>${style}</head>`)
 }
 

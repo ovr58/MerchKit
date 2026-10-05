@@ -31,6 +31,7 @@ import type {
 } from '../types.ts'
 import { textMismatches } from '../text-check.ts'
 import { validateLayout } from '../validate.ts'
+import { SYMBOL_GLYPHS } from './extract-browser.ts'
 import type { HtmlScene, SceneElement, SceneRect } from './scene.ts'
 
 /** Тексты продавца, к которым привязываются строки сцены. */
@@ -108,7 +109,10 @@ export function toLayout(
 
   problems.push(...validateLayout(layout))
   problems.push(...wordProblems(layers, seller))
-  for (const slot of textMismatches(layout, content, { title: [seller.title], body: [seller.body] })) {
+  problems.push(...glyphProblems(layers))
+  // Источник — само содержимое: слова продавца в нём сверил `bindingOf` без учёта регистра, а
+  // регистр в нём — сцены (Q-H5). Сверка с текстом продавца как есть давала бы отказ на регистре.
+  for (const slot of textMismatches(layout, content)) {
     problems.push(`гнездо «${slot}» легло не словами продавца`)
   }
 
@@ -121,21 +125,77 @@ const wordsOf = (text: string): string[] =>
 
 /**
  * Дословность статических строк (B5, решение 4 плана M7): каждое слово с буквами должно
- * встречаться во входных текстах продавца. Чистые числа (номера модулей «1», «2») не
+ * встречаться во входных текстах продавца — в той же или другой форме (Q-H6: «замши» →
+ * «замша», правило — `stemsOf` и `SUBSET.md`). Чистые числа (номера модулей «1», «2») не
  * проверяются: это вёрстка, а не слова. Привязанные слои — слова продавца по построению,
  * их сверяет `textMismatches`.
  */
 function wordProblems(layers: Layer[], seller: SellerTexts): string[] {
   const known = new Set(
     [seller.title, seller.body, ...seller.props.flatMap((prop) => [prop.label ?? '', prop.value ?? '']), ...(seller.extra ?? [])]
-      .flatMap(wordsOf),
+      .flatMap(wordsOf)
+      .flatMap(stemsOf),
   )
   const problems: string[] = []
   for (const layer of layers) {
     if (layer.type !== 'text' || layer.lines === undefined) continue
-    const text = layer.lines.map((line) => (typeof line === 'string' ? line : line.map((run) => run.text ?? '').join(''))).join(' ')
-    const unknown = wordsOf(text).filter((word) => /\p{L}/u.test(word) && !known.has(word))
+    const unknown = wordsOf(staticText(layer)).filter((word) => /\p{L}/u.test(word) && !stemsOf(word).some((stem) => known.has(stem)))
     if (unknown.length > 0) problems.push(`${layer.id}: слова не из текстов продавца — ${unknown.map((word) => `«${word}»`).join(', ')}`)
+  }
+  return problems
+}
+
+/** Текст статических строк слоя; у привязанного слоя строк нет. */
+const staticText = (layer: TextLayer): string =>
+  (layer.lines ?? []).map((line) => (typeof line === 'string' ? line : line.map((run) => run.text ?? '').join(''))).join(' ')
+
+/**
+ * Окончания склонения (Q-H6): слово без одного из них — основа. Глагольных нет — карточка
+ * пишет существительными и прилагательными.
+ */
+const ENDINGS = [
+  'ами', 'ями', 'иях', 'иям', 'ией', 'ием', 'ого', 'его', 'ому', 'ему', 'ыми', 'ими',
+  'ых', 'их', 'ую', 'юю', 'ая', 'яя', 'ое', 'ее', 'ые', 'ие', 'ой', 'ей', 'ий', 'ый', 'ом', 'ем',
+  'ам', 'ям', 'ах', 'ях', 'ов', 'ев', 'ию', 'ия', 'ии', 'ью',
+  'а', 'я', 'о', 'е', 'ы', 'и', 'у', 'ю', 'ь', 'й',
+]
+
+/**
+ * Само слово и его возможные основы — слово без любого из окончаний `ENDINGS`, если остаётся
+ * не меньше трёх букв. Две формы одного слова делят основу («замши» и «замша» — «замш»);
+ * однокоренное слово с другим суффиксом — нет («кресельный» — «кресельн», «кресло» — «кресл»).
+ */
+const stemsOf = (word: string): string[] => [
+  word,
+  ...ENDINGS.filter((ending) => word.endsWith(ending) && word.length - ending.length >= 3).map((ending) => word.slice(0, -ending.length)),
+]
+
+/**
+ * Знаки, которые рисуют шрифты карточки (Q-H7): буквы латиницы (с Latin-1) и кириллицы, цифры,
+ * пунктуация и значки Montserrat (стрелки, фигуры-маркеры) и значки шрифта значков
+ * (`SYMBOL_GLYPHS`). Набор сверен с таблицами символов файлов `tools/card-pipeline/fonts/`;
+ * скил-жанр называет значки из него.
+ */
+const DRAWN = new Set([
+  ...' \u00a0',
+  ...'0123456789',
+  ...'.,:;!?-‐–—«»“”„‘’\'"()[]/\\%№&+*#@…°×$€₽~_=<>|²³±·©®™§',
+  ...'•◆■▶←→↑↓↗↘',
+  ...SYMBOL_GLYPHS,
+])
+const isDrawn = (char: string): boolean => DRAWN.has(char) || /[A-Za-zÀ-ÖØ-öø-ÿА-яЁё]/.test(char)
+
+/**
+ * Символ вне шрифтов карточки — отказ (Q-H7): Chromium подставит ему системный шрифт, а сборка
+ * по слоям (resvg без системных шрифтов) нарисует пустой квадрат. Проверяются статические
+ * строки — их набрала модель; привязанные — слова продавца, как и в сборке по библиотеке.
+ */
+function glyphProblems(layers: Layer[]): string[] {
+  const problems: string[] = []
+  for (const layer of layers) {
+    if (layer.type !== 'text') continue
+    const foreign = [...new Set(staticText(layer))].filter((char) => !isDrawn(char))
+    if (foreign.length > 0) problems.push(`${layer.id}: символ вне шрифтов карточки — ${foreign.map((char) => `«${char}»`).join(', ')}`)
   }
   return problems
 }
@@ -248,9 +308,8 @@ function textLayer(
     ? (lines[0]?.rect.h ?? fontSize)
     : Number.parseFloat(style.lineHeight)
 
-  let transform: 'upper' | undefined
-  if (style.textTransform === 'uppercase') transform = 'upper'
-  else if (style.textTransform !== undefined && style.textTransform !== 'none') {
+  const transform = style.textTransform === 'uppercase' ? 'upper' : undefined
+  if (transform === undefined && style.textTransform !== undefined && style.textTransform !== 'none') {
     note(`text-transform «${style.textTransform}» не переводится`)
   }
 
@@ -266,16 +325,9 @@ function textLayer(
 
   const domLines = lines.map((line) => line.text)
   const binding = bindingOf(domLines.join(' '), seller)
-  if (binding !== null) {
-    const sellerText = binding.text
-    const domText = domLines.join(' ')
-    // Модель набрала прописными без `text-transform`, а у продавца регистр смешанный: на
-    // сборке по словам продавца карточка вышла бы строчными.
-    if (transform === undefined && domText === domText.toLocaleUpperCase('ru-RU') && sellerText !== sellerText.toLocaleUpperCase('ru-RU')) {
-      transform = 'upper'
-    }
-    fill(content, binding.bind, splitLike(sellerText, domLines))
-  }
+  // Содержимое — строки сцены (Q-H5): `bindingOf` сверил, что это слова продавца с точностью до
+  // регистра и пробелов, а регистр — тот, что сверстала модель («Чёрная вишня»).
+  if (binding !== null) fill(content, binding.bind, domLines.map((line) => line.replace(/\s+/g, ' ').trim()))
 
   const opacity = style.opacity * (color?.alpha ?? 1)
 
@@ -367,7 +419,7 @@ function roleOf(family: string, weight: number, families: FontFamilies): FontRol
 const normalize = (value: string) => value.replace(/\s+/g, ' ').trim().toLowerCase()
 
 /** Текст элемента, совпавший с текстом продавца целиком (без учёта регистра и пробелов). */
-function bindingOf(text: string, seller: SellerTexts): { bind: Binding; text: string } | null {
+function bindingOf(text: string, seller: SellerTexts): { bind: Binding } | null {
   const target = normalize(text)
   if (target === '') return null
   const candidates: { bind: Binding; text: string | undefined }[] = [
@@ -379,20 +431,7 @@ function bindingOf(text: string, seller: SellerTexts): { bind: Binding; text: st
     ]),
   ]
   const found = candidates.find((candidate) => candidate.text !== undefined && normalize(candidate.text) === target)
-  return found === undefined ? null : { bind: found.bind, text: found.text!.replace(/\s+/g, ' ').trim() }
-}
-
-/** Слова продавца, разбитые на строки так, как Chromium перенёс текст сцены. */
-function splitLike(sellerText: string, domLines: string[]): string[] {
-  const words = sellerText.split(' ')
-  const out: string[] = []
-  let at = 0
-  for (const line of domLines) {
-    const count = line.split(/\s+/).filter((word) => word !== '').length
-    out.push(words.slice(at, at + count).join(' '))
-    at += count
-  }
-  return out
+  return found === undefined ? null : { bind: found.bind }
 }
 
 function fill(content: CardContent, bind: Binding, lines: string[]): void {
